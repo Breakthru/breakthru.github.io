@@ -1,0 +1,104 @@
+<html>
+<head>
+<script>
+var ctx;
+var canvas;
+var x;
+var y;
+var w;
+var h;
+var sx;
+var sy;
+var step_interval;
+
+function clear_canvas()
+{
+    var N = x.length;
+    for (i = 0; i < N; i++){
+      if (i != 0 && i != 5 && i != 9)
+      {
+        ctx.clearRect(x[i], y[i], w[i], h[i]);
+      }
+    }
+}
+
+function keyboard_callback(e)
+{
+    clear_canvas();
+    var upkeys = "qwertyuiop\[\]".toUpperCase();
+    var downkeys = "`zxcvbnm,./".toUpperCase();
+    var leftkeys = "asdfgh".toUpperCase();
+    var rightkeys = "jkl;'\\".toUpperCase();
+    var keyPressed = String.fromCharCode(e.keyCode);
+    if (keyPressed == "A")
+    {
+      // reset the game
+      canvas = document.getElementById('canvas');
+      clearInterval(step_interval);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      start();
+    }
+
+    if (upkeys.search(keyPressed) > 0) {
+        y[0] = y[0] - 10;
+    }
+    else if (downkeys.search(keyPressed) > 0) {
+        y[0] = y[0] + 10;
+    }
+    else if (rightkeys.search(keyPressed) > 0) {
+        x[0] = x[0] + 10;
+    }
+    else if (leftkeys.search(keyPressed) > 0) {
+        x[0] = x[0] - 10;
+    }
+    else {
+        var tmp = w[0];
+        w[0] = h[0];
+        h[0] = tmp;
+    }
+
+    ctx.fillStyle = 'green';
+    ctx.fillRect(x[0], y[0], w[0], h[0]);
+
+}
+
+function step()
+{
+    clear_canvas();
+    var N = x.length;
+    var color = ['green', 'blue', 'yellow', 'orange', 'red', 'pink', 'brown', 'black', 'pink', 'grey', 'grey'];
+    for (i = 0; i < N; i++)
+    {
+        x[i] = x[i] + sx[i];
+        y[i] = y[i] + sy[i];
+        ctx.fillStyle = color[i];
+        ctx.fillRect(x[i], y[i], w[i], h[i]);
+        if (x[i] - w[i] < 0 || x[i] + w[i] > canvas.width) { sx[i] = - sx[i]; }
+        if (y[i] - h[i] < 0 || y[i] + h[i] > canvas.height) { sy[i] = - sy[i]; }
+    }
+}
+
+function start()
+{
+    x = [300, 400, 100, 70, 300, 60, 100, 100, 300, 100, 200];
+    y = [300, 400, 100, 150, 150, 70, 100, 100, 150, 300, 200];
+    sx = [12, 10, 10, 5, 8, 4, 12, 10, 5, 9, 10];
+    sy = [10, 7, 10, 10, 1, 10, 9, 7, 8, 3, 2];
+    w = [15, 50, 50, 50, 50, 15, 50, 50, 50, 15, 50];
+    h = [15, 30, 30, 30, 30, 15, 30, 30, 30, 15, 30];
+    canvas = document.getElementById('canvas');
+    canvas.width  = window.innerWidth-50;
+    canvas.height  = window.innerHeight-50;
+    ctx = canvas.getContext('2d');
+    window.addEventListener('keydown', keyboard_callback, false);
+    step_interval = window.setInterval(step, 100);
+}
+
+</script>
+</head>
+<body onload="javascript:start()">
+<div>
+<canvas style="border: 1px solid black;" id="canvas" height="600px" width="600px"></canvas>
+</div>
+</body>
+</html>
