@@ -45,6 +45,7 @@ background-image: url("images/dopamine_game.png");
 </style>
 <script>
 var refreshIntervalId;
+var latest_post_id;
     
 function append_post(text)
 {
@@ -65,8 +66,11 @@ function process(event)
     if (key === 13)
     {
         var newpost = append_post(document.getElementById("text").value);
-window.localStorage.setItem("post"+localStorage.length,document.getElementById("text").value);
-
+        latest_post_id = latest_post_id + 1;
+        window.localStorage.setItem(
+                        "post"+latest_post_id,
+                        document.getElementById("text").value
+                        );
         document.getElementById("text").value = "";
 	}
 }
@@ -126,7 +130,7 @@ function timeStep()
                 console.log(ps[i].childNodes[0].nodeValue);
                 if (ps[i].childNodes[0].nodeValue < 99) {
                   ps[i].childNodes[0].nodeValue = parseInt(ps[i].childNodes[0].nodeValue)+1;
-                  window.localStorage.setItem("likes"+(i+posts.length) , ps[i].childNodes[0].nodeValue);
+                  window.localStorage.setItem("likes"+latest_post_id , ps[i].childNodes[0].nodeValue);
                 }
                 else
                 {
@@ -151,9 +155,9 @@ window.onload = function(e){
      document.getElementById("text").focus();
      refreshIntervalId = window.setInterval(timeStep, 500);
      console.log(window.localStorage);
+     latest_post_id = 0;
      for (i=0; i<window.localStorage.length; i++)
      {
-         var n = 0;
          var text = window.localStorage.getItem("post"+i);
          if (text) {
              append_post(text);
@@ -162,10 +166,10 @@ window.onload = function(e){
              {
                  number_of_likes = 1;
              }
-             add_icons(n, "clap");
-             add_icons(n, "heart");
-             add_likes(n, number_of_likes);
-             n = n + 1;
+             add_icons(0, "clap");
+             add_icons(0, "heart");
+             add_likes(0, number_of_likes);
+             latest_post_id = latest_post_id + 1;
          }
      }
 
