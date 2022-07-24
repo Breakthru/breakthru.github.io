@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>
+the wonderful dopamine game
+</title>
+<style>
+body {
+background-image: url("images/dopamine_game.png");
+ background-repeat: no-repeat;
+}
+
+#posts {
+    position: absolute;
+    left: 222px;
+    top: 222px;
+    width: 480px;
+    height: 100%;
+}
+
+#likes {
+    position: absolute;
+    left: 950px;
+    width: 20px;
+    height: 20px;
+    border: 1px solid green;
+    background-color: red;
+}
+
+#type {
+    position: absolute;
+    left: 290px;
+    top: 100px;
+    width: 400px;
+    height: 40px;
+}
+
+#text {
+    width: 400px;
+    height: 40px;
+}
+
+
+</style>
+<script>
+var refreshIntervalId;
+var latest_post_id;
+    
+function append_post(text)
+{
+    var newpost = document.createElement("div");
+    var para = document.createElement("p");
+    para.style = "border: 1px solid black; padding:30px;"
+    var t = document.createTextNode(text);
+    para.appendChild(t);
+    var first = document.getElementById("posts").childNodes[0];
+    document.getElementById("posts").insertBefore(para, first);
+    document.getElementById("posts").insertBefore(newpost, first);
+}
+    
+function process(event)
+{
+	var key = event.keyCode;
+	// If the user has pressed enter
+    if (key === 13)
+    {
+        var newpost = append_post(document.getElementById("text").value);
+        latest_post_id = latest_post_id + 1;
+        window.localStorage.setItem(
+                        "post"+latest_post_id,
+                        document.getElementById("text").value
+                        );
+        document.getElementById("text").value = "";
+	}
+}
+
+function add_icons(i, name)
+{
+    var para = document.getElementById("posts").getElementsByTagName("div")[i];
+    if (name==="clap") {
+    var img = document.createElement("img");
+    img.src = "images/clap.gif";
+    img.width = 50;
+    img.height = 50;
+    img.style = "position:relative; top:10px;";
+    para.appendChild(img);
+    }
+    else if (name==="heart")
+    {
+        var heart = document.createElement("img");
+        heart.src = "images/heart.jpg";
+        heart.width = 50;
+        heart.height = 50;
+        heart.style = "position:relative; top:10px; left:40px";
+        para.appendChild(heart);
+
+    }
+}
+
+
+function add_likes(post_id, number_of_likes)
+{
+    var posts = document.getElementById("posts").getElementsByTagName("div");
+    // add likes
+    var like1 = document.createElement("p");
+    like1.style = "position: relative; top:-50px; left: 40px;width: 18px;height: 20px; color:white; background:red;text-align: center; font-size:16px;border-radius:5px;";
+    like1.appendChild(document.createTextNode(number_of_likes));
+    var like2 = document.createElement("p");
+    like2.style = "z-index:1; position: relative; top:-90px; left: 130px;width: 18px;height: 20px; color:white; background:red;text-align: center; font-size:16px; border-radius:5px;";
+    like2.appendChild(document.createTextNode(number_of_likes));
+    posts[post_id].appendChild(like1);
+    posts[post_id].appendChild(like2);
+}
+
+function timeStep()
+{
+    var posts = document.getElementById("posts").getElementsByTagName("div");
+    var para = posts[0];
+    if (para == null) { return; }
+
+    var imgs = para.getElementsByTagName("img");
+    if (imgs.length > 1) {
+        var ps = para.getElementsByTagName("p");
+        if (ps.length == 0) {
+            add_likes(0, 1);
+        }
+        else {
+            for (i = 0; i < ps.length; i++) {
+                console.log(ps[i].childNodes[0].nodeValue);
+                if (ps[i].childNodes[0].nodeValue < 99) {
+                  ps[i].childNodes[0].nodeValue = parseInt(ps[i].childNodes[0].nodeValue)+1;
+                  window.localStorage.setItem("likes"+latest_post_id , ps[i].childNodes[0].nodeValue);
+                }
+                else
+                {
+                    clearInterval(refreshIntervalId);
+                }
+            }
+        }
+    }
+
+    if (para.getElementsByTagName("img").length > 1) { return; }
+    if (para.getElementsByTagName("img").length == 0)
+    {
+        add_icons(0, "clap");
+    }
+    else {
+        add_icons(0, "heart");
+    }
+    
+}
+
+window.onload = function(e){ 
+     document.getElementById("text").focus();
+     refreshIntervalId = window.setInterval(timeStep, 500);
+     console.log(window.localStorage);
+     latest_post_id = 0;
+     for (i=0; i<window.localStorage.length; i++)
+     {
+         var text = window.localStorage.getItem("post"+i);
+         if (text) {
+             append_post(text);
+             var number_of_likes = window.localStorage.getItem("likes"+i);
+             if (number_of_likes == null)
+             {
+                 number_of_likes = 1;
+             }
+             add_icons(0, "clap");
+             add_icons(0, "heart");
+             add_likes(0, number_of_likes);
+             latest_post_id = latest_post_id + 1;
+         }
+     }
+
+}
+</script>
+</head>
+<body>
+<div id="type">
+<textarea id="text" onkeyup="javascript:process(event)"></textarea>
+</div>
+<!-- div id="likes">
+</div -->
+<div id="posts">
+</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script lang="JavaScript">
+        function get_local_ipv6(ipv4) {
+          ipv4 = input.split('.');
+          console.log(ipv4);
+          ipv6 = 'fe::';
+          for (i = 0; i < 2; i++) {
+            n = (parseInt(ipv4[2*i]) << 8) + parseInt(ipv4[2*i+1]);
+            ipv6 += n.toString(16);
+            if (i == 0) {
+              ipv6 += ':';
+            }
+          }
+          return ipv6;
+        }
+
+        function convert4to6() {
+          input = document.getElementById('ipv4').value;
+          output = document.getElementById('ipv6');
+          output.value = get_local_ipv6(input);
+        }
+
+        function showBytes() {
+          input = document.getElementById('ipv6').value;
+          output = document.getElementById('octects');
+          ipv6 = input.split(':');
+          console.log(ipv6);
+          octects = ipv6.map((n) => {
+            return ((parseInt(n, 16) & 0xFF00) >> 8).toString() + "." + (parseInt(n, 16) & 0xFF).toString();;
+          });
+          output.value = octects.join(".");
+        }
+        
+        function showHex() {
+          input = document.getElementById('octects').value;
+          output = document.getElementById('ipv6');
+          ipv6 = input.split('.');
+          hex = [];
+          for (i = 0; i < ipv6.length; i+=2) {
+            hex.push(((parseInt(ipv6[i]) << 8) + parseInt(ipv6[i+1])).toString(16));            
+	  }
+          output.value = hex.join(":");
+        }
+    </script>
+</head>
+<body>
+  <div>
+    <h2>ipv4</h2>
+	<input type="text" size="16" id="ipv4"></input>
+  </div>
+  <button onclick="convert4to6();">local 4 to local 6</button>
+  <div>
+    <h2>ipv6</h2>
+	<input type="text" size="40" id="ipv6"></input>
+        <button onclick="showBytes();">&rarr;</button>
+        <button onclick="showHex();">&larr;</button>
+	<input type="text" size="64" id="octects"></input>
+  </div>
+</body>
