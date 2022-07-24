@@ -10,11 +10,13 @@ class IPv6 {
         let blocks = s.split(':');
         // find the position of the :: block, if any
         let idx = blocks.findIndex(element => element == '');
+        // extract bytes before the :: block
         for (var i = 0; i < idx; i++) {
             let block_n = parseInt(blocks[i], 16);  // 2 bytes
             this.bytes[2*i] = (block_n & 0xFF00) >> 8;
             this.bytes[2*i+1] = block_n & 0xFF;
         }
+        // extract bytes after the :: block
         var tmp_bytes = new Array();
         for (var i = idx+1; i < blocks.length; i++) {
             let block_n = parseInt(blocks[i], 16);  // 2 bytes
@@ -23,6 +25,7 @@ class IPv6 {
                 tmp_bytes.push(block_n & 0xFF);
             }
         }
+        // put the bytes after :: at the end
         this.set_bytes(tmp_bytes, 16 - tmp_bytes.length);
     }
     
@@ -33,7 +36,7 @@ class IPv6 {
     }
 
     to_string() {
-        let hex = [];
+        let hex = [];  // blocks of 2 bytes
         for (var i = 0; i < 16; i+=2) {
           hex.push(((parseInt(this.bytes[i]) << 8) + parseInt(this.bytes[i+1])).toString(16));            
         }
@@ -41,7 +44,7 @@ class IPv6 {
     }
     
     to_decimal_string() {
-        let decimal = [];
+        let decimal = [];  // 16 bytes as decimal numbers
         for (var i = 0; i < 16; i++) {
           decimal.push(this.bytes[i].toString())
         }
