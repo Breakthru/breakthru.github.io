@@ -4,36 +4,28 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="ipv6.js"></script>
     <script lang="JavaScript">
-        function get_local_ipv6(ipv4) {
-          ipv4 = input.split('.');
-          console.log(ipv4);
-          ipv6 = 'fe::';
-          for (i = 0; i < 2; i++) {
-            n = (parseInt(ipv4[2*i]) << 8) + parseInt(ipv4[2*i+1]);
-            ipv6 += n.toString(16);
-            if (i == 0) {
-              ipv6 += ':';
-            }
-          }
-          return ipv6;
+        function get_local_ipv6(ipv4_str) {
+            console.log(ipv4_str);
+            let ipv6 = new IPv6('fe80::');
+            let ipv4 = new IPv4(ipv4_str);
+            ipv6.set_bytes(ipv4.bytes, 12);
+            return ipv6.to_string();
         }
 
         function convert4to6() {
-          input = document.getElementById('ipv4').value;
-          output = document.getElementById('ipv6');
-          output.value = get_local_ipv6(input);
+            input = document.getElementById('ipv4').value;
+            output = document.getElementById('local_ipv6');
+            output.value = get_local_ipv6(input);
         }
 
         function showBytes() {
-          input = document.getElementById('ipv6').value;
-          output = document.getElementById('octects');
-          ipv6 = input.split(':');
-          console.log(ipv6);
-          octects = ipv6.map((n) => {
-            return ((parseInt(n, 16) & 0xFF00) >> 8).toString() + "." + (parseInt(n, 16) & 0xFF).toString();;
-          });
-          output.value = octects.join(".");
+            input = document.getElementById('ipv6').value;
+            console.log(input);
+            output = document.getElementById('octects');
+            let ipv6 = new IPv6(input);
+            output.value = ipv6.to_decimal_string();
         }
         
         function showHex() {
@@ -46,19 +38,39 @@
 	  }
           output.value = hex.join(":");
         }
+        
+        function clear_all() {
+          ids = ["ipv4", "local_ipv6", "ipv6", "octects"];
+          ids.forEach((id) => {document.getElementById(id).value = '';})
+        }
+        
     </script>
 </head>
 <body>
   <div>
-    <h2>ipv4</h2>
+    <h2>make local ipv6 from any ipv4</h2>
+    <label for="ipv4">ipv4</label>
 	<input type="text" size="16" id="ipv4"></input>
+	<button onclick="convert4to6();">local 4 to local 6</button>
+	<input type="text" size="40" id="local_ipv6" disabled></input>
   </div>
-  <button onclick="convert4to6();">local 4 to local 6</button>
   <div>
-    <h2>ipv6</h2>
+    <h2>show ipv6 as 16 bytes</h2>
+    <label for="ipv6">ipv6</label>
 	<input type="text" size="40" id="ipv6"></input>
-        <button onclick="showBytes();">&rarr;</button>
-        <button onclick="showHex();">&larr;</button>
+    <button onclick="showBytes();">&rarr;</button>
+    <button onclick="showHex();">&larr;</button>
+    <label for="octects">bytes</label>
 	<input type="text" size="64" id="octects"></input>
   </div>
+  <div>
+   <button onclick="clear_all()">Clear</button>
+  </div>
+  <div>
+    <h2>references</h2>
+    <p>
+      <a href="https://www.ripe.net/participate/member-support/lir-basics/ipv6_reference_card.pdf">https://www.ripe.net/participate/member-support/lir-basics/ipv6_reference_card.pdf</a>
+    </p>
+  </div>
 </body>
+
