@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        button {
+          width: 10em;
+          height: 4em;
+        }
+        .slidecontainer {
+  width: 80%; /* Width of the outside container */
+}
+
+/* The slider itself */
+.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 25px; /* Specified height */
+  background: #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  background: #04AA6D; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  background: #04AA6D; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Lava water game</title>
+    <script>
+    var status = "LAVA";
+    var timeout_id = -1;
+    var timeout_ms = 2000;
+
+    function timer() {
+      var seconds_left = parseInt(document.getElementById('seconds').innerHTML);
+      seconds_left -= 1;
+      document.getElementById('seconds').innerHTML = seconds_left;
+      if (seconds_left > 0) {
+        window.setTimeout(timer, 1000);
+      }
+    }
+
+    function slider() {
+      var slider = document.getElementById("myRange");
+      timeout_ms = 1000 * slider.value;
+      document.getElementById('seconds').innerHTML = Math.round(timeout_ms / 1000.0);
+    }
+
+    function toggle() {
+      floor = document.getElementById('floor');
+      floor.innerHTML=status;
+      if (status=="LAVA") {
+          floor.style.backgroundColor = 'red';
+          floor.style.color = 'black';
+      } else {
+          floor.style.backgroundColor = 'blue';
+          floor.style.color = 'white';
+      }
+      audio = document.getElementById(status.toLowerCase());
+      audio.play();
+      status = (status == "LAVA") ? "WATER" : "LAVA";
+      timeout_id = window.setTimeout(toggle, timeout_ms);
+      slider();
+      timer();
+    }
+    function start() {
+        slider();
+        toggle();
+    }
+    function stop() {
+      window.clearTimeout(timeout_id);
+      document.getElementById('floor').innerHTML="";
+    }
+    </script>
+</head>
+<body>
+<div class="slidecontainer">
+  <input type="range" min="1" max="10" value="3" class="slider" id="myRange">
+</div>
+<br>
+<div id="seconds"></div>
+<br>
+<button onclick="start();">play</button><br>
+<button onclick="stop();">stop</button><br>
+<div style="width:10em; height:1em; border:1px solid black;">
+    <center><div id="floor"></div></center>
+</div>
+<br>
+<audio id="lava" controls preload="none" style="width:480px;">
+ <source src="lava.m4a" type="audio/mp4" />
+</audio>
+<br>
+<audio id="water" controls preload="none" style="width:480px;">
+ <source src="water.m4a" type="audio/mp4" />
+</audio>
+
+</body>
+</html>
