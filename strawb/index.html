@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>Strawbs.co</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+
+  <script src="form.js"></script>
+</head>
+<body>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container">
+    <div class="row">
+      <img width="400px;" src="https://flashpackingfamily.com/wp-content/uploads/2021/07/picking-strawberries-at-a-pick-your-own-farm.jpg"/>
+    </div>
+    <div class="row">
+        <h4>Strawbs.co</h4>
+        <p>Welcome to strawbs.co.</p>
+        <img width="400px;" src="https://flashpackingfamily.com/wp-content/uploads/2021/07/Strawberries.jpg"/>
+    </div>
+    <div class="row">
+      <form>
+        <div class="row">
+          <div class="six columns">
+            <label for="howmany">How many strawbs?</label>
+            <input class="u-full-width" type="text" placeholder="" id="howmany">
+          </div>
+          <div class="six columns">
+            <label for="sugar">With sugar?</label>
+            <select class="u-full-width" id="sugar">
+              <option value="Option 1">Yes sugar</option>
+              <option value="Option 2">No sugar</option>
+              <option value="Option 3">Surprise me</option>
+            </select>
+          </div>
+        </div>
+        <label for="payment">Payment method</label>
+        <textarea class="u-full-width" placeholder="Put it on mummy's account" id="payment"></textarea>
+        <label>
+          <input type="checkbox">
+          <span class="label-body">Faster delivery</span>
+        </label>
+        <input class="button-primary" type="submit" value="Submit" onclick="javascript:runForm();">
+      </form>
+    </div>
+  </div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>
