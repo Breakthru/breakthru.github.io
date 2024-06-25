@@ -21,10 +21,13 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/skeleton.css">
-
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+          integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+          crossorigin="anonymous">
+  </script>
   <script src="form.js"></script>
 </head>
-<body>
+<body onload="javascript:query_orders();">
 
   <!-- Primary Page Layout
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -38,7 +41,7 @@
         <img width="400px;" src="https://flashpackingfamily.com/wp-content/uploads/2021/07/Strawberries.jpg"/>
     </div>
     <div class="row">
-      <form>
+      <form class="order">
         <div class="row">
           <div class="six columns">
             <label for="howmany">How many strawbs?</label>
@@ -47,20 +50,21 @@
           <div class="six columns">
             <label for="sugar">With sugar?</label>
             <select class="u-full-width" id="sugar">
-              <option value="Option 1">Yes sugar</option>
-              <option value="Option 2">No sugar</option>
-              <option value="Option 3">Surprise me</option>
+              <option value="Yes sugar">Yes sugar</option>
+              <option value="No sugar">No sugar</option>
+              <option value="Surprise me">Surprise me</option>
             </select>
           </div>
         </div>
-        <label for="payment">Payment method</label>
-        <textarea class="u-full-width" placeholder="Put it on mummy's account" id="payment"></textarea>
-        <label>
-          <input type="checkbox">
-          <span class="label-body">Faster delivery</span>
-        </label>
-        <input class="button-primary" type="submit" value="Submit" onclick="javascript:runForm();">
+        <label for="notes">Notes</label>
+        <textarea class="u-full-width" placeholder="Put it on mummy's account" id="notes"></textarea>
+        <input class="button-primary" type="submit" value="Submit" formaction="javascript:runForm();">
       </form>
+    </div>
+    <div class="row">
+      <h4>Recent orders</h4>
+      <ul id="orders_list"></ul>
+      <li id="no_orders_msg">No orders for now</li>
     </div>
   </div>
 
