@@ -10,6 +10,23 @@ function runForm() {
     $.post( "http://breakthru.local:5000/", formData, function( response ) {
     console.log(response);
     alert( response );
+    query_orders();
+    });
+}
+
+function mark_delivered(order) {
+    $.post( "http://breakthru.local:5000/deliver", {"order": order}, function( response ) {
+    console.log(response);
+    alert( response );
+    query_orders();
+    });
+}
+
+function mark_cancelled(order) {
+    $.post( "http://breakthru.local:5000/cancel", {"order": order}, function( response ) {
+    console.log(response);
+    alert( response );
+    query_orders();
     });
 }
 
@@ -17,9 +34,12 @@ function query_orders() {
     $( document ).ready(function() {
         $.getJSON("http://breakthru.local:5000/",
         function(response) {
-            console.log(response)
-            if (response.length > 0) {
-                $('#no_orders_msg').remove();
+            $('#orders_list').empty();
+            console.log(response);
+            if (response.length === 0) {
+                $('#orders_list').append($('<li>', {
+                    text: "No more orders"
+                }));
             }
             $.each(response, function(index, element) {
                 msg = "Order "+(index+1)+": ";
@@ -28,9 +48,23 @@ function query_orders() {
                 if (element.notes) {
                     msg += " notes: " + element.notes;
                 }
-                $('#orders_list').append($('<li>', {
+                var description = $('<p>', {
                     text: msg
-                }));
+                });
+                var deliver_button = $('<button>', {
+                    text: "Deliver",
+                    onclick: "javascript:mark_delivered("+(index+1)+");"
+                });
+                var cancel_button = $('<button>', {
+                    text: "Cancel",
+                    onclick: "javascript:mark_cancelled("+(index+1)+");"
+                });
+
+                var order = $('<li>');
+                order.append(description);
+                order.append(deliver_button);
+                order.append(cancel_button);
+                $('#orders_list').append(order);
             });
         });
     });
