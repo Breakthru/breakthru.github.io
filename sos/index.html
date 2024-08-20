@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    let index = 0;
+    let code = [0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+
+    function paint(color) {
+      var c = document.getElementById("sos");
+      var ctx = c.getContext("2d");
+      if (color >= 1) {
+        ctx.fillStyle = "#000000";
+      }
+      else {
+        ctx.fillStyle = "#ffffff";
+      }
+      
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+
+    function display_sos() {
+      paint(code[index]);
+      index += 1;
+      if (index >= code.length) {
+        index = 0;
+      }
+    }
+
+    function run() {
+      // ensure canvas is 100% screen size
+      var container_div = document.getElementById("container");
+      var canvas = document.getElementById("sos");
+      canvas.width = container_div.innerWidth;
+      canvas.height = container_div.innerHeight;
+      // ensure canvas stays 100% even on resize
+      window.addEventListener("resize", () => {
+        // Resize canvas element
+        var canvas = document.getElementById("sos");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+
+       var timer1 = setInterval(display_sos, 500);
+    }
+
+  </script>
+</head>
+<body onload="run();">
+  <div id="container">
+    <canvas id="sos" width="1280" height="720"
+       style="border:1px solid #000000;">
+   </canvas>
+</div>
+</body>
+</html>
