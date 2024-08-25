@@ -1,0 +1,293 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children no
+\language british
+\language_package default
+\inputencoding utf8
+\fontencoding auto
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content true
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Title
+My own 3 laws of robotics 
+\end_layout
+
+\begin_layout Author
+Marco Paladini
+\end_layout
+
+\begin_layout Standard
+The 3 laws of robotics written by Isaac Asimov in his books are very famous and are fundamental to his science fiction stories.
+\end_layout
+
+\begin_layout Section*
+Asimov three laws
+\end_layout
+
+\begin_layout Standard
+1) A robot may not injure a human being or,
+ through inaction,
+ allow a human being to come to harm.
+\end_layout
+
+\begin_layout Standard
+2) A robot must obey orders given it by human beings except where such orders would conflict with the First Law.
+\end_layout
+
+\begin_layout Standard
+3) A robot must protect its own existence as long as such protection does not conflict with the First or Second Law.
+\end_layout
+
+\begin_layout Standard
+see https://xkcd.com/1613/
+\end_layout
+
+\begin_layout Subsection*
+Are there any laws of robotics in the real world?
+\end_layout
+
+\begin_layout Standard
+I'm talking about guidelines for us,
+ the people who build robots,
+ we all know that robots obey the laws of physics and will do whatever their software will say[1].
+\end_layout
+
+\begin_layout Standard
+So here's my laws of robotics:
+\end_layout
+
+\begin_layout Enumerate
+Demo setups always break
+\end_layout
+
+\begin_layout Enumerate
+Videos don't tell the whole story
+\end_layout
+
+\begin_layout Enumerate
+Robotics is expensive
+\end_layout
+
+\begin_layout Subsection*
+1) Demo setups always break
+\end_layout
+
+\begin_layout Standard
+This is the reality of setting up a robot demo to showcase your robotics results.
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Make sure your demo is constantly in tip-top shape
+\emph default
+,
+ there are plenty of things that go wrong from one day to the next:
+ cables that snap,
+ parts that break:
+ unexpected obstacles,
+ objects or containers in the wrong place,
+ etc.
+ etc.
+\end_layout
+
+\begin_layout Standard
+Unless you're doing pure research,
+ making sure your robot demo can run every day and does not break easily (and you don't actually leave it broken) is the one proof that your product will work tomorrow.
+\end_layout
+
+\begin_layout Subsection*
+2) Videos don't tell the whole story
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+We all know robotics is hard
+\emph default
+.
+ People see the one impressive robot demo video and the imagination wanders to other amazing things that this robot can do because now that it has performed that task this once in this video the robot has "mastered this task".
+\end_layout
+
+\begin_layout Standard
+Nothing can be further from the truth.
+ One impressive robot demo video does not mean the robot will work day-in-day-out,
+ only actually working in production at the required reliability will demonstrate that.
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+We still need good demo videos
+\emph default
+ but we should not hide the other videos showing all the failure cases.
+\end_layout
+
+\begin_layout Subsection*
+3) Robotics is expensive
+\end_layout
+
+\begin_layout Standard
+We often compare the unbelievable,
+ exponential increase in computer speed and capacity and the unbelievable,
+ exponential decrease in price of computing power to what will our robots be able to do once that exponential growth kicks in.
+\end_layout
+
+\begin_layout Standard
+Robots are not cheap and fast like computers,
+ they are expensive and fast or cheaper and slow or expensive and bulky,
+ or cheap and cute...
+ robots are physical machines and it is impressive how we,
+ humans,
+ quickly compare CPU power to electric motor power.
+ Yes,
+ large CPU power has benefited robots massively and yes,
+ both 
+\emph on
+cost and quality of robot parts are moving in the right direction
+\emph default
+,
+ but nobody expects any other machine to improve exponentially.
+ Why there is no talk of a Moore's law for coffee machines?
+ Or dishwashers?
+ Or washing machines?
+ Or cars?
+ Today's washing machines are extremely high quality and extremely cheap,
+ yet 
+\emph on
+there is a limit to how cheap or how powerful robots can get
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+Keep it real and never compare a robot to a phone or a laptop in terms of price/performance,
+ rather compare it to similar technologies such as electric motors,
+ air compressors,
+ sensors,
+ gearboxes,
+ and transformers (the alternate current ones,
+ not the movie `transfrormers`,
+ that is science fiction)
+\end_layout
+
+\begin_layout Standard
+Finally,
+ The Isaac Asimov fans will be well aware that there are really 4 laws of robotics.
+\end_layout
+
+\begin_layout Standard
+In the last of the "Foundation series" books [https://en.wikipedia.org/wiki/Foundation_and_Earth ] Asimov introduces another law of robotics,
+ called the zeroth law.
+\end_layout
+
+\begin_layout Subsection*
+0) A robot may not harm humanity,
+ or,
+ by inaction,
+ allow humanity to come to harm.
+\end_layout
+
+\begin_layout Standard
+This one is good,
+ 
+\emph on
+this one is also for us to follow
+\emph default
+,
+ us the people who build robots,
+ so you can make sure your robot works in a way that benefits all of humanity,
+ you should give it a peaceful and meaningful purpose to make this world a better place for us all.
+\end_layout
+
+\begin_layout Standard
+[1] Robots will not do whatever we want them to do,
+ because that's not how software works.
+ 
+\emph on
+Your software will hardly ever do what you want,
+ but will faithfully do what you say
+\emph default
+.
+\end_layout
+
+\end_body
+\end_document
