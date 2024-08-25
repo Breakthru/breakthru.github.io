@@ -1,0 +1,137 @@
+%% LyX 2.4.0~RC3 created this file.  For more info, see https://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[british]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\begin{document}
+\title{Artificial intelligence and Turing machines - Part 2: Can machines
+think?}
+\author{Marco Paladini}
+
+\maketitle
+In part 1 of this article, we have seen an introduction to the concept
+of Turing machine, and some examples of why they're useful in studying
+the theory of computation. In this part we compare the kind of tasks
+that machines can do with the tasks that we humans do, and ask the
+question, can a machine think?
+
+\emph{If we believe that our bodies and our minds perform some kind
+of computation when we receive information from the outside world
+through our five senses (sight, sound, touch, taste, smell), then
+we can be confident in saying that we are machines too}. Let me clarify.
+Of course we’re not machines in the sense that we respond to a given
+input with a given output, we’re much more complex than that.
+
+\emph{But even simple machines can give rise to extraordinary complexity,
+and to convince you, I’ll give you a few examples.}
+
+\section*{Simple machines, complex behaviour}
+
+Pseudo-random number generators {[}1{]} are algorithms following a
+very precise set of instructions that produce an unpredictable output.
+When you run a pseudo-random number generator, you know exactly what
+the algorithm is doing, but you can’t predict what the next value
+is going to come out in the output.
+
+There is a brilliant test of our own ability to generate random actions
+at this website, I urge you to try it if you haven’t yet: http://people.ischool.berkeley.edu/\textasciitilde nick/aaronson-oracle/index.html.
+The computer will predict which of two keys you will press on the
+keyboard, and will get it right most of the time.
+
+Conway’s game of life {[}2{]} is another typical example of how simple
+rules can result in fantastic complexity. Imagine a large board divided
+into squares with stones on some of the squares, the rules are to
+simply remove stones or add stones according to how many neighbours
+they have on the board.
+
+Would you imagine that from such a simple setup we can end up seeing
+patterns that look like creatures moving around the board or spaceships
+that generate other creatures? The animations on the Wikipedia page
+do a good job of showing how the resulting patterns are really life-like.
+
+\section*{Software in general is really complex}
+
+Even machines governed by simple rules can produce complex and difficult
+to predict outputs. This is part of the reason why we don’t have a
+general way to verify our software. That doesn’t mean we should give
+up software verification, in some cases it’s very important and there
+might be a way to verify your specific software for a particular application,
+but for example, we can't run an automatic analysis on \emph{any}
+database program and make sure it only allows authorised users to
+read and write to the database. \emph{Next time you think how self-driving
+cars and AI programs need to be correct all the time, spare a thought
+for all the software you use today, and remember it will have some
+still undiscovered bugs and vulnerabilities that can cause it to malfunction}. 
+
+\section*{Are we machines?}
+
+We’ve seen how simple machines can produce complex and unpredictable
+computations. Now we ask the question again. Are we machines ourselves?
+We certainly are capable of complex and unpredictable computations.
+
+There is no robot technology in the world today with capabilities
+similar to human muscles, skin and eyes {[}3{]}, but imagine things
+where humans and machine compete on equal footing (e.g. chess playing,
+driving a car, programming computers, writing music). Are we sure
+there are things we do while driving, that cannot be done by a machine?
+Is there some thinking we do while programming, that is fundamentally
+un-computable?
+
+If the answer is yes, then are we able to point out exactly what that
+is? We should be able to say \textquotedbl a self-driving car cannot
+compete with humans because task X is not computable by a machine\textquotedbl .
+As far as we are aware, we don't have proof that computers cannot
+do what we do. This means that \emph{in theory}, all our thinking
+could be simulated by a machine.
+
+\emph{Does it mean we can actually simulate people? No, it doesn’t,
+because computation speed, energy consumption, process noise, and
+physical architecture matters a lot in practice, but it’s something
+we conveniently ignore, when we develop theories}.
+
+\section*{What about Human-level AI (AGI)?}
+
+I hope I convinced you that \emph{in theory} it is possible to build
+a machine that has human-level intelligence, does it mean Artificial
+General Intelligence (AGI) is just around the corner? Probably not,
+because we don't yet know how to do it. I leave you with two quotes
+on that. The first one by \emph{Rodney Brooks}, when writing about
+the history of AI {[}4{]} he says ”So, journalists, don’t you dare,
+don’t you dare, come back to me in ten years and say \emph{where is
+that Artificial General Intelligence that we were promised? It isn’t
+coming any time soon}.”
+
+The other quote is by \emph{Andrew Ng}, who famously said “\emph{Worrying
+about evil AI killer robots today is a little bit like worrying about
+overpopulation on the planet Mars}.” {[}5{]}.
+
+\section*{Are machines intelligent?}
+
+It could also be that we will always consider humans to be more intelligent
+than machines, no matter how advanced they might be.
+
+After all, we were quick to reconsider the game of chess, from an
+activity that required human intelligence, to something easy for computers
+to do, that requires no intelligence at all.
+
+Look around, \emph{the world is full of machines that have surpassed
+human capabilities}, from fast calculators, large databases of documents,
+tall construction cranes lifting tonnes of materials, fast industrial
+robots, high-speed racing cars, underground trains... and airplanes,
+allowing people to fly in the sky.
+
+{[}1{]} https://en.wikipedia.org/wiki/Pseudorandomness
+
+{[}2{]} https://en.wikipedia.org/wiki/Conway\%27s\_Game\_of\_Life
+
+{[}3{]} If you do have robotic muscles with the energy efficiency
+and strength and resiliency of human muscles, let me know. Equally
+for robotic skin and robotic eyes.
+
+{[}4{]} https://rodneybrooks.com/forai-the-origins-of-artificial-intelligence/
+
+{[}5{]} https://www.gsb.stanford.edu/insights/andrew-ng-why-ai-new-electricity
+
+
+\end{document}

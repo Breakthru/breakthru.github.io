@@ -1,0 +1,347 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children no
+\language british
+\language_package default
+\inputencoding utf8
+\fontencoding auto
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content true
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Artificial intelligence and Turing machines - Part 2:
+ Can machines think?
+\end_layout
+
+\begin_layout Author
+Marco Paladini
+\end_layout
+
+\begin_layout Standard
+In part 1 of this article,
+ we have seen an introduction to the concept of Turing machine,
+ and some examples of why they're useful in studying the theory of computation.
+ In this part we compare the kind of tasks that machines can do with the tasks that we humans do,
+ and ask the question,
+ can a machine think?
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+If we believe that our bodies and our minds perform some kind of computation when we receive information from the outside world through our five senses (sight,
+ sound,
+ touch,
+ taste,
+ smell),
+ then we can be confident in saying that we are machines too
+\emph default
+.
+ Let me clarify.
+ Of course we’re not machines in the sense that we respond to a given input with a given output,
+ we’re much more complex than that.
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+But even simple machines can give rise to extraordinary complexity,
+ and to convince you,
+ I’ll give you a few examples.
+\end_layout
+
+\begin_layout Section*
+Simple machines,
+ complex behaviour
+\end_layout
+
+\begin_layout Standard
+Pseudo-random number generators [1] are algorithms following a very precise set of instructions that produce an unpredictable output.
+ When you run a pseudo-random number generator,
+ you know exactly what the algorithm is doing,
+ but you can’t predict what the next value is going to come out in the output.
+\end_layout
+
+\begin_layout Standard
+There is a brilliant test of our own ability to generate random actions at this website,
+ I urge you to try it if you haven’t yet:
+ http://people.ischool.berkeley.edu/~nick/aaronson-oracle/index.html.
+ The computer will predict which of two keys you will press on the keyboard,
+ and will get it right most of the time.
+\end_layout
+
+\begin_layout Standard
+Conway’s game of life [2] is another typical example of how simple rules can result in fantastic complexity.
+ Imagine a large board divided into squares with stones on some of the squares,
+ the rules are to simply remove stones or add stones according to how many neighbours they have on the board.
+\end_layout
+
+\begin_layout Standard
+Would you imagine that from such a simple setup we can end up seeing patterns that look like creatures moving around the board or spaceships that generate other creatures?
+ The animations on the Wikipedia page do a good job of showing how the resulting patterns are really life-like.
+\end_layout
+
+\begin_layout Section*
+Software in general is really complex
+\end_layout
+
+\begin_layout Standard
+Even machines governed by simple rules can produce complex and difficult to predict outputs.
+ This is part of the reason why we don’t have a general way to verify our software.
+ That doesn’t mean we should give up software verification,
+ in some cases it’s very important and there might be a way to verify your specific software for a particular application,
+ but for example,
+ we can't run an automatic analysis on 
+\emph on
+any
+\emph default
+ database program and make sure it only allows authorised users to read and write to the database.
+ 
+\emph on
+Next time you think how self-driving cars and AI programs need to be correct all the time,
+ spare a thought for all the software you use today,
+ and remember it will have some still undiscovered bugs and vulnerabilities that can cause it to malfunction
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Section*
+Are we machines?
+\end_layout
+
+\begin_layout Standard
+We’ve seen how simple machines can produce complex and unpredictable computations.
+ Now we ask the question again.
+ Are we machines ourselves?
+ We certainly are capable of complex and unpredictable computations.
+\end_layout
+
+\begin_layout Standard
+There is no robot technology in the world today with capabilities similar to human muscles,
+ skin and eyes [3],
+ but imagine things where humans and machine compete on equal footing (e.g.
+ chess playing,
+ driving a car,
+ programming computers,
+ writing music).
+ Are we sure there are things we do while driving,
+ that cannot be done by a machine?
+ Is there some thinking we do while programming,
+ that is fundamentally un-computable?
+\end_layout
+
+\begin_layout Standard
+If the answer is yes,
+ then are we able to point out exactly what that is?
+ We should be able to say "a self-driving car cannot compete with humans because task X is not computable by a machine".
+ As far as we are aware,
+ we don't have proof that computers cannot do what we do.
+ This means that 
+\emph on
+in theory
+\emph default
+,
+ all our thinking could be simulated by a machine.
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Does it mean we can actually simulate people?
+ No,
+ it doesn’t,
+ because computation speed,
+ energy consumption,
+ process noise,
+ and physical architecture matters a lot in practice,
+ but it’s something we conveniently ignore,
+ when we develop theories
+\emph default
+.
+\end_layout
+
+\begin_layout Section*
+What about Human-level AI (AGI)?
+\end_layout
+
+\begin_layout Standard
+I hope I convinced you that 
+\emph on
+in theory
+\emph default
+ it is possible to build a machine that has human-level intelligence,
+ does it mean Artificial General Intelligence (AGI) is just around the corner?
+ Probably not,
+ because we don't yet know how to do it.
+ I leave you with two quotes on that.
+ The first one by 
+\emph on
+Rodney Brooks
+\emph default
+,
+ when writing about the history of AI [4] he says ”So,
+ journalists,
+ don’t you dare,
+ don’t you dare,
+ come back to me in ten years and say 
+\emph on
+where is that Artificial General Intelligence that we were promised?
+ It isn’t coming any time soon
+\emph default
+.”
+\end_layout
+
+\begin_layout Standard
+The other quote is by 
+\emph on
+Andrew Ng
+\emph default
+,
+ who famously said “
+\emph on
+Worrying about evil AI killer robots today is a little bit like worrying about overpopulation on the planet Mars
+\emph default
+.” [5].
+\end_layout
+
+\begin_layout Section*
+Are machines intelligent?
+\end_layout
+
+\begin_layout Standard
+It could also be that we will always consider humans to be more intelligent than machines,
+ no matter how advanced they might be.
+\end_layout
+
+\begin_layout Standard
+After all,
+ we were quick to reconsider the game of chess,
+ from an activity that required human intelligence,
+ to something easy for computers to do,
+ that requires no intelligence at all.
+\end_layout
+
+\begin_layout Standard
+Look around,
+ 
+\emph on
+the world is full of machines that have surpassed human capabilities
+\emph default
+,
+ from fast calculators,
+ large databases of documents,
+ tall construction cranes lifting tonnes of materials,
+ fast industrial robots,
+ high-speed racing cars,
+ underground trains...
+ and airplanes,
+ allowing people to fly in the sky.
+\end_layout
+
+\begin_layout Standard
+[1] https://en.wikipedia.org/wiki/Pseudorandomness
+\end_layout
+
+\begin_layout Standard
+[2] https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+\end_layout
+
+\begin_layout Standard
+[3] If you do have robotic muscles with the energy efficiency and strength and resiliency of human muscles,
+ let me know.
+ Equally for robotic skin and robotic eyes.
+\end_layout
+
+\begin_layout Standard
+[4] https://rodneybrooks.com/forai-the-origins-of-artificial-intelligence/
+\end_layout
+
+\begin_layout Standard
+[5] https://www.gsb.stanford.edu/insights/andrew-ng-why-ai-new-electricity
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document
