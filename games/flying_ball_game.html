@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Pop Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling when canvas is full screen */
+            background-color: #1a1a2e; /* Dark theme background */
+            font-family: 'Fredoka One', cursive;
+            user-select: none; /* Disable text selection for better game feel */
+        }
+        
+        #gameCanvas {
+            display: block;
+            touch-action: none; /* Disable browser gestures on canvas */
+        }
+
+        #scoreDisplay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b); /* Bright gradient */
+            color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+            font-size: 1.5rem;
+            min-width: 150px;
+            text-align: center;
+            z-index: 10;
+            transition: transform 0.1s ease;
+        }
+
+        #backBtn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff416c, #ff4b2b); /* Bright gradient */
+            color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+            font-size: 1.5rem;
+            min-width: 150px;
+            text-align: center;
+            z-index: 10;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        #backBtn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        #scoreDisplay.pop-effect {
+            animation: scorePop 0.3s ease-out;
+        }
+
+        @keyframes scorePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        #messageBox {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(45, 45, 75, 0.95);
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            color: #fff;
+            text-align: center;
+            z-index: 20;
+            border: 4px solid #8e44ad;
+            max-width: 80%;
+        }
+
+        .start-button {
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #3498db, #8e44ad);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4);
+        }
+        
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(142, 68, 173, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scoreDisplay">Score: <span id="scoreValue">0</span></div>
+    <a id="backBtn" href="index.html" class="shadow-lg">
+       <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Initial Message Box for Instructions and Start -->
+    <div id="messageBox">
+        <h2 class="text-3xl mb-4">Tap the Flying Balls!</h2>
+        <p class="text-lg mb-6">Click or tap on the colorful balls as they fly towards the top of the screen to score points.</p>
+        <button id="startButton" class="start-button">Start Game</button>
+    </div>
+
+    <script>
+        // Global Constants and Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreValueSpan = document.getElementById('scoreValue');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const messageBox = document.getElementById('messageBox');
+        const startButton = document.getElementById('startButton');
+
+        let score = 0;
+        let balls = [];
+        let isGameRunning = false;
+        let lastSpawnTime = 0;
+        // EASIER SETTING: Increased to 500ms (was 300ms)
+        const SPAWN_INTERVAL = 500; // ms between ball spawns
+        
+        // Array of bright, cheerful colors for the balls
+        const COLORS = [
+            '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#5f27cd',
+            '#ff9f43', '#ee5253', '#00d2d3', '#54a0ff', '#c8d6e5'
+        ];
+
+        /**
+         * Represents a single flying ball.
+         * @param {number} x - Starting x position.
+         * @param {number} y - Starting y position.
+         * @param {number} radius - Ball radius.
+         * @param {number} speed - Vertical speed (pixels per frame).
+         * @param {string} color - Ball color.
+         */
+        class Ball {
+            constructor(x, y, radius, speed, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.speed = speed;
+                this.color = color;
+                this.popped = false;
+            }
+
+            // Move the ball up the screen
+            update() {
+                this.y -= this.speed;
+            }
+
+            // Draw the ball on the canvas
+            draw() {
+                if (this.popped) return; // Don't draw if popped
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.closePath();
+                ctx.shadowBlur = 0; // Reset shadow for other elements
+            }
+
+            /**
+             * Checks if a point (tapX, tapY) is inside the ball.
+             * @param {number} tapX - X coordinate of the tap.
+             * @param {number} tapY - Y coordinate of the tap.
+             * @returns {boolean} True if the tap is inside the ball.
+             */
+            isHit(tapX, tapY) {
+                const distance = Math.sqrt(
+                    (tapX - this.x) ** 2 + (tapY - this.y) ** 2
+                );
+                return distance < this.radius && !this.popped;
+            }
+        }
+
+        /**
+         * Sets the canvas dimensions to fill the entire window and calls
+         * the game loop start function.
+         */
+        function initializeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Only start the animation loop once the user clicks start
+        }
+        
+        // Handle resizing the window
+        window.addEventListener('resize', initializeCanvas);
+
+        /**
+         * Spawns a new ball from the bottom of the screen with random properties.
+         */
+        function spawnBall() {
+            // EASIER SETTING: Radius between 20 and 30 (was 10-25)
+            const radius = Math.random() * 10 + 20; 
+            const x = Math.random() * (canvas.width - 2 * radius) + radius;
+            // EASIER SETTING: Speed between 1.5 and 2.5 (was 2.0-3.5)
+            const speed = Math.random() * 1.0 + 1.5; 
+            const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+            const newBall = new Ball(x, canvas.height + radius, radius, speed, color);
+            balls.push(newBall);
+        }
+
+        /**
+         * Updates all game elements (positions, spawns, removes expired balls).
+         * @param {number} timeStamp - The current time provided by requestAnimationFrame.
+         */
+        function gameLoop(timeStamp) {
+            if (!isGameRunning) return;
+
+            // 1. Clear the canvas for the next frame
+            ctx.fillStyle = '#1a1a2e'; // Match body background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Spawn new balls periodically
+            if (timeStamp - lastSpawnTime > SPAWN_INTERVAL) {
+                spawnBall();
+                lastSpawnTime = timeStamp;
+            }
+
+            // 3. Update and Draw balls
+            for (let i = balls.length - 1; i >= 0; i--) {
+                const ball = balls[i];
+                ball.update();
+                ball.draw();
+
+                // 4. Check for removal (off-screen or popped)
+                if (ball.y < -ball.radius || ball.popped) {
+                    balls.splice(i, 1);
+                }
+            }
+
+            // 5. Request the next frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        /**
+         * Handles user taps/clicks on the canvas.
+         * @param {MouseEvent|TouchEvent} event - The input event.
+         */
+        function handleTap(event) {
+            if (!isGameRunning) return;
+
+            // Get coordinates relative to the canvas
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            // Handle touch events (use the first touch point)
+            if (event.touches) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else { // Handle mouse events
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            
+            const tapX = clientX - rect.left;
+            const tapY = clientY - rect.top;
+
+            for (let i = balls.length - 1; i >= 0; i--) {
+                const ball = balls[i];
+                if (ball.isHit(tapX, tapY)) {
+                    // Score a point and mark the ball for removal
+                    score++;
+                    ball.popped = true; 
+                    updateScoreDisplay();
+                    break; // Only pop one ball per tap
+                }
+            }
+            
+            // Prevent default touch/click behavior
+            event.preventDefault();
+        }
+        
+        /**
+         * Updates the visual score display and applies a brief animation.
+         */
+        function updateScoreDisplay() {
+            scoreValueSpan.textContent = score;
+            // Apply pop effect class
+            scoreDisplay.classList.remove('pop-effect');
+            void scoreDisplay.offsetWidth; // Trigger reflow to restart animation
+            scoreDisplay.classList.add('pop-effect');
+        }
+
+        /**
+         * Starts the game, hiding the instruction screen.
+         */
+        function startGame() {
+            messageBox.style.display = 'none';
+            isGameRunning = true;
+            score = 0;
+            balls = [];
+            updateScoreDisplay();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Event Listeners and Initialization ---
+
+        // Listen for mouse clicks and touch taps
+        canvas.addEventListener('mousedown', handleTap, false);
+        canvas.addEventListener('touchstart', handleTap, false);
+
+        // Start button listener
+        startButton.addEventListener('click', startGame);
+
+        // Initial setup
+        window.onload = initializeCanvas;
+    </script>
+</body>
+</html>
+

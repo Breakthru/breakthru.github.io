@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Portal - Icon Selector</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* Custom font for a clean look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background */
+        }
+        /* Style for the game icon card */
+        .game-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(255, 255, 255, 0.1);
+            background-color: #161b22;
+        }
+        .icon {
+            font-size: 3rem;
+            /* Default color for 'Coming Soon' icons */
+            color: #FFC107; 
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 flex flex-col items-center">
+
+    <header class="text-center mb-10 w-full max-w-7xl">
+        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">The Arcade Hub</h1>
+        <p class="text-lg text-gray-400">Select a game to start playing!</p>
+    </header>
+
+    <!-- Game Icon Grid Container -->
+    <!-- Responsive Grid: 2 columns on small, 3 on medium, 5 on large (2 rows of 5) -->
+    <main class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 w-full max-w-6xl">
+
+        <!-- Game 1: Flying Ball Game (READY TO BUILD) -->
+        <a href="flying_ball_game.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-circle-dot icon mb-3" style="color: #339CFF;"></i> <!-- Specific color for active game -->
+            <span class="text-sm font-semibold text-white">Flying Ball Game</span>
+        </a>
+
+        <!-- Game 2: Racing Game (READY TO BUILD) -->
+        <a href="racing.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-car-side icon mb-3" style="color: #FF4444;"></i> <!-- Specific color for active game -->
+            <span class="text-sm font-semibold text-white">Racing Game</span>
+        </a>
+
+        <!-- Game 3: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 4: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 5: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 6: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 7: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 8: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 9: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+        <!-- Game 10: Coming Soon -->
+        <a href="index.html" class="game-card bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center border border-gray-700">
+            <i class="fa-solid fa-hourglass-half icon mb-3"></i>
+            <span class="text-sm font-semibold text-white">Coming Soon</span>
+        </a>
+
+    </main>
+</body>
+</html>
+
