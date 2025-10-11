@@ -1,3 +1,5 @@
+let server_address = "/api"
+
 function runForm() {
     number = document.forms[0].howmany.value;
     console.log("one order of "+number+" strawberries coming up!");
@@ -7,7 +9,7 @@ function runForm() {
         "notes": $("#notes").val()
     }
     console.log(formData);
-    $.post( "http://breakthru.local:5000/", formData, function( response ) {
+    $.post( server_address, formData, function( response ) {
     console.log(response);
     alert( response );
     query_orders();
@@ -15,7 +17,7 @@ function runForm() {
 }
 
 function mark_delivered(order) {
-    $.post( "http://breakthru.local:5000/deliver", {"order": order}, function( response ) {
+    $.post( server_address+"/deliver", {"order": order}, function( response ) {
     console.log(response);
     alert( response );
     query_orders();
@@ -23,7 +25,7 @@ function mark_delivered(order) {
 }
 
 function mark_cancelled(order) {
-    $.post( "http://breakthru.local:5000/cancel", {"order": order}, function( response ) {
+    $.post( server_address+"/cancel", {"order": order}, function( response ) {
     console.log(response);
     alert( response );
     query_orders();
@@ -32,7 +34,7 @@ function mark_cancelled(order) {
 
 function query_orders() {
     $( document ).ready(function() {
-        $.getJSON("http://breakthru.local:5000/",
+        $.getJSON(server_address,
         function(response) {
             $('#orders_list').empty();
             console.log(response);

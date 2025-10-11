@@ -184,7 +184,9 @@
                 <p>
                     You are racing against the computer. You must be the first to complete <span class="font-bold text-yellow-300">3 Laps</span> to win!
                     <br><br>
-                    **The Challenge:** Watch the **speedometer**! When approaching a turn, the gauge shows a **red danger zone**. If you enter the corner too fast, you will **crash** and lose valuable time!
+                    **Controls:** Use the on-screen buttons OR the **Up Arrow** (Gas) and **Down Arrow** (Brake).
+                    <br><br>
+                    **The Challenge:** Watch the **speedometer**! If you enter the corner too fast, you will **crash** and lose valuable time!
                 </p>
                 <button id="startRaceBtn" class="start-race-btn shadow-lg">Start Race</button>
             </div>
@@ -244,11 +246,9 @@
         const CAR_FRICTION = 0.02;
         const LAPS_TO_WIN = 3; 
         
-        // --- OPPONENT SPEED REDUCED ---
-        const OPPONENT_MAX_SPEED = 4.8; // Reduced speed to make the race easier
-        const OPPONENT_ACCELERATION = 0.025; // Reduced acceleration
-        // ------------------------------
-
+        // Opponent speed reduced for easier player win
+        const OPPONENT_MAX_SPEED = 4.8; 
+        const OPPONENT_ACCELERATION = 0.025; 
         const OPPONENT_BRAKING_DISTANCE = 0.4; // How early AI starts braking (in segment progress)
 
         // Speed limits for corners
@@ -263,6 +263,7 @@
         let isGameRunning = false; 
         let isGasPressed = false;
         let isBrakePressed = false;
+        let playerStarted = false; // NEW: Opponent waits for player to press gas the first time
 
         // Player Car object
         const playerCar = {
@@ -412,6 +413,9 @@
 
         // --- Opponent AI Logic ---
         function updateOpponent(deltaTime) {
+            // NEW: Opponent only moves after the player has pressed gas the first time
+            if (!playerStarted) return;
+
             const car = opponentCar;
             const nextIndex = (car.checkpointIndex + 1) % checkpoints.length;
             const nextCheckpoint = checkpoints[nextIndex];
@@ -682,26 +686,50 @@
         // --- Event Handlers and Initialization ---
 
         function setupControls() {
+            // Combined handler for both mouse/touch and keyboard
             const startHandler = (e) => {
-                e.preventDefault();
+                // Check if the event is a keydown and prevent scrolling
+                if (e.type === 'keydown' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                    e.preventDefault(); 
+                }
+                
                 if (!isGameRunning || isGameOver) return; 
 
-                if (e.currentTarget.id === 'gasBtn') {
-                    isGasPressed = true;
-                } else if (e.currentTarget.id === 'brakeBtn') {
+                // Check for Gas (Button ID or Key)
+                if (e.currentTarget?.id === 'gasBtn' || e.key === 'ArrowUp') {
+                    // Only start if player wasn't already pressing gas
+                    if (!isGasPressed) {
+                        isGasPressed = true;
+                        // NEW: Set playerStarted flag on first gas press
+                        if (!playerStarted) {
+                            playerStarted = true;
+                            console.log("Player started, opponent activated.");
+                        }
+                    }
+                } 
+                // Check for Brake (Button ID or Key)
+                else if (e.currentTarget?.id === 'brakeBtn' || e.key === 'ArrowDown') {
                     isBrakePressed = true;
                 }
             };
 
             const endHandler = (e) => {
-                e.preventDefault();
-                if (e.currentTarget.id === 'gasBtn') {
+                // Check if the event is a keyup
+                if (e.type === 'keyup' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                    e.preventDefault(); 
+                }
+
+                // Check for Gas (Button ID or Key)
+                if (e.currentTarget?.id === 'gasBtn' || e.key === 'ArrowUp') {
                     isGasPressed = false;
-                } else if (e.currentTarget.id === 'brakeBtn') {
+                } 
+                // Check for Brake (Button ID or Key)
+                else if (e.currentTarget?.id === 'brakeBtn' || e.key === 'ArrowDown') {
                     isBrakePressed = false;
                 }
             };
 
+            // Touch/Mouse Controls
             gasBtn.addEventListener('mousedown', startHandler);
             gasBtn.addEventListener('touchstart', startHandler);
             gasBtn.addEventListener('mouseup', endHandler);
@@ -715,6 +743,10 @@
             brakeBtn.addEventListener('mouseleave', () => isBrakePressed = false); 
             
             startRaceBtn.addEventListener('click', startGame);
+
+            // KEYBOARD CONTROLS (New additions)
+            window.addEventListener('keydown', startHandler);
+            window.addEventListener('keyup', endHandler);
         }
         
         function resizeCanvas() {

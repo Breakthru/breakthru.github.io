@@ -1,10 +1,10 @@
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, make_response, jsonify, send_from_directory
 
 app = Flask(__name__)
 
 all_strawbs_orders = []
 
-@app.route('/', methods=['POST'])
+@app.route('/api', methods=['POST'])
 def parse_request():
     print(request.path)
     if request.form:
@@ -14,14 +14,14 @@ def parse_request():
     return response
 
 
-@app.route('/', methods=['GET'])
+@app.route('/api', methods=['GET'])
 def display_all():
     response = jsonify(all_strawbs_orders)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
 
-@app.route('/cancel', methods=['POST'])
+@app.route('/api/cancel', methods=['POST'])
 def cancel_order():
     order = int(request.form["order"])
     print("cancelling order", order)
@@ -31,7 +31,7 @@ def cancel_order():
     return response
 
 
-@app.route('/deliver', methods=['POST'])
+@app.route('/api/deliver', methods=['POST'])
 def deliver_order():
     order = int(request.form["order"])
     print("delivering order", order)
@@ -39,3 +39,15 @@ def deliver_order():
     response = make_response(f"order {order} marked as delivered", 201)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+    
+@app.route('/', methods=['GET'])
+def homepage():
+    return send_from_directory('.', 'index.html')
+    
+@app.route('/form.js', methods=['GET'])
+def jshomepage():
+    return send_from_directory('.', 'form.js')
+    
+@app.route('/favicon.ico', methods=['GET'])
+def icon():
+    return send_from_directory('.', 'favicon.ico')
