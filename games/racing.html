@@ -51,6 +51,11 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
             transition: background-color 0.1s;
             touch-action: manipulation; /* Important for preventing mobile browser delays */
+            /* Disable text selection on touch/hold */
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;     
+            user-select: none;         
         }
         .control-btn:active {
             box-shadow: none;
@@ -85,11 +90,12 @@
             right: 20px;
             font-size: 1.25rem;
         }
-        /* Speedometer Styles - NOW LOCATED BOTTOM RIGHT */
+        /* Speedometer Styles - NOW LOCATED TOP CENTER */
         #speedometerContainer {
             position: absolute;
-            bottom: 20px; 
-            right: 20px; 
+            top: 20px; /* Moved to top */
+            left: 50%; 
+            transform: translateX(-50%); /* Centered horizontally */
             z-index: 20;
             background-color: rgba(0, 0, 0, 0.6);
             padding: 10px;
@@ -201,9 +207,10 @@
         </a>
         <div id="scoreDisplay">Score: 0</div>
         
-        <!-- Speedometer and Lap Counter Display (Bottom Right) -->
+        <!-- Speedometer and Lap Counter Display (Top Center) -->
         <div id="speedometerContainer">
-            <canvas id="speedoCanvas" width="120" height="120"></canvas>
+            <!-- Canvas size reduced from 120x120 to 100x100 -->
+            <canvas id="speedoCanvas" width="100" height="100"></canvas>
             <div id="lapCounter" class="text-white font-bold text-lg mt-1">Player Lap 1 / 3</div>
             <div id="opponentLapCounter" class="text-white text-sm opacity-80 mt-1">Opponent Lap 1 / 3</div>
         </div>
@@ -800,7 +807,7 @@
                 return startAngleRad - (normalizedSpeed * totalSweep);
             };
 
-            speedoCtx.lineWidth = 12;
+            speedoCtx.lineWidth = 10; // Slightly reduced line width
             speedoCtx.strokeStyle = '#3a506b'; 
             speedoCtx.beginPath();
             speedoCtx.arc(centerX, centerY, radius, endAngleRad, startAngleRad, true); 
@@ -810,7 +817,7 @@
                 const dangerStartAngle = mapSpeedToAngle(safeSpeedLimit);
                 const dangerEndAngle = mapSpeedToAngle(maxSpeed);
                 
-                speedoCtx.lineWidth = 12;
+                speedoCtx.lineWidth = 10; // Slightly reduced line width
                 speedoCtx.strokeStyle = '#e74c3c'; 
                 speedoCtx.beginPath();
                 speedoCtx.arc(centerX, centerY, radius, dangerEndAngle, dangerStartAngle, false); 
@@ -844,12 +851,13 @@
             speedoCtx.arc(centerX, centerY, 5, 0, Math.PI * 2);
             speedoCtx.fill();
 
+            // Reduced font sizes for smaller canvas
             speedoCtx.fillStyle = 'white';
-            speedoCtx.font = 'bold 16px Inter';
+            speedoCtx.font = 'bold 14px Inter'; 
             speedoCtx.textAlign = 'center';
-            speedoCtx.fillText(`${currentSpeed.toFixed(1)}`, centerX, centerY + 20);
-            speedoCtx.font = '10px Inter';
-            speedoCtx.fillText('MPH', centerX, centerY + 5);
+            speedoCtx.fillText(`${currentSpeed.toFixed(1)}`, centerX, centerY + 18); // Adjusted Y position
+            speedoCtx.font = '9px Inter'; 
+            speedoCtx.fillText('MPH', centerX, centerY + 3); // Adjusted Y position
 
             speedoCtx.restore();
         }
