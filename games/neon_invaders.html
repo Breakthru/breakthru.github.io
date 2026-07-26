@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Invaders</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #030d0d;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #livesDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(3, 13, 13, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 210, 211, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(0, 210, 211, 0.2);
+            border-color: rgba(0, 210, 211, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        #livesDisplay {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(3, 13, 13, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    <div id="scoreDisplay">Score: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+    <div id="livesDisplay">Shields: <span id="livesVal">3</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-teal-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-teal-500/10">
+            <i class="fa-solid fa-space-shuttle text-6xl text-teal-400 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">NEON INVADERS</h1>
+            <p class="text-gray-400 mb-6">Drag horizontally to steer your fighter. Firing is automatic. Dodge hostile laser fire and clear grid invaders!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-teal-400 to-cyan-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-teal-500/30">
+                Launch Fighter
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-teal-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-teal-500/10">
+            <i id="gameOverIcon" class="fa-solid fa-skull-crossbones text-6xl text-red-500 mb-4"></i>
+            <h1 id="gameOverTitle" class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">SYSTEM OFFLINE</h1>
+            <p id="gameOverText" class="text-gray-400 mb-6">Casing destroyed by alien weaponry.</p>
+            <p class="text-2xl font-bold text-teal-400 mb-6">Score: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-teal-500/30">
+                Deploy Replacement
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const livesVal = document.getElementById('livesVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const gameOverIcon = document.getElementById('gameOverIcon');
+        const gameOverText = document.getElementById('gameOverText');
+
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('neon_invaders_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let lives = 3;
+        let isPlaying = false;
+        let particles = [];
+        let playerLasers = [];
+        let enemyLasers = [];
+        let invaders = [];
+
+        let fireCooldown = 0;
+        let invaderDirection = 1;
+        let invaderSpeed = 1;
+        let invaderMoveDown = false;
+
+        // Player Ship
+        const player = {
+            width: 35,
+            height: 25,
+            x: 0,
+            y: 0,
+            color: '#00d2d3'
+        };
+
+        const INVADER_COLORS = ['#ff4444', '#ff9f43', '#1dd1a1', '#00FFFF', '#9b59b6'];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.y = canvas.height - 80;
+            if (!isPlaying) {
+                player.x = canvas.width / 2 - player.width / 2;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Invader {
+            constructor(x, y, row) {
+                this.x = x;
+                this.y = y;
+                this.width = 30;
+                this.height = 20;
+                this.color = INVADER_COLORS[row % INVADER_COLORS.length];
+                this.points = (5 - row) * 10;
+                this.active = true;
+            }
+
+            draw() {
+                if (!this.active) return;
+                
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 3;
+
+                // Draw retro style space invader sprite geometry
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 4);
+                ctx.fill();
+                ctx.stroke();
+
+                // Eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(this.x + 6, this.y + 6, 4, 4);
+                ctx.fillRect(this.x + 20, this.y + 6, 4, 4);
+                ctx.restore();
+            }
+        }
+
+        class Laser {
+            constructor(x, y, vy, color) {
+                this.x = x;
+                this.y = y;
+                this.vy = vy;
+                this.color = color;
+                this.width = 4;
+                this.height = 14;
+            }
+            update() {
+                this.y += this.vy;
+            }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+                ctx.restore();
+            }
+        }
+
+        class InvaderParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.size = Math.random() * 2 + 1;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.04 + 0.03;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initInvaders() {
+            invaders = [];
+            const rows = 4;
+            const cols = Math.floor(Math.min(canvas.width - 60, 600) / 50);
+            const startX = (canvas.width - (cols * 50 - 20)) / 2;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    invaders.push(new Invader(startX + c * 50, 120 + r * 35, r));
+                }
+            }
+            invaderDirection = 1;
+            invaderSpeed = 1 + (score * 0.001); // scales slightly with score
+        }
+
+        // Steer player with touch/drag
+        function handleMove(e) {
+            if (!isPlaying) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            player.x = clientX - player.width / 2;
+            
+            // Constrain
+            if (player.x < 10) player.x = 10;
+            if (player.x + player.width > canvas.width - 10) player.x = canvas.width - player.width - 10;
+        }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', (e) => {
+            handleMove(e);
+            e.preventDefault();
+        }, { passive: false });
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push(new InvaderParticle(x, y, color));
+            }
+        }
+
+        function checkLaserCollisions() {
+            // Player lasers vs Invaders
+            for (let l = playerLasers.length - 1; l >= 0; l--) {
+                const laser = playerLasers[l];
+                for (let i = invaders.length - 1; i >= 0; i--) {
+                    const inv = invaders[i];
+                    if (inv.active) {
+                        // Bounding Box overlap
+                        if (laser.x + laser.width/2 > inv.x && laser.x - laser.width/2 < inv.x + inv.width) {
+                            if (laser.y < inv.y + inv.height && laser.y + laser.height > inv.y) {
+                                // Hit!
+                                inv.active = false;
+                                score += inv.points;
+                                scoreVal.innerText = score;
+                                createExplosion(inv.x + inv.width/2, inv.y + inv.height/2, inv.color);
+                                playerLasers.splice(l, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Enemy lasers vs Player
+            for (let l = enemyLasers.length - 1; l >= 0; l--) {
+                const laser = enemyLasers[l];
+                if (laser.x + laser.width/2 > player.x && laser.x - laser.width/2 < player.x + player.width) {
+                    if (laser.y + laser.height > player.y && laser.y < player.y + player.height) {
+                        // Player hit!
+                        lives--;
+                        livesVal.innerText = lives;
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, player.color);
+                        enemyLasers.splice(l, 1);
+                        
+                        if (lives <= 0) {
+                            gameOver();
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkLevelClear() {
+            let activeLeft = invaders.some(inv => inv.active);
+            if (!activeLeft) {
+                // Spawn next harder wave
+                initInvaders();
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Clear Background
+            ctx.fillStyle = '#020606';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid draw
+            ctx.strokeStyle = 'rgba(0, 210, 211, 0.02)';
+            ctx.lineWidth = 1;
+            const gridSize = 80;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Automatic Firing Cooldown
+            if (fireCooldown > 0) {
+                fireCooldown--;
+            } else {
+                playerLasers.push(new Laser(player.x + player.width / 2, player.y - 10, -8, '#00ffff'));
+                fireCooldown = 25; // Delay between shots
+            }
+
+            // Update & Draw player lasers
+            for (let i = playerLasers.length - 1; i >= 0; i--) {
+                const l = playerLasers[i];
+                l.update();
+                l.draw();
+                if (l.y < -20) playerLasers.splice(i, 1);
+            }
+
+            // Update & Draw enemy lasers
+            for (let i = enemyLasers.length - 1; i >= 0; i--) {
+                const l = enemyLasers[i];
+                l.update();
+                l.draw();
+                if (l.y > canvas.height + 20) enemyLasers.splice(i, 1);
+            }
+
+            // Update Invader Position Loop
+            let shiftDown = false;
+            let leftmost = canvas.width;
+            let rightmost = 0;
+
+            invaders.forEach(inv => {
+                if (inv.active) {
+                    leftmost = Math.min(leftmost, inv.x);
+                    rightmost = Math.max(rightmost, inv.x + inv.width);
+                }
+            });
+
+            // Wall bounce check
+            if (rightmost + invaderSpeed * invaderDirection > canvas.width - 20 || leftmost + invaderSpeed * invaderDirection < 20) {
+                invaderDirection = -invaderDirection;
+                shiftDown = true;
+            }
+
+            // Move & Draw invaders
+            invaders.forEach(inv => {
+                if (inv.active) {
+                    inv.x += invaderSpeed * invaderDirection;
+                    if (shiftDown) {
+                        inv.y += 15;
+                    }
+                    inv.draw();
+
+                    // Check if invaders reached player level
+                    if (inv.y + inv.height > player.y) {
+                        gameOver();
+                    }
+
+                    // Random enemy firing
+                    if (Math.random() < 0.003) {
+                        enemyLasers.push(new Laser(inv.x + inv.width/2, inv.y + inv.height, 5, inv.color));
+                    }
+                }
+            });
+
+            // Collisions
+            checkLaserCollisions();
+            checkLevelClear();
+
+            // Draw Player Ship
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = player.color;
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            
+            // Retro fighter shape
+            ctx.moveTo(player.x + player.width / 2, player.y);
+            ctx.lineTo(player.x + player.width, player.y + player.height);
+            ctx.lineTo(player.x + player.width - 8, player.y + player.height);
+            ctx.lineTo(player.x + player.width - 8, player.y + player.height - 4);
+            ctx.lineTo(player.x + 8, player.y + player.height - 4);
+            ctx.lineTo(player.x + 8, player.y + player.height);
+            ctx.lineTo(player.x, player.y + player.height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Core engine glowing dot
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + player.width/2 - 2, player.y + player.height - 4, 4, 4);
+            ctx.restore();
+
+            // Update & Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            score = 0;
+            scoreVal.innerText = score;
+            lives = 3;
+            livesVal.innerText = lives;
+            playerLasers = [];
+            enemyLasers = [];
+            particles = [];
+            
+            player.x = canvas.width / 2 - player.width / 2;
+            initInvaders();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            finalScoreVal.innerText = score;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('neon_invaders_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+
+            createExplosion(player.x + player.width/2, player.y + player.height/2, player.color);
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Dodge</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050a12;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(5, 10, 18, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(84, 160, 255, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(84, 160, 255, 0.2);
+            border-color: rgba(84, 160, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 10, 18, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    <div id="scoreDisplay">Score: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-blue-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-blue-500/10">
+            <i class="fa-solid fa-arrows-spin text-6xl text-blue-400 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">ORBIT DODGE</h1>
+            <p class="text-gray-400 mb-6">Hold down on the screen to accelerate outward. Release to let gravity pull you back. Avoid rotating orbital debris!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-blue-500/30">
+                Launch Orbit
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-blue-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-blue-500/10">
+            <i class="fa-solid fa-burst text-6xl text-blue-500 mb-4 animate-bounce"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">ORBIT DECAY</h1>
+            <p class="text-gray-400 mb-2">Decentered collision occurred.</p>
+            <p class="text-2xl font-bold text-blue-400 mb-6">Score: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-blue-500/30">
+                Retry Flight
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('orbit_dodge_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let isPlaying = false;
+        let isPressing = false;
+        
+        let center = { x: 0, y: 0 };
+        const starRadius = 35;
+        
+        // Ship Config
+        const ship = {
+            r: 100, // starting orbital radius
+            theta: 0, // orbital angle
+            size: 10,
+            color: '#00FFFF',
+            minR: 60,
+            maxR: 280,
+            vr: 0,
+            speed: 0.03 // angular speed
+        };
+
+        let debris = [];
+        let particles = [];
+        let frameCount = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            center.x = canvas.width / 2;
+            center.y = canvas.height / 2;
+            ship.maxR = Math.min(canvas.width, canvas.height) * 0.45;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class OrbitParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 5;
+                this.vy = (Math.random() - 0.5) * 5;
+                this.size = Math.random() * 2 + 1;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.04 + 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class DebrisRock {
+            constructor() {
+                // Spawn randomly on fixed orbital rings
+                const rings = [100, 150, 200, 250];
+                this.r = rings[Math.floor(Math.random() * rings.length)];
+                
+                // Adjust sizes for inner/outer
+                this.size = Math.random() * 8 + 8;
+                this.theta = Math.random() * Math.PI * 2;
+                
+                // Orbit speed (faster closer to center)
+                const baseSpeed = 0.02;
+                this.speed = (baseSpeed * (120 / this.r)) * (Math.random() > 0.5 ? 1 : -1);
+                
+                this.color = '#54a0ff';
+            }
+
+            update() {
+                this.theta += this.speed;
+            }
+
+            draw() {
+                const x = center.x + this.r * Math.cos(this.theta);
+                const y = center.y + this.r * Math.sin(this.theta);
+
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = 'rgba(84, 160, 255, 0.1)';
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Internal hazard node
+                ctx.beginPath();
+                ctx.arc(x, y, this.size * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.restore();
+            }
+
+            checkCollision(shipX, shipY, shipSize) {
+                const x = center.x + this.r * Math.cos(this.theta);
+                const y = center.y + this.r * Math.sin(this.theta);
+                const dx = x - shipX;
+                const dy = y - shipY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                return dist < this.size + shipSize;
+            }
+        }
+
+        // Input Bindings
+        function pressStart(e) {
+            if (isPlaying && e.target === canvas) {
+                isPressing = true;
+                if (e.cancelable) e.preventDefault();
+            }
+        }
+        function pressEnd() {
+            isPressing = false;
+        }
+
+        window.addEventListener('mousedown', pressStart);
+        window.addEventListener('mouseup', pressEnd);
+        window.addEventListener('touchstart', pressStart, { passive: false });
+        window.addEventListener('touchend', pressEnd);
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') isPressing = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') isPressing = false;
+        });
+
+        function spawnDebris() {
+            if (debris.length < 12 && frameCount % 90 === 0) {
+                debris.push(new DebrisRock());
+            }
+        }
+
+        function triggerExplosion(x, y) {
+            for (let i = 0; i < 20; i++) {
+                particles.push(new OrbitParticle(x, y, '#00FFFF'));
+                particles.push(new OrbitParticle(x, y, '#ffffff'));
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Clear Background grid
+            ctx.fillStyle = '#03060a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Orbit guides
+            ctx.strokeStyle = 'rgba(84, 160, 255, 0.05)';
+            ctx.lineWidth = 1;
+            const rings = [100, 150, 200, 250];
+            for (let r of rings) {
+                if (r < ship.maxR) {
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+
+            frameCount++;
+            if (frameCount % 30 === 0) {
+                score++;
+                scoreVal.innerText = score;
+            }
+
+            // Spawn & Update debris
+            spawnDebris();
+            
+            // Draw central gravity well (Star)
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#54a0ff';
+            ctx.fillStyle = '#102540';
+            ctx.strokeStyle = '#54a0ff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, starRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // Ship radial physics
+            if (isPressing) {
+                ship.vr += 0.4; // thrust outward
+            } else {
+                ship.vr -= 0.3; // gravitation pull inward
+            }
+
+            ship.vr *= 0.93; // drag
+            ship.r += ship.vr;
+
+            // Constrain radius
+            if (ship.r < ship.minR) {
+                ship.r = ship.minR;
+                ship.vr = 0;
+            }
+            if (ship.r > ship.maxR) {
+                ship.r = ship.maxR;
+                ship.vr = 0;
+            }
+
+            // Ship Angular Motion
+            ship.theta += ship.speed;
+
+            // Compute Cartesian Coordinates
+            const shipX = center.x + ship.r * Math.cos(ship.theta);
+            const shipY = center.y + ship.r * Math.sin(ship.theta);
+
+            // Update & Draw debris
+            for (let i = debris.length - 1; i >= 0; i--) {
+                const rock = debris[i];
+                rock.update();
+                rock.draw();
+
+                if (rock.checkCollision(shipX, shipY, ship.size)) {
+                    triggerExplosion(shipX, shipY);
+                    gameOver();
+                }
+            }
+
+            // Draw Ship
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = ship.color;
+            ctx.translate(shipX, shipY);
+            ctx.rotate(ship.theta + Math.PI / 2); // face flight direction
+
+            // Propeller tail particles
+            if (frameCount % 3 === 0) {
+                particles.push(new OrbitParticle(shipX - Math.cos(ship.theta)*10, shipY - Math.sin(ship.theta)*10, ship.color));
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(10, 0);
+            ctx.lineTo(-8, -6);
+            ctx.lineTo(-4, 0);
+            ctx.lineTo(-8, 6);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = ship.color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+
+            // Update & Draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            score = 0;
+            scoreVal.innerText = score;
+            debris = [];
+            particles = [];
+            frameCount = 0;
+            
+            ship.r = 120;
+            ship.theta = 0;
+            ship.vr = 0;
+
+            // Spawn initial debris
+            for (let i = 0; i < 4; i++) {
+                debris.push(new DebrisRock());
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            finalScoreVal.innerText = score;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('orbit_dodge_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Desktop Calculator</title>
+    <meta name="description" content="A sleek, modern standalone desktop calculator application with basic and scientific modes.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Ambient Glow Orbs -->
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="top-nav">
+        <a href="../index.html" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>App Suite Hub</span>
+        </a>
+    </nav>
+
+    <!-- Main Calculator Layout -->
+    <div class="calc-wrapper">
+        
+        <!-- Calculator Unit -->
+        <main class="calculator" id="calculator">
+            
+            <!-- Header Controls -->
+            <div class="calc-header">
+                <div class="brand-title">
+                    <span class="brand-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                            <line x1="8" y1="6" x2="16" y2="6"></line>
+                            <line x1="16" y1="14" x2="16" y2="18"></line>
+                            <path d="M16 10h.01"></path>
+                            <path d="M12 10h.01"></path>
+                            <path d="M8 10h.01"></path>
+                            <path d="M12 14h.01"></path>
+                            <path d="M8 14h.01"></path>
+                            <path d="M12 18h.01"></path>
+                            <path d="M8 18h.01"></path>
+                        </svg>
+                    </span>
+                    <span>ProCalc</span>
+                </div>
+
+                <div class="header-actions">
+                    <!-- Segmented Mode Control -->
+                    <div class="mode-toggle" id="modeToggle">
+                        <button type="button" class="mode-btn active" id="modeBasicBtn">Basic</button>
+                        <button type="button" class="mode-btn" id="modeSciBtn">Scientific</button>
+                    </div>
+
+                    <!-- Sound Toggle -->
+                    <button type="button" class="icon-btn active" id="soundToggleBtn" title="Mute Sounds">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                    </button>
+
+                    <!-- History Drawer Toggle -->
+                    <button type="button" class="icon-btn active" id="historyToggleBtn" title="Toggle History Log">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Display Area -->
+            <div class="display-container">
+                <div class="display-indicators">
+                    <div class="indicator-pills">
+                        <span class="pill active" id="pillDeg">DEG</span>
+                        <span class="pill" id="pillRad">RAD</span>
+                        <span class="pill" id="pillMem">M</span>
+                    </div>
+
+                    <button type="button" class="copy-btn" id="copyBtn" title="Copy result to clipboard">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+
+                    <div class="copy-toast" id="copyToast">Copied!</div>
+                </div>
+
+                <div class="expression-line" id="expressionLine"></div>
+                <div class="main-display" id="mainDisplay">0</div>
+            </div>
+
+            <!-- Keypad Area -->
+            <div class="keypad-container">
+                
+                <!-- Memory Row -->
+                <div class="memory-bar">
+                    <button type="button" class="mem-btn" id="memClear" data-action="memory" data-value="MC" disabled>MC</button>
+                    <button type="button" class="mem-btn" id="memRecall" data-action="memory" data-value="MR" disabled>MR</button>
+                    <button type="button" class="mem-btn" data-action="memory" data-value="M+">M+</button>
+                    <button type="button" class="mem-btn" data-action="memory" data-value="M-">M-</button>
+                    <button type="button" class="mem-btn" data-action="memory" data-value="MS">MS</button>
+                </div>
+
+                <!-- Main Button Grids -->
+                <div class="grid-container">
+                    
+                    <!-- Scientific Keypad Panel (Collapsible/Expandable) -->
+                    <div class="scientific-panel" id="scientificPanel">
+                        <!-- Row 1 -->
+                        <button type="button" class="btn sci" id="btnSecond" data-action="toggle-2nd">2<sup>nd</sup></button>
+                        <button type="button" class="btn sci" data-action="toggle-angle">DEG/RAD</button>
+                        <button type="button" class="btn sci" data-action="parenthesis" data-value="(">(</button>
+                        <button type="button" class="btn sci" data-action="parenthesis" data-value=")">)</button>
+
+                        <!-- Row 2 -->
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="sin" data-second="sin<sup>-1</sup>" data-action-normal="sin(" data-action-2nd="asin(" data-action="function" data-value="sin(">sin</button>
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="cos" data-second="cos<sup>-1</sup>" data-action-normal="cos(" data-action-2nd="acos(" data-action="function" data-value="cos(">cos</button>
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="tan" data-second="tan<sup>-1</sup>" data-action-normal="tan(" data-action-2nd="atan(" data-action="function" data-value="tan(">tan</button>
+                        <button type="button" class="btn sci" data-action="constant" data-value="π">π</button>
+
+                        <!-- Row 3 -->
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="ln" data-second="log<sub>2</sub>" data-action-normal="ln(" data-action-2nd="log2(" data-action="function" data-value="ln(">ln</button>
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="log" data-second="10<sup>x</sup>" data-action-normal="log(" data-action-2nd="10^" data-action="function" data-value="log(">log</button>
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="x<sup>2</sup>" data-second="x<sup>3</sup>" data-action-normal="^2" data-action-2nd="^3" data-action="operator" data-value="^2">x<sup>2</sup></button>
+                        <button type="button" class="btn sci" data-action="constant" data-value="e">e</button>
+
+                        <!-- Row 4 -->
+                        <button type="button" class="btn sci btn-2nd-toggle" data-normal="√x" data-second="∛x" data-action-normal="√(" data-action-2nd="∛(" data-action="function" data-value="√(">√x</button>
+                        <button type="button" class="btn sci" data-action="operator" data-value="^">x<sup>y</sup></button>
+                        <button type="button" class="btn sci" data-action="function" data-value="1/(">1/x</button>
+                        <button type="button" class="btn sci" data-action="function" data-value="!">n!</button>
+
+                        <!-- Row 5 -->
+                        <button type="button" class="btn sci" data-action="function" data-value="abs(">|x|</button>
+                        <button type="button" class="btn sci" data-action="operator" data-value="mod">mod</button>
+                        <button type="button" class="btn sci" data-action="constant" data-value="ϕ">ϕ</button>
+                        <button type="button" class="btn sci" data-action="operator" data-value="%">%</button>
+                    </div>
+
+                    <!-- Basic Keypad Panel -->
+                    <div class="basic-panel">
+                        <!-- Row 1 -->
+                        <button type="button" class="btn clear" data-action="clear">AC</button>
+                        <button type="button" class="btn clear" data-action="clear-entry">CE</button>
+                        <button type="button" class="btn op" data-action="backspace">⌫</button>
+                        <button type="button" class="btn op" data-action="operator" data-value="÷">÷</button>
+
+                        <!-- Row 2 -->
+                        <button type="button" class="btn" data-action="digit" data-value="7">7</button>
+                        <button type="button" class="btn" data-action="digit" data-value="8">8</button>
+                        <button type="button" class="btn" data-action="digit" data-value="9">9</button>
+                        <button type="button" class="btn op" data-action="operator" data-value="×">×</button>
+
+                        <!-- Row 3 -->
+                        <button type="button" class="btn" data-action="digit" data-value="4">4</button>
+                        <button type="button" class="btn" data-action="digit" data-value="5">5</button>
+                        <button type="button" class="btn" data-action="digit" data-value="6">6</button>
+                        <button type="button" class="btn op" data-action="operator" data-value="-">-</button>
+
+                        <!-- Row 4 -->
+                        <button type="button" class="btn" data-action="digit" data-value="1">1</button>
+                        <button type="button" class="btn" data-action="digit" data-value="2">2</button>
+                        <button type="button" class="btn" data-action="digit" data-value="3">3</button>
+                        <button type="button" class="btn op" data-action="operator" data-value="+">+</button>
+
+                        <!-- Row 5 -->
+                        <button type="button" class="btn" data-action="negate">±</button>
+                        <button type="button" class="btn" data-action="digit" data-value="0">0</button>
+                        <button type="button" class="btn" data-action="digit" data-value=".">.</button>
+                        <button type="button" class="btn action" data-action="equals">=</button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- Calculation History Drawer -->
+        <aside class="history-drawer" id="historyDrawer">
+            <div class="history-header">
+                <span class="history-title">History Log</span>
+                <button type="button" class="clear-history-btn" id="clearHistoryBtn">Clear</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty">No previous calculations</div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Script -->
+    <script src="app.js"></script>
+</body>
+</html>

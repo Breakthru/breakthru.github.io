@@ -1,79 +1,589 @@
 <!DOCTYPE html>
-<html lang="en">
-<html>
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="ipv6.js"></script>
-    <script lang="JavaScript">
-        function get_local_ipv6(ipv4_str) {
-            console.log(ipv4_str);
-            let ipv6 = new IPv6('fe80::');
-            let ipv4 = new IPv4(ipv4_str);
-            ipv6.set_bytes(ipv4.bytes, 12);
-            return ipv6.to_string();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Index</title>
+    <meta name="description" content="Simple index portal linking directly to each subfolder application suite.">
+    
+    <!-- PWA Manifest & Mobile Icons -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#080c14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Web Suite">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Dark Theme Colors */
+            --bg-body: #080c14;
+            --bg-card: rgba(20, 28, 45, 0.65);
+            --bg-card-hover: rgba(28, 39, 64, 0.85);
+            --bg-pill: rgba(255, 255, 255, 0.06);
+            
+            --border-card: rgba(255, 255, 255, 0.08);
+            --border-card-hover: rgba(99, 102, 241, 0.45);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            
+            --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+            --shadow-hover: 0 22px 45px -12px rgba(99, 102, 241, 0.35);
+            
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            
+            --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        function convert4to6() {
-            input = document.getElementById('ipv4').value;
-            output = document.getElementById('local_ipv6');
-            output.value = get_local_ipv6(input);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        function showBytes() {
-            input = document.getElementById('ipv6').value;
-            console.log(input);
-            output = document.getElementById('octects');
-            let ipv6 = new IPv6(input);
-            output.value = ipv6.to_decimal_string();
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 40px 0;
         }
-        
-        function showHex() {
-          input = document.getElementById('octects').value;
-          output = document.getElementById('ipv6');
-          ipv6 = input.split('.');
-          hex = [];
-          for (i = 0; i < ipv6.length; i+=2) {
-            hex.push(((parseInt(ipv6[i]) << 8) + parseInt(ipv6[i+1])).toString(16));            
-	  }
-          output.value = hex.join(":");
+
+        /* Ambient Background Lighting */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
-        
-        function clear_all() {
-          ids = ["ipv4", "local_ipv6", "ipv6", "octects"];
-          ids.forEach((id) => {document.getElementById(id).value = '';})
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.22;
+            animation: float 22s infinite ease-in-out alternate;
         }
-        
-    </script>
+
+        .orb-1 {
+            top: -15%;
+            left: -10%;
+            width: 55vw;
+            height: 55vw;
+            background: radial-gradient(circle, #6366f1, #4f46e5);
+        }
+
+        .orb-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, #06b6d4, #3b82f6);
+            animation-delay: -8s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(45px, 65px) scale(1.08); }
+            100% { transform: translate(-35px, -45px) scale(0.92); }
+        }
+
+        /* Layout Container */
+        .app-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            width: 100%;
+        }
+
+        /* App Grid Layout */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 28px;
+            width: 100%;
+        }
+
+        /* App Card Styling */
+        .app-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-xl);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.35s var(--transition-smooth);
+            overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Accent Gradient Top Line */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-accent-gradient, linear-gradient(90deg, #6366f1, #a855f7));
+            opacity: 0.45;
+            transition: opacity 0.35s ease, height 0.35s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-card-hover);
+            background: var(--bg-card-hover);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+            height: 5px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        /* SVG Icon Badge */
+        .app-icon-badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-icon-bg, rgba(99, 102, 241, 0.12));
+            border: 1px solid var(--card-icon-border, rgba(99, 102, 241, 0.25));
+            color: var(--card-icon-color, #6366f1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            transition: transform 0.35s var(--transition-smooth), box-shadow 0.35s ease;
+        }
+
+        .app-card:hover .app-icon-badge {
+            transform: scale(1.1) rotate(-3deg);
+            box-shadow: 0 12px 30px var(--card-icon-glow, rgba(99, 102, 241, 0.35));
+        }
+
+        .folder-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: var(--bg-pill);
+            border: 1px solid var(--border-card);
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .card-body {
+            flex-grow: 1;
+            margin-bottom: 24px;
+        }
+
+        .suite-badge-tag {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--card-accent-color, var(--primary));
+            margin-bottom: 8px;
+        }
+
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+
+        .app-description {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        /* Included Items / Features Box */
+        .features-box {
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-top: 14px;
+        }
+
+        .features-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .feature-chip {
+            font-size: 0.75rem;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: var(--bg-pill);
+            color: var(--text-muted);
+            font-weight: 500;
+            border: 1px solid var(--border-card);
+        }
+
+        /* Card Footer Launch Button */
+        .card-footer {
+            padding-top: 20px;
+            border-top: 1px solid var(--border-card);
+        }
+
+        .launch-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card-accent-gradient, linear-gradient(135deg, #6366f1, #4f46e5));
+            color: white;
+            padding: 12px 22px;
+            border-radius: var(--radius-md);
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s var(--transition-smooth);
+            box-shadow: 0 4px 14px var(--card-shadow-glow, rgba(99, 102, 241, 0.3));
+            width: 100%;
+            justify-content: center;
+        }
+
+        .app-card:hover .launch-btn {
+            filter: brightness(1.12);
+            box-shadow: 0 6px 20px var(--card-shadow-glow, rgba(99, 102, 241, 0.45));
+            transform: translateY(-2px);
+        }
+
+        .launch-btn svg {
+            transition: transform 0.25s ease;
+        }
+
+        .app-card:hover .launch-btn svg {
+            transform: translateX(5px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 0;
+            }
+            .app-wrapper {
+                padding: 0 16px;
+            }
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div>
-    <h2>make link-local ipv6 from any ipv4</h2>
-    <label for="ipv4">ipv4</label>
-	<input type="text" size="16" id="ipv4"></input>
-	<button onclick="convert4to6();">local 4 to local 6</button>
-	<input type="text" size="40" id="local_ipv6" disabled></input>
-  </div>
-  <div>
-    <h2>show ipv6 as 16 bytes</h2>
-    <label for="ipv6">ipv6</label>
-	<input type="text" size="40" id="ipv6"></input>
-    <button onclick="showBytes();">&rarr;</button>
-    <button onclick="showHex();">&larr;</button>
-    <label for="octects">bytes</label>
-	<input type="text" size="64" id="octects"></input>
-  </div>
-  <div>
-   <button onclick="clear_all()">Clear</button>
-  </div>
-  <div>
-    <h2>references</h2>
-    <p>
-      <a href="https://www.ripe.net/participate/member-support/lir-basics/ipv6_reference_card.pdf">https://www.ripe.net/participate/member-support/lir-basics/ipv6_reference_card.pdf</a>
-    </p>
-    <p>
-      <a href="https://en.wikipedia.org/wiki/Hexspeak">https://en.wikipedia.org/wiki/Hexspeak</a>
-    </p>
-  </div>
-</body>
 
+    <!-- Ambient Background Lighting -->
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- Main Content Container: Apps Grid Only -->
+    <main class="app-wrapper">
+        <div class="app-grid" id="app-grid">
+            <!-- App Cards rendered via JS -->
+        </div>
+    </main>
+
+    <!-- Application Script Logic -->
+    <script>
+        // Subfolder Suites Data
+        const suitesData = [
+            {
+                id: 'suite-calm',
+                title: 'The Calm Tools Suite',
+                folder: 'calm',
+                path: 'calm/index.html',
+                badgeText: '10 Productivity Tools',
+                description: 'Offline-first personal productivity ecosystem. Daily intention planner, habit heatmaps, financial vault, workout logger, journal, and invoice generator.',
+                features: ['Daily Planner', 'Pulse Dashboard', 'Journal & Mood', 'Finance Vault', 'Habit Tracker', 'Fitness Log', 'Invoices'],
+                accentGradient: 'linear-gradient(135deg, #3b82f6, #10b981)',
+                iconBg: 'rgba(59, 130, 246, 0.14)',
+                iconBorder: 'rgba(59, 130, 246, 0.3)',
+                iconColor: '#3b82f6',
+                shadowGlow: 'rgba(59, 130, 246, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" stroke-dasharray="4 2"/>
+                        <path d="M12 6v6l4 2"/>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="#10b981" stroke-width="2.5"/>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-games',
+                title: 'Arcade Games Hub',
+                folder: 'games',
+                path: 'games/index.html',
+                badgeText: '10+ Canvas Mini-Games',
+                description: 'Lightweight, high-framerate HTML5 arcade game collection. Features Neon Racer, Ball Pop, Neon Slasher, Flappy Neon, Brick Breaker, and Orbit Dodge.',
+                features: ['Neon Racer', 'Ball Pop', 'Neon Slasher', 'Flappy Neon', 'Neon Breaker', 'Neon Stack', 'Orbit Dodge'],
+                accentGradient: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+                iconBg: 'rgba(236, 72, 153, 0.14)',
+                iconBorder: 'rgba(236, 72, 153, 0.3)',
+                iconColor: '#ec4899',
+                shadowGlow: 'rgba(236, 72, 153, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="6" width="20" height="12" rx="6"></rect>
+                        <line x1="6" y1="12" x2="10" y2="12"></line>
+                        <line x1="8" y1="10" x2="8" y2="14"></line>
+                        <circle cx="15" cy="11" r="1" fill="currentColor"></circle>
+                        <circle cx="18" cy="13" r="1" fill="currentColor"></circle>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-lava',
+                title: 'The Floor is Lava',
+                folder: 'lava',
+                path: 'lava/index.html',
+                badgeText: 'Interactive Physical Audio Game',
+                description: 'Active voice & sound cue game designed for physical play. Automatically switches between Lava and Water modes with customizable speed timers.',
+                features: ['Audio Sound Cues', 'Lava & Water Modes', 'Adjustable Speed Timer', 'Physical Activity', 'Kid-Friendly'],
+                accentGradient: 'linear-gradient(135deg, #f97316, #ef4444)',
+                iconBg: 'rgba(249, 115, 22, 0.14)',
+                iconBorder: 'rgba(249, 115, 22, 0.3)',
+                iconColor: '#f97316',
+                shadowGlow: 'rgba(249, 115, 22, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-notes',
+                title: 'Local Notes App',
+                folder: 'notes',
+                path: 'notes/index.html',
+                badgeText: 'Local-First Markdown Workspace',
+                description: 'Clean Markdown note-taking workspace with instant full-text search, category tagging, live preview split, and persistent browser storage.',
+                features: ['Markdown Syntax', 'Live Preview', 'Full-Text Search', 'Categorization', 'Browser LocalStorage'],
+                accentGradient: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                iconBg: 'rgba(99, 102, 241, 0.14)',
+                iconBorder: 'rgba(99, 102, 241, 0.3)',
+                iconColor: '#6366f1',
+                shadowGlow: 'rgba(99, 102, 241, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-pcd',
+                title: '3D Point Cloud Viewer',
+                folder: 'pcd_viewer',
+                path: 'pcd_viewer/index.html',
+                badgeText: 'Three.js WebGL Engine',
+                description: 'High-performance 3D Point Cloud Data (.pcd) interactive renderer powered by Three.js and OrbitControls. Inspect point density, size, and geometry.',
+                features: ['.PCD File Loader', 'Three.js Renderer', 'Orbit Controls', 'Dynamic Point Size', 'Custom Color Map'],
+                accentGradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+                iconBg: 'rgba(6, 182, 212, 0.14)',
+                iconBorder: 'rgba(6, 182, 212, 0.3)',
+                iconColor: '#06b6d4',
+                shadowGlow: 'rgba(6, 182, 212, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-calc',
+                title: 'Pro Scientific Calculator',
+                folder: 'calc',
+                path: 'calc/index.html',
+                badgeText: 'Desktop & Scientific Engine',
+                description: 'Full-featured desktop calculator supporting basic arithmetic, advanced scientific mode (trig, log, powers, constants), memory registers, audio feedback, and calculation history.',
+                features: ['Basic Arithmetic', 'Scientific Functions', 'DEG / RAD Modes', 'Memory Registers', 'Keyboard Shortcuts', 'History Log', 'Audio Feedback'],
+                accentGradient: 'linear-gradient(135deg, #6366f1, #0ea5e9)',
+                iconBg: 'rgba(99, 102, 241, 0.14)',
+                iconBorder: 'rgba(99, 102, 241, 0.3)',
+                iconColor: '#6366f1',
+                shadowGlow: 'rgba(99, 102, 241, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                        <line x1="8" y1="6" x2="16" y2="6"></line>
+                        <line x1="16" y1="14" x2="16" y2="18"></line>
+                        <path d="M16 10h.01"></path>
+                        <path d="M12 10h.01"></path>
+                        <path d="M8 10h.01"></path>
+                        <path d="M12 14h.01"></path>
+                        <path d="M8 14h.01"></path>
+                        <path d="M12 18h.01"></path>
+                        <path d="M8 18h.01"></path>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-ipv6',
+                title: 'IPv6 Learning Tool',
+                folder: 'ipv6',
+                path: 'ipv6/index.html',
+                badgeText: '128-Bit Address & Byte Converter',
+                description: 'Learn IPv6 address structure, convert IPv4 to link-local IPv6, and translate between 128-bit hex notation and 16-byte decimal octet arrays.',
+                features: ['IPv4 to Link-Local IPv6', 'Hex to Decimal Octets', 'Decimal Octets to Hex', '128-Bit Byte Structure', 'Reference Documentation'],
+                accentGradient: 'linear-gradient(135deg, #10b981, #06b6d4)',
+                iconBg: 'rgba(16, 185, 129, 0.14)',
+                iconBorder: 'rgba(16, 185, 129, 0.3)',
+                iconColor: '#10b981',
+                shadowGlow: 'rgba(16, 185, 129, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                `
+            },
+            {
+                id: 'suite-kidsbank',
+                title: 'Kids Reward Bank',
+                folder: 'kidsbank',
+                path: 'kidsbank/index.html',
+                badgeText: 'Pocket Money & Reward Tracker',
+                description: 'Child-friendly bank and pocket money manager. Record rewards for study/chores, birthday & Christmas cash gifts, track spending, and view balance history.',
+                features: ['Child & Parent Views', 'Reward Categories', 'Cash Gifts & Spend Tracking', 'Chronological Ledger', 'Offline LocalStorage'],
+                accentGradient: 'linear-gradient(135deg, #f59e0b, #ec4899)',
+                iconBg: 'rgba(245, 158, 11, 0.14)',
+                iconBorder: 'rgba(245, 158, 11, 0.3)',
+                iconColor: '#f59e0b',
+                shadowGlow: 'rgba(245, 158, 11, 0.35)',
+                iconSvg: `
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                        <circle cx="16" cy="15" r="1.5"></circle>
+                    </svg>
+                `
+            }
+        ];
+
+        // Render Suites Function
+        function renderSuites() {
+            const appGrid = document.getElementById('app-grid');
+            if (!appGrid) return;
+
+            appGrid.innerHTML = suitesData.map(suite => `
+                <a href="${suite.path}" 
+                    class="app-card" 
+                    style="
+                        --card-accent-gradient: ${suite.accentGradient};
+                        --card-icon-bg: ${suite.iconBg};
+                        --card-icon-border: ${suite.iconBorder};
+                        --card-icon-color: ${suite.iconColor};
+                        --card-icon-glow: ${suite.shadowGlow};
+                        --card-shadow-glow: ${suite.shadowGlow};
+                        --card-accent-color: ${suite.iconColor};
+                    "
+                >
+                    <div class="card-header">
+                        <div class="app-icon-badge">
+                            ${suite.iconSvg}
+                        </div>
+                        <span class="folder-badge">/${suite.folder}/</span>
+                    </div>
+
+                    <div class="card-body">
+                        <span class="suite-badge-tag">${suite.badgeText}</span>
+                        <h3 class="app-title">${suite.title}</h3>
+                        <p class="app-description">${suite.description}</p>
+                        
+                        <div class="features-box">
+                            <div class="features-title">Included Apps & Features</div>
+                            <div class="features-list">
+                                ${suite.features.map(f => `<span class="feature-chip">${f}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="launch-btn">
+                            <span>Open ${suite.title}</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        renderSuites();
+
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Suite PWA Service Worker registered:', reg.scope))
+                    .catch(err => console.log('Suite PWA Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

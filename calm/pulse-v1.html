@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse — Weekly Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --surface-alt: #f3f4f6;
+            --text: #111827;
+            --text-muted: #6b7280;
+            --text-faint: #9ca3af;
+            --border: #e5e7eb;
+            --accent: #f59e0b;
+            --accent-light: #fef3c7;
+            --accent-dark: #d97706;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #3b82f6;
+            --info-light: #dbeafe;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-lg: rgba(0, 0, 0, 0.1);
+
+            /* App colors for cards */
+            --blueprint: #2563eb;
+            --anchors: #c4854c;
+            --iron: #22c55e;
+            --streak: #7c3aed;
+            --vault: #2d6a4f;
+            --planner: #2563eb;
+            --shelf: #0891b2;
+            --spark: #f59e0b;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface-alt: #262626;
+            --text: #f5f5f5;
+            --text-muted: #a3a3a3;
+            --text-faint: #525252;
+            --border: #333333;
+            --accent: #fbbf24;
+            --accent-light: #451a03;
+            --accent-dark: #fcd34d;
+            --success: #34d399;
+            --success-light: #064e3b;
+            --warning: #fbbf24;
+            --warning-light: #451a03;
+            --danger: #f87171;
+            --danger-light: #450a0a;
+            --info: #60a5fa;
+            --info-light: #1e3a5f;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+
+            --blueprint: #3b82f6;
+            --anchors: #d4954c;
+            --iron: #4ade80;
+            --streak: #a78bfa;
+            --vault: #3fb950;
+            --planner: #3b82f6;
+            --shelf: #22d3ee;
+            --spark: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Onboarding */
+        .onboarding {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .onboarding.hidden { display: none; }
+
+        .onboarding-content {
+            max-width: 440px;
+            text-align: center;
+        }
+
+        .onboarding-logo {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border-radius: 16px;
+            margin: 0 auto 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.25);
+        }
+
+        .onboarding-content h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .onboarding-tagline {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-size: 1.05rem;
+        }
+
+        .onboarding-features {
+            text-align: left;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .onboarding-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .onboarding-feature:last-child { border-bottom: none; }
+
+        .onboarding-feature-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .onboarding-feature-text {
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .onboarding-feature-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .onboarding-btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            background: var(--accent);
+            color: white;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .onboarding-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+
+        .header-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        /* Week Navigation */
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .week-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+
+        .week-nav-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .week-nav-label {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .week-nav-dates {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        .week-nav-today {
+            margin-left: auto;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .week-nav-today:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Summary Cards Row */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .summary-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .summary-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .summary-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .summary-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: -0.02em;
+        }
+
+        .summary-card-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .summary-card-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .summary-card-change.up {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .summary-card-change.down {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .summary-card-change.neutral {
+            background: var(--surface-alt);
+            color: var(--text-muted);
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Section Card */
+        .section-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .section-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .section-link {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            transition: all 0.15s;
+        }
+
+        .section-link:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .section-body {
+            padding: 20px;
+        }
+
+        /* Energy Chart */
+        .energy-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 120px;
+            padding-top: 20px;
+        }
+
+        .energy-bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .energy-bar {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s;
+        }
+
+        .energy-bar[data-level="1"] { background: #fecaca; }
+        .energy-bar[data-level="2"] { background: #fed7aa; }
+        .energy-bar[data-level="3"] { background: #fef08a; }
+        .energy-bar[data-level="4"] { background: #bbf7d0; }
+        .energy-bar[data-level="5"] { background: #86efac; }
+        .energy-bar[data-level="0"] { background: var(--border); }
+
+        .energy-day {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .energy-value {
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--text);
+        }
+
+        /* Habit Grid */
+        .habit-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .habit-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .habit-name {
+            font-size: 0.85rem;
+            width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+        }
+
+        .habit-days {
+            display: flex;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .habit-day {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 500;
+        }
+
+        .habit-day.done {
+            background: var(--success);
+            color: white;
+        }
+
+        .habit-day.missed {
+            background: var(--surface-alt);
+            color: var(--text-faint);
+        }
+
+        .habit-day.future {
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-faint);
+        }
+
+        .habit-rate {
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--text-muted);
+            width: 45px;
+            text-align: right;
+        }
+
+        /* Tasks List */
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .task-checkbox.done {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .task-text {
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .task-text.done {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-date {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Spending Summary */
+        .spending-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spending-total {
+            text-align: center;
+            padding: 20px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .spending-total-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .spending-total-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--danger);
+        }
+
+        .spending-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .spending-day {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .spending-day:last-child {
+            border-bottom: none;
+        }
+
+        .spending-day-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .spending-day-value {
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Journal Entries */
+        .journal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .journal-entry {
+            padding: 12px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .journal-entry-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .journal-entry-mood {
+            font-size: 1.1rem;
+        }
+
+        .journal-entry-date {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .journal-entry-preview {
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Workouts Summary */
+        .workouts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .workout-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .workout-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--iron);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .workout-info {
+            flex: 1;
+        }
+
+        .workout-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .workout-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .workout-date {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 32px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 0.9rem;
+        }
+
+        .empty-state-sub {
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            margin-top: 4px;
+        }
+
+        /* Reading List */
+        .reading-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .reading-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .reading-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--shelf);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .reading-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .reading-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reading-author {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .reading-status {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .reading-status.reading {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .reading-status.finished {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .reading-status.to-read {
+            background: var(--surface-alt);
+            color: var(--text-muted);
+        }
+
+        /* Sparks/Ideas List */
+        .sparks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .spark-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .spark-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--spark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .spark-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .spark-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .spark-tags {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .spark-status {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .spark-status.spark {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .spark-status.developing {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
+        .spark-status.ready {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .spark-status.parked {
+            background: var(--surface-alt);
+            color: var(--text-muted);
+        }
+
+        /* Goals Progress */
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .goal-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .goal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .goal-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .goal-percent {
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--text-muted);
+        }
+
+        .goal-bar {
+            height: 8px;
+            background: var(--surface-alt);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .goal-fill {
+            height: 100%;
+            background: var(--planner);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* Weekly Review Prompt */
+        .review-prompt {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .review-prompt-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .review-prompt-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .review-prompt-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .review-prompt-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .review-prompt-btn:hover {
+            background: var(--accent-dark);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--text);
+            color: var(--bg);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+
+            .summary-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .summary-card-value {
+                font-size: 1.5rem;
+            }
+
+            .habit-name {
+                width: 80px;
+                font-size: 0.8rem;
+            }
+
+            .habit-day {
+                width: 20px;
+                height: 20px;
+            }
+
+            .week-nav-dates {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Onboarding -->
+    <div class="onboarding" id="onboarding">
+        <div class="onboarding-content">
+            <div class="onboarding-logo">◎</div>
+            <h1>Pulse</h1>
+            <p class="onboarding-tagline">Your weekly dashboard. See your life at a glance.</p>
+
+            <div class="onboarding-features">
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">📊</div>
+                    <div>
+                        <div class="onboarding-feature-text">Unified Overview</div>
+                        <div class="onboarding-feature-sub">Data from all your apps in one place</div>
+                    </div>
+                </div>
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">📈</div>
+                    <div>
+                        <div class="onboarding-feature-text">Weekly Trends</div>
+                        <div class="onboarding-feature-sub">Energy, habits, spending, and more</div>
+                    </div>
+                </div>
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">🎯</div>
+                    <div>
+                        <div class="onboarding-feature-text">Goal Tracking</div>
+                        <div class="onboarding-feature-sub">See progress on your yearly goals</div>
+                    </div>
+                </div>
+                <div class="onboarding-feature">
+                    <div class="onboarding-feature-icon">🔒</div>
+                    <div>
+                        <div class="onboarding-feature-text">Completely Local</div>
+                        <div class="onboarding-feature-sub">Reads from localStorage, no servers</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="onboarding-btn" onclick="startApp()">View Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo">◎</div>
+            <span class="header-title">Pulse</span>
+        </div>
+        <div class="header-right">
+            <a href="index.html" class="header-btn" title="Back to Apps">⌂</a>
+            <button class="header-btn" onclick="refreshData()" title="Refresh Data">↻</button>
+            <button class="header-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Theme">🌙</button>
+        </div>
+    </header>
+
+    <!-- Week Navigation -->
+    <div class="week-nav">
+        <button class="week-nav-btn" onclick="changeWeek(-1)">←</button>
+        <span class="week-nav-label" id="weekLabel">Week 52</span>
+        <span class="week-nav-dates" id="weekDates">Dec 23 – Dec 29</span>
+        <button class="week-nav-btn" onclick="changeWeek(1)">→</button>
+        <button class="week-nav-today" onclick="goToCurrentWeek()">This Week</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Summary Cards -->
+        <div class="summary-row" id="summaryRow">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Energy Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--blueprint);">◇</div>
+                        <span class="section-title">Energy Levels</span>
+                    </div>
+                    <a href="blueprint-v2.html" class="section-link">Open Blueprint →</a>
+                </div>
+                <div class="section-body">
+                    <div class="energy-chart" id="energyChart">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habits Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--streak);">◉</div>
+                        <span class="section-title">Habits</span>
+                    </div>
+                    <a href="streak-v3.html" class="section-link">Open Streak →</a>
+                </div>
+                <div class="section-body">
+                    <div class="habit-grid" id="habitGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--blueprint);">◇</div>
+                        <span class="section-title">Actions This Week</span>
+                    </div>
+                    <a href="blueprint-v2.html" class="section-link">Open Blueprint →</a>
+                </div>
+                <div class="section-body">
+                    <div class="tasks-list" id="tasksList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--vault);">◆</div>
+                        <span class="section-title">Spending</span>
+                    </div>
+                    <a href="vault-v3.html" class="section-link">Open Vault →</a>
+                </div>
+                <div class="section-body">
+                    <div class="spending-summary" id="spendingSummary">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journal Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--anchors);">◈</div>
+                        <span class="section-title">Journal Entries</span>
+                    </div>
+                    <a href="anchors-v2.html" class="section-link">Open Anchors →</a>
+                </div>
+                <div class="section-body">
+                    <div class="journal-list" id="journalList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workouts Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--iron);">⬡</div>
+                        <span class="section-title">Workouts</span>
+                    </div>
+                    <a href="iron-v1.html" class="section-link">Open Iron →</a>
+                </div>
+                <div class="section-body">
+                    <div class="workouts-list" id="workoutsList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reading Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--shelf);">▤</div>
+                        <span class="section-title">Reading</span>
+                    </div>
+                    <a href="shelf-v1.html" class="section-link">Open Shelf →</a>
+                </div>
+                <div class="section-body">
+                    <div class="reading-list" id="readingList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sparks Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--spark);">✦</div>
+                        <span class="section-title">Ideas</span>
+                    </div>
+                    <a href="spark-v1.html" class="section-link">Open Spark →</a>
+                </div>
+                <div class="section-body">
+                    <div class="sparks-list" id="sparksList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goals Section -->
+            <div class="section-card full-width">
+                <div class="section-header">
+                    <div class="section-header-left">
+                        <div class="section-icon" style="background: var(--planner);">▦</div>
+                        <span class="section-title">2026 Goals Progress</span>
+                    </div>
+                    <a href="planner-v1.html" class="section-link">Open Planner →</a>
+                </div>
+                <div class="section-body">
+                    <div class="goals-list" id="goalsList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">Data refreshed</div>
+
+    <script>
+        // ==================== STATE ====================
+        let currentWeekStart = getWeekStart(new Date());
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            checkOnboarding();
+            initTheme();
+            renderWeekNav();
+            loadAllData();
+        }
+
+        function checkOnboarding() {
+            const seen = localStorage.getItem('pulse_onboarded');
+            if (seen) {
+                document.getElementById('onboarding').classList.add('hidden');
+            }
+        }
+
+        function startApp() {
+            localStorage.setItem('pulse_onboarded', 'true');
+            document.getElementById('onboarding').classList.add('hidden');
+        }
+
+        // ==================== THEME ====================
+        function initTheme() {
+            const saved = localStorage.getItem('pulse_theme');
+            if (saved === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('themeBtn').textContent = '☀️';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('pulse_theme', 'light');
+                document.getElementById('themeBtn').textContent = '🌙';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('pulse_theme', 'dark');
+                document.getElementById('themeBtn').textContent = '☀️';
+            }
+        }
+
+        // ==================== DATE UTILITIES ====================
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+            return new Date(d.setDate(diff));
+        }
+
+        function getWeekDays(weekStart) {
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                days.push(d);
+            }
+            return days;
+        }
+
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatShortDate(date) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function getDayName(date) {
+            return date.toLocaleDateString('en-US', { weekday: 'short' });
+        }
+
+        // ==================== WEEK NAVIGATION ====================
+        function renderWeekNav() {
+            const weekNum = getWeekNumber(currentWeekStart);
+            const weekDays = getWeekDays(currentWeekStart);
+            const startStr = formatShortDate(weekDays[0]);
+            const endStr = formatShortDate(weekDays[6]);
+
+            document.getElementById('weekLabel').textContent = `Week ${weekNum}`;
+            document.getElementById('weekDates').textContent = `${startStr} – ${endStr}`;
+        }
+
+        function changeWeek(delta) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (delta * 7));
+            renderWeekNav();
+            loadAllData();
+        }
+
+        function goToCurrentWeek() {
+            currentWeekStart = getWeekStart(new Date());
+            renderWeekNav();
+            loadAllData();
+        }
+
+        // ==================== DATA LOADING ====================
+        function loadAllData() {
+            const weekDays = getWeekDays(currentWeekStart);
+            const today = new Date();
+
+            // Load from all apps
+            const blueprintData = loadBlueprintData(weekDays);
+            const streakData = loadStreakData(weekDays);
+            const vaultData = loadVaultData(weekDays);
+            const anchorsData = loadAnchorsData(weekDays);
+            const ironData = loadIronData(weekDays);
+            const plannerData = loadPlannerData();
+            const shelfData = loadShelfData();
+            const sparkData = loadSparkData();
+
+            // Render all sections
+            renderSummaryCards(blueprintData, streakData, vaultData, anchorsData, ironData, shelfData, sparkData);
+            renderEnergyChart(blueprintData, weekDays, today);
+            renderHabits(streakData, weekDays, today);
+            renderTasks(blueprintData, weekDays);
+            renderSpending(blueprintData, vaultData, weekDays);
+            renderJournal(anchorsData, weekDays);
+            renderWorkouts(ironData, weekDays);
+            renderReading(shelfData);
+            renderSparks(sparkData);
+            renderGoals(plannerData);
+        }
+
+        function refreshData() {
+            loadAllData();
+            showToast('Data refreshed');
+        }
+
+        // ==================== BLUEPRINT DATA ====================
+        function loadBlueprintData(weekDays) {
+            const stored = localStorage.getItem('blueprint_data');
+            if (!stored) return { days: {} };
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return { days: {} };
+            }
+        }
+
+        // ==================== STREAK DATA ====================
+        function loadStreakData(weekDays) {
+            const habitsStored = localStorage.getItem('streak_habits');
+            const completionsStored = localStorage.getItem('streak_completions');
+
+            let habits = [];
+            let completions = {};
+
+            try {
+                if (habitsStored) habits = JSON.parse(habitsStored);
+                if (completionsStored) completions = JSON.parse(completionsStored);
+            } catch (e) {}
+
+            return { habits, completions };
+        }
+
+        // ==================== VAULT DATA ====================
+        function loadVaultData(weekDays) {
+            const stored = localStorage.getItem('vault_transactions');
+            if (!stored) return [];
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // ==================== DAILY ANCHORS DATA ====================
+        function loadAnchorsData(weekDays) {
+            const stored = localStorage.getItem('dailyAnchorsJournal');
+            if (!stored) return {};
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return {};
+            }
+        }
+
+        // ==================== IRON DATA ====================
+        function loadIronData(weekDays) {
+            const stored = localStorage.getItem('iron_workouts');
+            if (!stored) return [];
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // ==================== PLANNER DATA ====================
+        function loadPlannerData() {
+            const stored = localStorage.getItem('planner2026');
+            if (!stored) return { goals: [] };
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return { goals: [] };
+            }
+        }
+
+        // ==================== SHELF DATA ====================
+        function loadShelfData() {
+            const stored = localStorage.getItem('shelf_books');
+            if (!stored) return [];
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // ==================== SPARK DATA ====================
+        function loadSparkData() {
+            const stored = localStorage.getItem('spark_ideas');
+            if (!stored) return [];
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // ==================== RENDER SUMMARY CARDS ====================
+        function renderSummaryCards(blueprintData, streakData, vaultData, anchorsData, ironData, shelfData, sparkData) {
+            const weekDays = getWeekDays(currentWeekStart);
+
+            // Calculate stats
+            let energySum = 0;
+            let energyCount = 0;
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let habitsCompleted = 0;
+            let habitsTotal = 0;
+            let totalSpending = 0;
+            let journalCount = 0;
+            let workoutCount = 0;
+
+            weekDays.forEach(day => {
+                const dateKey = getDateKey(day);
+
+                // Blueprint energy & tasks
+                const dayData = blueprintData[dateKey] || blueprintData.days?.[dateKey];
+                if (dayData) {
+                    if (dayData.energyLevel) {
+                        energySum += dayData.energyLevel;
+                        energyCount++;
+                    }
+                    if (dayData.tasks) {
+                        totalTasks += dayData.tasks.length;
+                        completedTasks += dayData.tasks.filter(t => t.completed).length;
+                    }
+                    // Blueprint spending
+                    if (dayData.spending) {
+                        dayData.spending.forEach(s => {
+                            const amount = parseFloat(s.amount?.replace(/[^0-9.-]/g, '')) || 0;
+                            totalSpending += amount;
+                        });
+                    }
+                }
+
+                // Journal entries
+                if (anchorsData[dateKey]) {
+                    journalCount++;
+                }
+
+                // Habits
+                if (streakData.habits) {
+                    streakData.habits.forEach(habit => {
+                        const completion = streakData.completions?.[habit.id]?.[dateKey];
+                        if (completion === 'done') {
+                            habitsCompleted++;
+                        }
+                        if (day <= new Date()) {
+                            habitsTotal++;
+                        }
+                    });
+                }
+            });
+
+            // Iron workouts
+            if (Array.isArray(ironData)) {
+                ironData.forEach(workout => {
+                    const workoutDate = new Date(workout.date);
+                    if (workoutDate >= weekDays[0] && workoutDate <= weekDays[6]) {
+                        workoutCount++;
+                    }
+                });
+            }
+
+            // Vault spending
+            if (Array.isArray(vaultData)) {
+                vaultData.forEach(tx => {
+                    const txDate = new Date(tx.date);
+                    if (txDate >= weekDays[0] && txDate <= weekDays[6] && tx.type === 'expense') {
+                        totalSpending += Math.abs(tx.amount || 0);
+                    }
+                });
+            }
+
+            // Shelf books
+            const booksReading = (shelfData || []).filter(b => b.status === 'reading').length;
+            const booksFinished = (shelfData || []).filter(b => b.status === 'finished').length;
+
+            // Spark ideas
+            const sparkIdeas = sparkData || [];
+            const newSparks = sparkIdeas.filter(i => i.status === 'spark').length;
+            const developingIdeas = sparkIdeas.filter(i => i.status === 'developing').length;
+
+            const avgEnergy = energyCount > 0 ? (energySum / energyCount).toFixed(1) : '—';
+            const habitRate = habitsTotal > 0 ? Math.round((habitsCompleted / habitsTotal) * 100) : 0;
+            const taskRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            const html = `
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--blueprint);">◇</div>
+                        <div class="summary-card-title">Avg Energy</div>
+                    </div>
+                    <div class="summary-card-value">${avgEnergy}</div>
+                    <div class="summary-card-sub">out of 5</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--streak);">◉</div>
+                        <div class="summary-card-title">Habit Rate</div>
+                    </div>
+                    <div class="summary-card-value">${habitRate}%</div>
+                    <div class="summary-card-sub">${habitsCompleted} of ${habitsTotal} completed</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--success);">✓</div>
+                        <div class="summary-card-title">Tasks Done</div>
+                    </div>
+                    <div class="summary-card-value">${taskRate}%</div>
+                    <div class="summary-card-sub">${completedTasks} of ${totalTasks} completed</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--vault);">◆</div>
+                        <div class="summary-card-title">Spent</div>
+                    </div>
+                    <div class="summary-card-value">$${totalSpending.toFixed(0)}</div>
+                    <div class="summary-card-sub">this week</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--anchors);">◈</div>
+                        <div class="summary-card-title">Journal</div>
+                    </div>
+                    <div class="summary-card-value">${journalCount}</div>
+                    <div class="summary-card-sub">entries this week</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--iron);">⬡</div>
+                        <div class="summary-card-title">Workouts</div>
+                    </div>
+                    <div class="summary-card-value">${workoutCount}</div>
+                    <div class="summary-card-sub">sessions logged</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--shelf);">▤</div>
+                        <div class="summary-card-title">Reading</div>
+                    </div>
+                    <div class="summary-card-value">${booksReading}</div>
+                    <div class="summary-card-sub">${booksFinished} finished total</div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <div class="summary-card-icon" style="background: var(--spark);">✦</div>
+                        <div class="summary-card-title">Ideas</div>
+                    </div>
+                    <div class="summary-card-value">${newSparks}</div>
+                    <div class="summary-card-sub">${developingIdeas} developing</div>
+                </div>
+            `;
+
+            document.getElementById('summaryRow').innerHTML = html;
+        }
+
+        // ==================== RENDER ENERGY CHART ====================
+        function renderEnergyChart(blueprintData, weekDays, today) {
+            let html = '';
+
+            weekDays.forEach(day => {
+                const dateKey = getDateKey(day);
+                const dayData = blueprintData[dateKey] || blueprintData.days?.[dateKey];
+                const energy = dayData?.energyLevel || 0;
+                const height = energy > 0 ? (energy / 5) * 80 : 10;
+                const isFuture = day > today;
+
+                html += `
+                    <div class="energy-bar-wrapper">
+                        <div class="energy-value">${energy > 0 ? energy : '—'}</div>
+                        <div class="energy-bar" data-level="${energy}" style="height: ${height}px; ${isFuture ? 'opacity: 0.3;' : ''}"></div>
+                        <div class="energy-day">${getDayName(day)}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('energyChart').innerHTML = html;
+        }
+
+        // ==================== RENDER HABITS ====================
+        function renderHabits(streakData, weekDays, today) {
+            if (!streakData.habits || streakData.habits.length === 0) {
+                document.getElementById('habitGrid').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">◉</div>
+                        <div class="empty-state-text">No habits tracked yet</div>
+                        <div class="empty-state-sub">Open Streak to create habits</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            streakData.habits.slice(0, 5).forEach(habit => {
+                let completedCount = 0;
+                let daysHtml = '';
+
+                weekDays.forEach(day => {
+                    const dateKey = getDateKey(day);
+                    const status = streakData.completions?.[habit.id]?.[dateKey];
+                    const isFuture = day > today;
+
+                    let dayClass = 'missed';
+                    if (isFuture) {
+                        dayClass = 'future';
+                    } else if (status === 'done') {
+                        dayClass = 'done';
+                        completedCount++;
+                    }
+
+                    daysHtml += `<div class="habit-day ${dayClass}">${getDayName(day).charAt(0)}</div>`;
+                });
+
+                const rate = Math.round((completedCount / 7) * 100);
+
+                html += `
+                    <div class="habit-row">
+                        <div class="habit-name">${habit.name || 'Unnamed'}</div>
+                        <div class="habit-days">${daysHtml}</div>
+                        <div class="habit-rate">${rate}%</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('habitGrid').innerHTML = html;
+        }
+
+        // ==================== RENDER TASKS ====================
+        function renderTasks(blueprintData, weekDays) {
+            const allTasks = [];
+
+            weekDays.forEach(day => {
+                const dateKey = getDateKey(day);
+                const dayData = blueprintData[dateKey] || blueprintData.days?.[dateKey];
+                if (dayData?.tasks) {
+                    dayData.tasks.forEach(task => {
+                        if (task.text) {
+                            allTasks.push({
+                                ...task,
+                                date: dateKey
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (allTasks.length === 0) {
+                document.getElementById('tasksList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">◇</div>
+                        <div class="empty-state-text">No actions this week</div>
+                        <div class="empty-state-sub">Open Blueprint to add tasks</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort: incomplete first, then by date
+            allTasks.sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
+                return a.date.localeCompare(b.date);
+            });
+
+            const html = allTasks.slice(0, 8).map(task => `
+                <div class="task-item">
+                    <div class="task-checkbox ${task.completed ? 'done' : ''}">${task.completed ? '✓' : ''}</div>
+                    <div class="task-text ${task.completed ? 'done' : ''}">${escapeHtml(task.text)}</div>
+                    <div class="task-date">${formatShortDate(new Date(task.date + 'T12:00:00'))}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('tasksList').innerHTML = html;
+        }
+
+        // ==================== RENDER SPENDING ====================
+        function renderSpending(blueprintData, vaultData, weekDays) {
+            let totalSpending = 0;
+            const dailySpending = {};
+
+            // Initialize daily spending
+            weekDays.forEach(day => {
+                dailySpending[getDateKey(day)] = 0;
+            });
+
+            // Blueprint spending
+            weekDays.forEach(day => {
+                const dateKey = getDateKey(day);
+                const dayData = blueprintData[dateKey] || blueprintData.days?.[dateKey];
+                if (dayData?.spending) {
+                    dayData.spending.forEach(s => {
+                        const amount = parseFloat(s.amount?.replace(/[^0-9.-]/g, '')) || 0;
+                        dailySpending[dateKey] += amount;
+                        totalSpending += amount;
+                    });
+                }
+            });
+
+            // Vault spending
+            if (Array.isArray(vaultData)) {
+                vaultData.forEach(tx => {
+                    const txDate = new Date(tx.date);
+                    const dateKey = getDateKey(txDate);
+                    if (dailySpending.hasOwnProperty(dateKey) && tx.type === 'expense') {
+                        const amount = Math.abs(tx.amount || 0);
+                        dailySpending[dateKey] += amount;
+                        totalSpending += amount;
+                    }
+                });
+            }
+
+            if (totalSpending === 0) {
+                document.getElementById('spendingSummary').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">◆</div>
+                        <div class="empty-state-text">No spending recorded</div>
+                        <div class="empty-state-sub">Track expenses in Blueprint or Vault</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let breakdownHtml = '';
+            weekDays.forEach(day => {
+                const dateKey = getDateKey(day);
+                const amount = dailySpending[dateKey];
+                if (amount > 0) {
+                    breakdownHtml += `
+                        <div class="spending-day">
+                            <span class="spending-day-label">${getDayName(day)}, ${formatShortDate(day)}</span>
+                            <span class="spending-day-value">$${amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            const html = `
+                <div class="spending-total">
+                    <div class="spending-total-label">Week Total</div>
+                    <div class="spending-total-value">$${totalSpending.toFixed(2)}</div>
+                </div>
+                <div class="spending-breakdown">
+                    ${breakdownHtml || '<div class="spending-day"><span class="spending-day-label">No daily breakdown</span></div>'}
+                </div>
+            `;
+
+            document.getElementById('spendingSummary').innerHTML = html;
+        }
+
+        // ==================== RENDER JOURNAL ====================
+        function renderJournal(anchorsData, weekDays) {
+            const entries = [];
+
+            weekDays.forEach(day => {
+                const dateKey = getDateKey(day);
+                const entry = anchorsData[dateKey];
+                if (entry) {
+                    entries.push({
+                        date: dateKey,
+                        mood: entry.mood || '',
+                        preview: entry.answers?.[0] || entry.thoughts || ''
+                    });
+                }
+            });
+
+            if (entries.length === 0) {
+                document.getElementById('journalList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">◈</div>
+                        <div class="empty-state-text">No journal entries this week</div>
+                        <div class="empty-state-sub">Open Daily Anchors to reflect</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = entries.slice(0, 4).map(entry => `
+                <div class="journal-entry">
+                    <div class="journal-entry-header">
+                        <span class="journal-entry-mood">${entry.mood || '📝'}</span>
+                        <span class="journal-entry-date">${formatShortDate(new Date(entry.date + 'T12:00:00'))}</span>
+                    </div>
+                    <div class="journal-entry-preview">${escapeHtml(entry.preview) || 'No content'}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('journalList').innerHTML = html;
+        }
+
+        // ==================== RENDER WORKOUTS ====================
+        function renderWorkouts(ironData, weekDays) {
+            const workouts = [];
+
+            if (Array.isArray(ironData)) {
+                ironData.forEach(workout => {
+                    const workoutDate = new Date(workout.date);
+                    if (workoutDate >= weekDays[0] && workoutDate <= weekDays[6]) {
+                        workouts.push(workout);
+                    }
+                });
+            }
+
+            if (workouts.length === 0) {
+                document.getElementById('workoutsList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⬡</div>
+                        <div class="empty-state-text">No workouts logged this week</div>
+                        <div class="empty-state-sub">Open Iron to track your training</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = workouts.slice(0, 4).map(workout => {
+                const exerciseCount = workout.exercises?.length || 0;
+                return `
+                    <div class="workout-item">
+                        <div class="workout-icon">💪</div>
+                        <div class="workout-info">
+                            <div class="workout-name">${escapeHtml(workout.name) || 'Workout'}</div>
+                            <div class="workout-detail">${exerciseCount} exercise${exerciseCount !== 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="workout-date">${formatShortDate(new Date(workout.date))}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('workoutsList').innerHTML = html;
+        }
+
+        // ==================== RENDER READING ====================
+        function renderReading(shelfData) {
+            const books = shelfData || [];
+
+            // Get currently reading and recently finished
+            const reading = books.filter(b => b.status === 'reading');
+            const recentlyFinished = books
+                .filter(b => b.status === 'finished')
+                .sort((a, b) => new Date(b.dateFinished || 0) - new Date(a.dateFinished || 0))
+                .slice(0, 2);
+
+            const displayBooks = [...reading, ...recentlyFinished].slice(0, 4);
+
+            if (displayBooks.length === 0) {
+                document.getElementById('readingList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">▤</div>
+                        <div class="empty-state-text">No books being tracked</div>
+                        <div class="empty-state-sub">Open Shelf to add books</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusLabels = {
+                'reading': 'Reading',
+                'finished': 'Finished',
+                'to-read': 'To Read'
+            };
+
+            const html = displayBooks.map(book => `
+                <div class="reading-item">
+                    <div class="reading-icon">📖</div>
+                    <div class="reading-info">
+                        <div class="reading-title">${escapeHtml(book.title)}</div>
+                        <div class="reading-author">${escapeHtml(book.author)}</div>
+                    </div>
+                    <span class="reading-status ${book.status}">${statusLabels[book.status] || book.status}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('readingList').innerHTML = html;
+        }
+
+        // ==================== RENDER SPARKS ====================
+        function renderSparks(sparkData) {
+            const ideas = sparkData || [];
+
+            // Get active ideas (spark and developing status)
+            const activeIdeas = ideas
+                .filter(i => i.status === 'spark' || i.status === 'developing')
+                .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+                .slice(0, 4);
+
+            if (activeIdeas.length === 0) {
+                document.getElementById('sparksList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✦</div>
+                        <div class="empty-state-text">No active ideas</div>
+                        <div class="empty-state-sub">Open Spark to capture ideas</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusLabels = {
+                'spark': 'Spark',
+                'developing': 'Developing',
+                'ready': 'Ready',
+                'parked': 'Parked'
+            };
+
+            const html = activeIdeas.map(idea => `
+                <div class="spark-item">
+                    <div class="spark-icon">✦</div>
+                    <div class="spark-info">
+                        <div class="spark-title">${escapeHtml(idea.title)}</div>
+                        <div class="spark-tags">${idea.tags && idea.tags.length > 0 ? idea.tags.slice(0, 3).join(', ') : 'No tags'}</div>
+                    </div>
+                    <span class="spark-status ${idea.status}">${statusLabels[idea.status] || idea.status}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('sparksList').innerHTML = html;
+        }
+
+        // ==================== RENDER GOALS ====================
+        function renderGoals(plannerData) {
+            const goals = plannerData.goals || [];
+
+            if (goals.length === 0) {
+                document.getElementById('goalsList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">▦</div>
+                        <div class="empty-state-text">No goals set for 2026</div>
+                        <div class="empty-state-sub">Open the 2026 Planner to set yearly goals</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = goals.slice(0, 5).map(goal => {
+                const progress = goal.progress || 0;
+                const description = goal.description || 'Untitled Goal';
+
+                return `
+                    <div class="goal-item">
+                        <div class="goal-header">
+                            <span class="goal-name">${escapeHtml(description.substring(0, 60))}${description.length > 60 ? '...' : ''}</span>
+                            <span class="goal-percent">${progress}%</span>
+                        </div>
+                        <div class="goal-bar">
+                            <div class="goal-fill" style="width: ${progress}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('goalsList').innerHTML = html;
+        }
+
+        // ==================== UTILITIES ====================
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;')
+                       .replace(/"/g, '&quot;');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2000);
+        }
+
+        // ==================== INIT ====================
+        init();
+    </script>
+</body>
+</html>

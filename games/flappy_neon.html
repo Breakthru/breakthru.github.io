@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Neon</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0b110b;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(11, 17, 11, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(29, 209, 161, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(29, 209, 161, 0.2);
+            border-color: rgba(29, 209, 161, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(11, 17, 11, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    <div id="scoreDisplay">Score: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-green-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-green-500/10">
+            <i class="fa-solid fa-crow text-6xl text-green-400 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">FLAPPY NEON</h1>
+            <p class="text-gray-400 mb-6">Tap the screen to propel your ship upward. Avoid crashing into the glowing green energy pillars!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-green-400 to-emerald-600 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-green-500/30">
+                Launch Ship
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-red-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-red-500/10">
+            <i class="fa-solid fa-explosion text-6xl text-red-500 mb-4 animate-bounce"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">CRITICAL IMPACT</h1>
+            <p class="text-gray-400 mb-2">Systems offline. Structural integrity collapsed.</p>
+            <p class="text-2xl font-bold text-green-400 mb-6">Laps Survived: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-red-500 to-green-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-red-500/30">
+                Reboot System
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('flappy_neon_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let isPlaying = false;
+        
+        // Ship Properties
+        let ship = {
+            x: 0,
+            y: 0,
+            radius: 14,
+            velocity: 0,
+            gravity: 0.4,
+            thrust: -7.5,
+            angle: 0
+        };
+
+        let columns = [];
+        let particles = [];
+        let frameCount = 0;
+        const columnSpawnInterval = 120; // frames
+        const columnSpeed = 3;
+        const gapHeight = 160;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (!isPlaying) {
+                ship.x = canvas.width * 0.25;
+                ship.y = canvas.height * 0.5;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class EnergyColumn {
+            constructor() {
+                this.x = canvas.width;
+                this.width = 60;
+                // Random gap position
+                this.gapY = Math.random() * (canvas.height - gapHeight - 200) + 100;
+                this.passed = false;
+                this.color = '#1dd1a1';
+            }
+
+            update() {
+                this.x -= columnSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = 'rgba(29, 209, 161, 0.1)';
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 4;
+
+                // Top Column
+                ctx.beginPath();
+                ctx.roundRect(this.x, -10, this.width, this.gapY + 10, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Bottom Column
+                const bottomHeight = canvas.height - (this.gapY + gapHeight);
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.gapY + gapHeight, this.width, bottomHeight + 10, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Inner electric grids
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                for (let offset = 10; offset < this.width; offset += 15) {
+                    // Top Column details
+                    ctx.moveTo(this.x + offset, 0);
+                    ctx.lineTo(this.x + offset, this.gapY);
+                    // Bottom Column details
+                    ctx.moveTo(this.x + offset, this.gapY + gapHeight);
+                    ctx.lineTo(this.x + offset, canvas.height);
+                }
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            checkCollision(ship) {
+                // Circle-AABB collision check for columns
+                // Ship bounds
+                const shipLeft = ship.x - ship.radius;
+                const shipRight = ship.x + ship.radius;
+                const shipTop = ship.y - ship.radius;
+                const shipBottom = ship.y + ship.radius;
+
+                // Collision with Top Column
+                if (shipRight > this.x && shipLeft < this.x + this.width) {
+                    if (shipTop < this.gapY || shipBottom > this.gapY + gapHeight) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        class FlappyParticle {
+            constructor(x, y, color, speedScale = 1) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.7) * 4 * speedScale;
+                this.vy = (Math.random() - 0.5) * 4 * speedScale;
+                this.size = Math.random() * 3 + 1;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.05 + 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function triggerAction() {
+            if (!isPlaying) return;
+            ship.velocity = ship.thrust;
+            
+            // Thrust emission particles
+            for (let i = 0; i < 5; i++) {
+                particles.push(new FlappyParticle(ship.x - 10, ship.y, '#ffffff', 0.5));
+            }
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            if (isPlaying && e.target === canvas) {
+                triggerAction();
+            }
+        });
+        window.addEventListener('touchstart', (e) => {
+            if (isPlaying && e.target === canvas) {
+                triggerAction();
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Add keyboard trigger (Spacebar)
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                triggerAction();
+                e.preventDefault();
+            }
+        });
+
+        function createShipExplosion() {
+            for (let i = 0; i < 30; i++) {
+                particles.push(new FlappyParticle(ship.x, ship.y, '#ffffff', 2.0));
+                particles.push(new FlappyParticle(ship.x, ship.y, '#1dd1a1', 2.0));
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Draw Background grid
+            ctx.fillStyle = '#080d08';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(29, 209, 161, 0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 80;
+            const xOffset = -(frameCount * 1.5) % gridSize;
+            for (let x = xOffset; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            frameCount++;
+
+            // Spawn columns
+            if (frameCount % columnSpawnInterval === 0) {
+                columns.push(new EnergyColumn());
+            }
+
+            // Update & Draw columns
+            for (let i = columns.length - 1; i >= 0; i--) {
+                const col = columns[i];
+                col.update();
+                col.draw();
+
+                // Check collision
+                if (col.checkCollision(ship)) {
+                    gameOver();
+                }
+
+                // Check point pass
+                if (!col.passed && col.x + col.width < ship.x) {
+                    col.passed = true;
+                    score++;
+                    scoreVal.innerText = score;
+                }
+
+                // Remove offscreen columns
+                if (col.x < -col.width) {
+                    columns.splice(i, 1);
+                }
+            }
+
+            // Update Ship physics
+            ship.velocity += ship.gravity;
+            ship.y += ship.velocity;
+            
+            // Limit velocity angle rotation
+            ship.angle = Math.min(Math.PI / 6, Math.max(-Math.PI / 8, ship.velocity * 0.05));
+
+            // Screen boundary check
+            if (ship.y - ship.radius < 0 || ship.y + ship.radius > canvas.height) {
+                gameOver();
+            }
+
+            // Draw Ship
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#1dd1a1';
+            ctx.translate(ship.x, ship.y);
+            ctx.rotate(ship.angle);
+            
+            // Thrust trail particle emitter periodically
+            if (frameCount % 2 === 0) {
+                particles.push(new FlappyParticle(ship.x - 14, ship.y, '#1dd1a1'));
+            }
+
+            // Draw beautiful triangular fighter
+            ctx.beginPath();
+            ctx.moveTo(18, 0);
+            ctx.lineTo(-14, -10);
+            ctx.lineTo(-6, 0);
+            ctx.lineTo(-14, 10);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#1dd1a1';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Cockpit glow
+            ctx.beginPath();
+            ctx.arc(2, 0, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#1dd1a1';
+            ctx.fill();
+
+            ctx.restore();
+
+            // Update & Draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            score = 0;
+            scoreVal.innerText = score;
+            columns = [];
+            particles = [];
+            frameCount = 0;
+            
+            ship.x = canvas.width * 0.25;
+            ship.y = canvas.height * 0.5;
+            ship.velocity = 0;
+            ship.angle = 0;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            createShipExplosion();
+            finalScoreVal.innerText = score;
+            
+            // Save High Score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('flappy_neon_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+
+            // Animate particles once to show explosion while modal overlay is appearing
+            ctx.fillStyle = 'rgba(8, 13, 8, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for (let p of particles) {
+                p.update();
+                p.draw();
+            }
+
+            setTimeout(() => {
+                gameOverModal.classList.remove('hidden');
+            }, 600);
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

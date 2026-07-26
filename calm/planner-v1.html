@@ -1,0 +1,2592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 Planner</title>
+  <style>
+    /* ===== BASE RESET & VARIABLES ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --border: #e5e5e5;
+      --text: #1a1a1a;
+      --text-muted: #737373;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --energy-1: #fecaca;
+      --energy-2: #fed7aa;
+      --energy-3: #fef08a;
+      --energy-4: #bbf7d0;
+      --energy-5: #86efac;
+      --focus-bg: #f0f9ff;
+      --focus-border: #bae6fd;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav.hidden { display: none; }
+
+    .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: all 0.15s;
+        }
+
+        .header-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: all 0.15s;
+        }
+
+
+
+        .header-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+
+
+        .nav-links {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .nav-links button {
+      background: none;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .nav-links button:hover { background: var(--bg); color: var(--text); }
+    .nav-links button.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .focus-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .focus-btn:hover { background: var(--bg); }
+    .focus-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ===== TYPOGRAPHY ===== */
+    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text); }
+    h3 { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.025em; }
+
+    .date-subtitle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
+
+    /* ===== FORM ELEMENTS ===== */
+    input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--surface);
+      transition: border-color 0.15s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    input:disabled, textarea:disabled {
+      background: var(--bg);
+      color: var(--text);
+      cursor: default;
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ===== SECTIONS ===== */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-header h3 { margin-bottom: 0; }
+
+    /* Helper text for guidance */
+    .helper-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 0.375rem;
+      display: none;
+    }
+    .helper-text.visible { display: block; }
+
+    /* ===== ENERGY SELECTOR ===== */
+    .energy-selector {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .energy-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .energy-btn:hover { transform: scale(1.05); }
+    .energy-btn.selected { border-width: 2px; border-color: var(--text); }
+    .energy-btn[data-level="1"] { background: var(--energy-1); }
+    .energy-btn[data-level="2"] { background: var(--energy-2); }
+    .energy-btn[data-level="3"] { background: var(--energy-3); }
+    .energy-btn[data-level="4"] { background: var(--energy-4); }
+    .energy-btn[data-level="5"] { background: var(--energy-5); }
+
+    /* ===== LISTS (Commitments, Focus, Actions) ===== */
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      background: var(--surface);
+    }
+
+    .list-item:last-child { margin-bottom: 0; }
+
+    .list-item input[type="text"] {
+      flex: 1;
+      border: none;
+      padding: 0;
+      background: transparent;
+    }
+
+    .list-item input[type="text"]:focus { outline: none; }
+
+    .list-item .time-input {
+      width: 70px;
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 0.75rem;
+      padding: 0.25rem;
+    }
+
+    .list-item .drag-handle {
+      cursor: grab;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0.25rem;
+      user-select: none;
+    }
+
+    .list-item .drag-handle:active { cursor: grabbing; }
+
+    .list-item .delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .list-item:hover .delete-btn { opacity: 1; }
+    .list-item .delete-btn:hover { color: #dc2626; }
+
+    /* Focus blocks - visually distinct */
+    .list-item.focus-block {
+      background: var(--focus-bg);
+      border-color: var(--focus-border);
+      border-left-width: 3px;
+    }
+
+    /* Actions checkboxes */
+    .list-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .list-item.done { opacity: 0.5; }
+    .list-item.done input[type="text"] { text-decoration: line-through; }
+
+    .add-btn {
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      padding: 0.5rem;
+      width: 100%;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      transition: all 0.15s;
+    }
+
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .add-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--border); color: var(--text-muted); }
+
+    /* Focus limit message - positioned to avoid layout jump */
+    .focus-limit-msg {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 0.5rem;
+      font-style: italic;
+      min-height: 0;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+    .focus-limit-msg.visible {
+      min-height: 2rem;
+      max-height: 2rem;
+      opacity: 1;
+    }
+
+    /* ===== ARTIFACTS & FOUND TIME ===== */
+    .inline-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .inline-row label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .inline-row input[type="number"] {
+      width: 60px;
+      text-align: center;
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toggle {
+      width: 40px;
+      height: 22px;
+      background: var(--border);
+      border-radius: 11px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle.active { background: var(--success); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+
+    .toggle.active::after { transform: translateX(18px); }
+
+    .found-time-note {
+      flex: 1;
+      min-width: 150px;
+      display: none;
+    }
+
+    .found-time-note.visible { display: block; }
+
+    /* ===== DAY COMPLETE ===== */
+    .day-complete-section {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 1.5rem;
+    }
+
+    .day-complete-section .toggle-container {
+      flex-shrink: 0;
+    }
+
+    .day-complete-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .day-summary {
+      display: none;
+      flex: 1;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    .day-summary.visible { display: block; }
+
+    /* Day complete muting - allow text selection but disable inputs */
+    .today-content.day-complete {
+      opacity: 0.6;
+    }
+
+    .today-content.day-complete .section {
+      background: var(--bg);
+    }
+
+    .today-content.day-complete input,
+    .today-content.day-complete textarea,
+    .today-content.day-complete button,
+    .today-content.day-complete .toggle,
+    .today-content.day-complete .energy-btn {
+      pointer-events: none;
+    }
+
+    /* ===== MONTH VIEW ===== */
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .month-nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .month-nav button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .month-nav button:hover { background: var(--bg); }
+
+    /* Monthly insights */
+    .monthly-insights {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      line-height: 1.6;
+      min-height: 2.5rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .calendar-header {
+      background: var(--surface);
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .calendar-day {
+      background: var(--surface);
+      padding: 0.5rem;
+      min-height: 80px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .calendar-day:hover { background: var(--bg); }
+    .calendar-day.other-month { opacity: 0.4; }
+    .calendar-day.today { background: var(--accent-light); }
+
+    .calendar-day .day-number {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .calendar-day .day-indicators {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .energy-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .actions-count {
+      font-size: 0.625rem;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .habit-dots {
+      display: flex;
+      gap: 1px;
+    }
+
+    .habit-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .habit-dot.done { background: var(--success); }
+
+    /* Calendar day tooltip */
+    .day-tooltip {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--surface);
+      font-size: 0.6875rem;
+      padding: 0.375rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 50;
+      pointer-events: none;
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .day-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--text);
+    }
+
+    .calendar-day:hover .day-tooltip { display: block; }
+
+    /* ===== HABITS VIEW ===== */
+    .habits-philosophy {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 1.25rem;
+    }
+
+    .habit-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      background: var(--surface);
+    }
+
+    .habit-row.archived {
+      opacity: 0.5;
+      background: var(--bg);
+    }
+
+    .habit-name {
+      flex: 1;
+      font-size: 0.875rem;
+    }
+
+    .habit-name input {
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      width: 100%;
+    }
+
+    .habit-checkbox {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      accent-color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .habit-actions {
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .habit-row:hover .habit-actions { opacity: 1; }
+
+    .habit-archive, .habit-delete {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .habit-archive:hover { color: var(--accent); }
+    .habit-delete:hover { color: #dc2626; }
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(31, 1fr);
+      gap: 2px;
+      margin-top: 1rem;
+    }
+
+    .heatmap-cell {
+      aspect-ratio: 1;
+      background: var(--bg);
+      border-radius: 2px;
+      font-size: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .heatmap-cell.done { background: var(--success); color: white; }
+    .heatmap-cell.empty { background: transparent; }
+
+    /* Archived habits section */
+    .archived-habits-section {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .archived-habits-section h3 {
+      font-size: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* ===== COMMITMENTS VIEW (formerly Goals) ===== */
+    .commitment-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .commitment-card textarea {
+      margin-bottom: 0.75rem;
+    }
+
+    .commitment-cost {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .commitment-cost label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .commitment-cost input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+    }
+
+    .commitment-cost-hint {
+      font-size: 0.6875rem;
+      color: var(--warning);
+      margin-left: auto;
+      display: none;
+    }
+
+    .commitment-cost-hint.visible { display: inline; }
+
+    .milestones {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .milestone {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .milestone label {
+      font-size: 0.625rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .milestone input {
+      font-size: 0.75rem;
+      padding: 0.375rem;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    .progress-input {
+      width: 60px;
+      text-align: center;
+    }
+
+    .commitment-delete {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .commitment-delete:hover { color: #dc2626; }
+
+    /* ===== WEEKLY REVIEW ===== */
+    .week-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .week-selector button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .week-selector span {
+      font-weight: 500;
+    }
+
+    /* Week stats */
+    .week-stats {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      line-height: 1.6;
+      min-height: 2.5rem;
+    }
+
+    .review-section {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+
+    .review-section label {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .review-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      background: var(--text);
+      color: var(--surface);
+      border-radius: 50%;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* ===== SETTINGS ===== */
+    .settings-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .settings-section h3 {
+      margin-bottom: 0.75rem;
+    }
+
+    .settings-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.15s;
+    }
+
+    .settings-btn:hover { background: var(--bg); }
+    .settings-btn.danger { color: #dc2626; border-color: #fecaca; }
+    .settings-btn.danger:hover { background: #fef2f2; }
+
+    /* ===== KEYBOARD HINT ===== */
+    .keyboard-hint {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .keyboard-hint kbd {
+      background: var(--bg);
+      padding: 0.125rem 0.375rem;
+      border-radius: 2px;
+      font-family: inherit;
+      margin-right: 0.25rem;
+    }
+
+    /* ===== FOCUS MODE ===== */
+    body.focus-mode { background: var(--surface); }
+    body.focus-mode main { max-width: 600px; padding-top: 3rem; }
+    body.focus-mode .keyboard-hint { display: none; }
+
+    .exit-focus-btn {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .exit-focus-btn:hover { background: var(--bg); color: var(--text); }
+
+    body.focus-mode .exit-focus-btn { display: block; }
+
+    /* ===== UTILITY ===== */
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .hidden { display: none !important; }
+
+    /* Screen reader only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav id="navbar" role="navigation" aria-label="Main navigation">
+      <div class="nav-links" role="tablist">
+        <a href="index.html" class="header-btn" title="Back to Apps">⌂</a>
+        <button data-view="today" class="active" role="tab" aria-selected="true">Today</button>
+        <button data-view="month" role="tab" aria-selected="false">Month</button>
+        <button data-view="habits" role="tab" aria-selected="false">Habits</button>
+        <button data-view="commitments" role="tab" aria-selected="false">Commitments</button>
+        <button data-view="review" role="tab" aria-selected="false">Weekly Review</button>
+        <button data-view="settings" role="tab" aria-selected="false">Settings</button>
+      </div>
+      <div class="nav-right">
+        <button class="focus-btn" id="focusToggle" aria-label="Toggle focus mode">Focus Mode</button>
+      </div>
+    </nav>
+
+    <main role="main">
+      <!-- ===== TODAY VIEW ===== -->
+      <div id="today-view" class="view active" role="tabpanel">
+        <h1 id="today-title"></h1>
+        <p class="date-subtitle" id="today-subtitle"></p>
+
+        <div id="today-content" class="today-content">
+          <!-- Today Matters -->
+          <div class="section">
+            <h3>Today matters because...</h3>
+            <input type="text" id="todayMatters" placeholder="What makes today significant?" aria-label="Why today matters">
+            <p class="helper-text" id="todayMattersHelper">One sentence is enough. This anchors the day.</p>
+          </div>
+
+          <!-- Energy Level -->
+          <div class="section">
+            <h3 id="energyLabel">Energy Level</h3>
+            <div class="energy-selector" id="energySelector" role="group" aria-labelledby="energyLabel">
+              <button class="energy-btn" data-level="1" aria-label="Energy level 1 - Very low">1</button>
+              <button class="energy-btn" data-level="2" aria-label="Energy level 2 - Low">2</button>
+              <button class="energy-btn" data-level="3" aria-label="Energy level 3 - Moderate">3</button>
+              <button class="energy-btn" data-level="4" aria-label="Energy level 4 - High">4</button>
+              <button class="energy-btn" data-level="5" aria-label="Energy level 5 - Very high">5</button>
+            </div>
+          </div>
+
+          <!-- One Thing - formerly Workflow -->
+          <div class="section">
+            <h3>If only one thing ships today...</h3>
+            <input type="text" id="workflow" placeholder="The single most important outcome" aria-label="Most important outcome today">
+          </div>
+
+          <!-- Non-negotiables (data field still "commitments" for backward compat) -->
+          <div class="section">
+            <div class="section-header">
+              <h3>Non-negotiables</h3>
+            </div>
+            <div id="commitmentsList" role="list"></div>
+            <button class="add-btn" id="addCommitment" aria-label="Add non-negotiable item">+ Add item (C)</button>
+          </div>
+
+          <!-- Flexible Focus Blocks -->
+          <div class="section">
+            <div class="section-header">
+              <h3>Flexible Focus</h3>
+            </div>
+            <div id="focusList" role="list"></div>
+            <div class="focus-limit-msg" id="focusLimitMsg" aria-live="polite">Three is enough.</div>
+            <button class="add-btn" id="addFocus" aria-label="Add focus block">+ Add focus block (F)</button>
+          </div>
+
+          <!-- Actions -->
+          <div class="section">
+            <div class="section-header">
+              <h3>Actions</h3>
+            </div>
+            <div id="actionsList" role="list"></div>
+            <button class="add-btn" id="addAction" aria-label="Add action item">+ Add action (A)</button>
+          </div>
+
+          <!-- Notes -->
+          <div class="section">
+            <h3>Notes</h3>
+            <textarea id="notes" placeholder="Freeform thoughts, observations, ideas..." aria-label="Daily notes"></textarea>
+          </div>
+
+          <!-- Artifacts & Found Time -->
+          <div class="section">
+            <div class="inline-row">
+              <label>
+                Artifacts shipped:
+                <input type="number" id="artifacts" min="0" value="0" aria-label="Number of artifacts shipped">
+              </label>
+              <div class="toggle-container">
+                <span id="foundTimeLabel" style="font-size: 0.875rem; color: var(--text-muted);">Found time?</span>
+                <div class="toggle" id="foundTimeToggle" role="switch" aria-checked="false" aria-labelledby="foundTimeLabel" tabindex="0"></div>
+              </div>
+              <input type="text" id="foundTimeNote" class="found-time-note" placeholder="How did you find time?" aria-label="Found time notes">
+            </div>
+          </div>
+        </div>
+
+        <!-- Day Complete -->
+        <div class="day-complete-section">
+          <div class="toggle-container">
+            <span class="day-complete-label" id="dayCompleteLabel">Day Complete</span>
+            <div class="toggle" id="dayCompleteToggle" role="switch" aria-checked="false" aria-labelledby="dayCompleteLabel" tabindex="0"></div>
+          </div>
+          <div class="day-summary" id="daySummary" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <!-- ===== MONTH VIEW ===== -->
+      <div id="month-view" class="view" role="tabpanel">
+        <div class="month-header">
+          <h1 id="monthTitle"></h1>
+          <div class="month-nav">
+            <button id="prevMonth" aria-label="Previous month">← Prev</button>
+            <button id="todayBtn">Today</button>
+            <button id="nextMonth" aria-label="Next month">Next →</button>
+          </div>
+        </div>
+        <div class="monthly-insights" id="monthlyInsights" aria-live="polite"></div>
+        <div class="calendar-grid" id="calendarGrid" role="grid"></div>
+      </div>
+
+      <!-- ===== HABITS VIEW ===== -->
+      <div id="habits-view" class="view" role="tabpanel">
+        <h1>Habits</h1>
+        <p class="habits-philosophy">Habits are not goals. They are votes for the person you're becoming.</p>
+
+        <div class="section">
+          <div class="section-header">
+            <h3>Today's Habits</h3>
+          </div>
+          <div id="habitsList" role="list"></div>
+          <button class="add-btn" id="addHabit" aria-label="Add new habit">+ Add habit</button>
+        </div>
+
+        <div id="archivedHabitsContainer" class="archived-habits-section hidden">
+          <h3>Archived</h3>
+          <div id="archivedHabitsList" role="list"></div>
+        </div>
+
+        <div class="section">
+          <h3>Monthly Heatmap</h3>
+          <div id="habitsHeatmap"></div>
+        </div>
+      </div>
+
+      <!-- ===== COMMITMENTS VIEW (formerly Goals) ===== -->
+      <div id="commitments-view" class="view" role="tabpanel">
+        <h1>2026 Commitments</h1>
+        <p class="date-subtitle">Up to 10 yearly commitments with quarterly milestones</p>
+
+        <div id="commitmentCardsList"></div>
+        <button class="add-btn" id="addCommitmentCard" style="margin-top: 0;" aria-label="Add new commitment">+ Add commitment</button>
+      </div>
+
+      <!-- ===== WEEKLY REVIEW VIEW ===== -->
+      <div id="review-view" class="view" role="tabpanel">
+        <h1>Weekly Review</h1>
+
+        <div class="week-selector">
+          <button id="prevWeek" aria-label="Previous week">←</button>
+          <span id="weekLabel"></span>
+          <button id="nextWeek" aria-label="Next week">→</button>
+        </div>
+
+        <div class="week-stats" id="weekStats" aria-live="polite"></div>
+
+        <div class="review-section">
+          <label for="reviewShipped"><span class="review-number">1</span> What shipped this week</label>
+          <textarea id="reviewShipped" placeholder="Completed projects, deliverables, progress made..."></textarea>
+        </div>
+
+        <div class="review-section">
+          <label for="reviewMetrics"><span class="review-number">2</span> Metrics snapshot</label>
+          <textarea id="reviewMetrics" placeholder="Key numbers, stats, measurements..."></textarea>
+        </div>
+
+        <div class="review-section">
+          <label for="reviewFriction"><span class="review-number">3</span> Friction notes</label>
+          <textarea id="reviewFriction" placeholder="What drained you? What slowed you down?"></textarea>
+        </div>
+
+        <div class="review-section">
+          <label for="reviewDoubleDown"><span class="review-number">4</span> What to double down on next week</label>
+          <input type="text" id="reviewDoubleDown" placeholder="One sentence focus">
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS VIEW ===== -->
+      <div id="settings-view" class="view" role="tabpanel">
+        <h1>Settings</h1>
+        <p class="date-subtitle">Data management</p>
+
+        <div class="settings-section">
+          <h3>Export & Import</h3>
+          <button class="settings-btn" id="exportBtn">Export JSON</button>
+          <button class="settings-btn" id="importBtn">Import JSON</button>
+          <button class="settings-btn" id="templateBtn">Export Fresh Template</button>
+          <input type="file" id="importFile" accept=".json" style="display: none;" aria-hidden="true">
+        </div>
+
+        <div class="settings-section">
+          <h3>Danger Zone</h3>
+          <button class="settings-btn danger" id="resetBtn">Reset All Data</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>Keyboard Shortcuts</h3>
+          <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.8;">
+            <kbd>A</kbd> Add action<br>
+            <kbd>C</kbd> Add non-negotiable<br>
+            <kbd>F</kbd> Add focus block<br>
+            <kbd>Esc</kbd> Exit focus mode<br>
+            <kbd>1-5</kbd> Set energy level
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <div class="keyboard-hint" id="keyboardHint" aria-hidden="true">
+      <kbd>A</kbd> action <kbd>C</kbd> non-neg <kbd>F</kbd> focus
+    </div>
+
+    <button class="exit-focus-btn" id="exitFocusBtn" aria-label="Exit focus mode">Exit Focus Mode (Esc)</button>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       DATA MODEL & MIGRATION
+
+       Version history:
+       - v1: Initial schema (days, habits, habitCompletions, goals, weeklyReviews)
+       - v2: Added habit.archived, goal.weeklyCost, day.dayComplete
+       - v3: Added meta.version for explicit versioning
+
+       Migration approach:
+       - On load, check meta.version (default to 1 if missing)
+       - Apply migrations sequentially
+       - Never delete existing data, only add fields with safe defaults
+
+       Import behavior:
+       - OVERWRITES current data completely
+       - Applies migrations to imported data
+       - Validates structure before accepting
+    ========================================================================== */
+
+    const STORAGE_KEY = 'planner2026';
+    const CURRENT_VERSION = 3;
+
+    // State
+    let data = loadData();
+    let currentDate = new Date();
+    let viewMonth = new Date();
+    let viewWeek = getWeekNumber(new Date());
+
+    // ===== DATA FUNCTIONS =====
+
+    /**
+     * Load data from localStorage and apply migrations
+     */
+    function loadData() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          let parsed = JSON.parse(stored);
+          parsed = migrateData(parsed);
+          return parsed;
+        } catch (e) {
+          console.error('Failed to parse stored data:', e);
+        }
+      }
+      return createEmptyData();
+    }
+
+    /**
+     * Create a fresh empty data structure at current version
+     */
+    function createEmptyData() {
+      return {
+        meta: { version: CURRENT_VERSION },
+        days: {},
+        habits: [],
+        habitCompletions: {},
+        goals: [],
+        weeklyReviews: {}
+      };
+    }
+
+    /**
+     * Apply all necessary migrations to bring data to current version
+     */
+    function migrateData(data) {
+      // Determine source version
+      const sourceVersion = data.meta?.version || 1;
+
+      // Ensure meta exists
+      if (!data.meta) {
+        data.meta = { version: 1 };
+      }
+
+      // Migration v1 -> v2: Add archived to habits, weeklyCost to goals, dayComplete to days
+      if (sourceVersion < 2) {
+        if (data.habits) {
+          data.habits = data.habits.map(h => ({
+            ...h,
+            archived: h.archived ?? false
+          }));
+        }
+        if (data.goals) {
+          data.goals = data.goals.map(g => ({
+            ...g,
+            weeklyCost: g.weeklyCost ?? ''
+          }));
+        }
+        // dayComplete is added lazily in getDayData
+        data.meta.version = 2;
+      }
+
+      // Migration v2 -> v3: Just version bump, no structural changes
+      if (sourceVersion < 3) {
+        data.meta.version = 3;
+      }
+
+      // Ensure required collections exist
+      data.days = data.days || {};
+      data.habits = data.habits || [];
+      data.habitCompletions = data.habitCompletions || {};
+      data.goals = data.goals || [];
+      data.weeklyReviews = data.weeklyReviews || {};
+
+      return data;
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    /**
+     * Get date key in YYYY-MM-DD format using local timezone
+     * This prevents off-by-one errors across timezone boundaries
+     */
+    function getDateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    /**
+     * Parse a date key back to a Date object at noon local time
+     * Using noon avoids DST edge cases
+     */
+    function parseDateKey(dateKey) {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      return new Date(year, month - 1, day, 12, 0, 0);
+    }
+
+    function getDayData(dateKey) {
+      if (!data.days[dateKey]) {
+        data.days[dateKey] = {
+          todayMatters: '',
+          energyLevel: 0,
+          commitments: [],
+          focusBlocks: [],
+          actions: [],
+          workflow: '',
+          notes: '',
+          artifactsShipped: 0,
+          foundTime: false,
+          foundTimeNote: '',
+          dayComplete: false
+        };
+      }
+      // Ensure all fields exist for older data
+      const d = data.days[dateKey];
+      if (d.dayComplete === undefined) d.dayComplete = false;
+      if (d.focusBlocks === undefined) d.focusBlocks = [];
+      if (d.commitments === undefined) d.commitments = [];
+      if (d.actions === undefined) d.actions = [];
+      return d;
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // ===== DATE UTILITIES =====
+    function formatDate(date) {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    }
+
+    function formatShortDate(date) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    /**
+     * Get ISO week number with year
+     * Handles year boundaries correctly (week 1 may start in previous year)
+     */
+    function getWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return { year: d.getUTCFullYear(), week: weekNo };
+    }
+
+    function getWeekKey(weekObj) {
+      return `${weekObj.year}-W${String(weekObj.week).padStart(2, '0')}`;
+    }
+
+    /**
+     * Get the Monday-Sunday date range for an ISO week
+     */
+    function getWeekDates(weekObj) {
+      // Find Jan 4 of the year (always in week 1)
+      const jan4 = new Date(weekObj.year, 0, 4);
+      const jan4DayOfWeek = jan4.getDay() || 7; // Convert Sunday 0 to 7
+
+      // Find Monday of week 1
+      const week1Monday = new Date(jan4);
+      week1Monday.setDate(jan4.getDate() - jan4DayOfWeek + 1);
+
+      // Calculate Monday of target week
+      const monday = new Date(week1Monday);
+      monday.setDate(week1Monday.getDate() + (weekObj.week - 1) * 7);
+
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      return { start: monday, end: sunday };
+    }
+
+    /**
+     * Get the number of ISO weeks in a year
+     */
+    function getWeeksInYear(year) {
+      const dec31 = new Date(year, 11, 31);
+      const weekInfo = getWeekNumber(dec31);
+      // If Dec 31 is in week 1 of next year, check Dec 24
+      if (weekInfo.week === 1) {
+        return getWeekNumber(new Date(year, 11, 24)).week;
+      }
+      return weekInfo.week;
+    }
+
+    // ===== NAVIGATION =====
+    const navButtons = document.querySelectorAll('.nav-links button');
+    const views = document.querySelectorAll('.view');
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const viewName = btn.dataset.view;
+        showView(viewName);
+      });
+    });
+
+    function showView(viewName) {
+      navButtons.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      views.forEach(v => v.classList.remove('active'));
+
+      const activeBtn = document.querySelector(`[data-view="${viewName}"]`);
+      activeBtn.classList.add('active');
+      activeBtn.setAttribute('aria-selected', 'true');
+      document.getElementById(`${viewName}-view`).classList.add('active');
+
+      // Refresh view content
+      if (viewName === 'today') renderToday();
+      if (viewName === 'month') renderMonth();
+      if (viewName === 'habits') renderHabits();
+      if (viewName === 'commitments') renderCommitments();
+      if (viewName === 'review') renderWeeklyReview();
+    }
+
+    // ===== FOCUS MODE =====
+    const focusToggle = document.getElementById('focusToggle');
+    const navbar = document.getElementById('navbar');
+
+    function exitFocusMode() {
+      document.body.classList.remove('focus-mode');
+      navbar.classList.remove('hidden');
+      focusToggle.classList.remove('active');
+    }
+
+    focusToggle.addEventListener('click', () => {
+      document.body.classList.toggle('focus-mode');
+      navbar.classList.toggle('hidden');
+      focusToggle.classList.toggle('active');
+    });
+
+    document.getElementById('exitFocusBtn').addEventListener('click', exitFocusMode);
+
+    // ===== TODAY VIEW =====
+    function renderToday() {
+      const dateKey = getDateKey(currentDate);
+      const dayData = getDayData(dateKey);
+
+      // Title
+      document.getElementById('today-title').textContent = formatDate(currentDate);
+      const isToday = getDateKey(new Date()) === dateKey;
+      document.getElementById('today-subtitle').textContent = isToday ? "Today" : "";
+
+      // Fields
+      document.getElementById('todayMatters').value = dayData.todayMatters;
+      document.getElementById('workflow').value = dayData.workflow;
+      document.getElementById('notes').value = dayData.notes;
+      document.getElementById('artifacts').value = dayData.artifactsShipped;
+
+      // Today Matters helper text
+      const helper = document.getElementById('todayMattersHelper');
+      helper.classList.toggle('visible', !dayData.todayMatters.trim());
+
+      // Energy
+      document.querySelectorAll('.energy-btn').forEach(btn => {
+        const selected = parseInt(btn.dataset.level) === dayData.energyLevel;
+        btn.classList.toggle('selected', selected);
+        btn.setAttribute('aria-pressed', selected);
+      });
+
+      // Found time
+      const foundToggle = document.getElementById('foundTimeToggle');
+      const noteField = document.getElementById('foundTimeNote');
+      foundToggle.classList.toggle('active', dayData.foundTime);
+      foundToggle.setAttribute('aria-checked', dayData.foundTime);
+      noteField.classList.toggle('visible', dayData.foundTime);
+      noteField.value = dayData.foundTimeNote;
+
+      // Day Complete
+      const dayCompleteToggle = document.getElementById('dayCompleteToggle');
+      const todayContent = document.getElementById('today-content');
+      const daySummary = document.getElementById('daySummary');
+
+      dayCompleteToggle.classList.toggle('active', dayData.dayComplete);
+      dayCompleteToggle.setAttribute('aria-checked', dayData.dayComplete);
+      todayContent.classList.toggle('day-complete', dayData.dayComplete);
+      daySummary.classList.toggle('visible', dayData.dayComplete);
+
+      if (dayData.dayComplete) {
+        updateDaySummary(dayData);
+      }
+
+      // Lists
+      renderTodayCommitments(dayData);
+      renderFocusBlocks(dayData);
+      renderActions(dayData);
+      updateFocusButton(dayData);
+    }
+
+    function updateDaySummary(dayData) {
+      const daySummary = document.getElementById('daySummary');
+      const completedActions = dayData.actions.filter(a => a.done).length;
+      const totalActions = dayData.actions.length;
+      const energyText = dayData.energyLevel ? `Energy ${dayData.energyLevel}/5` : 'No energy logged';
+      const artifactText = dayData.artifactsShipped === 1 ? '1 artifact shipped' : `${dayData.artifactsShipped} artifacts shipped`;
+
+      let summaryParts = [energyText, artifactText, `${completedActions}/${totalActions} actions`];
+
+      // Include "one thing" if filled
+      if (dayData.workflow && dayData.workflow.trim()) {
+        const trimmed = dayData.workflow.trim();
+        const oneThingText = trimmed.length > 60 ? trimmed.substring(0, 57) + '...' : trimmed;
+        summaryParts.push(`"${oneThingText}"`);
+      }
+
+      daySummary.textContent = summaryParts.join(' · ');
+    }
+
+    function renderTodayCommitments(dayData) {
+      const container = document.getElementById('commitmentsList');
+      if (dayData.commitments.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = dayData.commitments.map((c) => `
+        <div class="list-item" data-id="${c.id}" role="listitem">
+          <input type="text" class="time-input" value="${escapeHtml(c.time)}" placeholder="Time" data-field="time" aria-label="Time for ${escapeHtml(c.text) || 'item'}">
+          <input type="text" value="${escapeHtml(c.text)}" placeholder="Non-negotiable" data-field="text" aria-label="Non-negotiable item">
+          <button class="delete-btn" data-action="delete" aria-label="Delete this item">×</button>
+        </div>
+      `).join('');
+      attachTodayCommitmentListeners();
+    }
+
+    function renderFocusBlocks(dayData) {
+      const container = document.getElementById('focusList');
+      if (dayData.focusBlocks.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = dayData.focusBlocks.map((f) => `
+        <div class="list-item focus-block" data-id="${f.id}" draggable="true" role="listitem">
+          <span class="drag-handle" aria-hidden="true">⋮⋮</span>
+          <input type="text" value="${escapeHtml(f.text)}" placeholder="Focus block" aria-label="Focus block">
+          <button class="delete-btn" data-action="delete" aria-label="Delete focus block">×</button>
+        </div>
+      `).join('');
+      attachFocusListeners();
+    }
+
+    function renderActions(dayData) {
+      const container = document.getElementById('actionsList');
+      if (dayData.actions.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = dayData.actions.map(a => `
+        <div class="list-item ${a.done ? 'done' : ''}" data-id="${a.id}" role="listitem">
+          <input type="checkbox" ${a.done ? 'checked' : ''} aria-label="Mark action as ${a.done ? 'incomplete' : 'complete'}">
+          <input type="text" value="${escapeHtml(a.text)}" placeholder="Action item" aria-label="Action item">
+          <button class="delete-btn" data-action="delete" aria-label="Delete action">×</button>
+        </div>
+      `).join('');
+      attachActionListeners();
+    }
+
+    function updateFocusButton(dayData) {
+      const addFocusBtn = document.getElementById('addFocus');
+      const limitMsg = document.getElementById('focusLimitMsg');
+      const atLimit = dayData.focusBlocks.length >= 3;
+
+      addFocusBtn.disabled = atLimit;
+      limitMsg.classList.toggle('visible', atLimit);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    // Event listeners for Today view (static elements)
+    document.getElementById('todayMatters').addEventListener('input', (e) => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.todayMatters = e.target.value;
+      saveData();
+      // Update helper visibility
+      const helper = document.getElementById('todayMattersHelper');
+      helper.classList.toggle('visible', !e.target.value.trim());
+    });
+
+    document.getElementById('workflow').addEventListener('input', (e) => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.workflow = e.target.value;
+      saveData();
+      // Update summary if day is complete
+      if (dayData.dayComplete) {
+        updateDaySummary(dayData);
+      }
+    });
+
+    document.getElementById('notes').addEventListener('input', (e) => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.notes = e.target.value;
+      saveData();
+    });
+
+    document.getElementById('artifacts').addEventListener('input', (e) => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.artifactsShipped = parseInt(e.target.value) || 0;
+      saveData();
+      if (dayData.dayComplete) {
+        updateDaySummary(dayData);
+      }
+    });
+
+    document.getElementById('energySelector').addEventListener('click', (e) => {
+      if (e.target.classList.contains('energy-btn')) {
+        const level = parseInt(e.target.dataset.level);
+        const dayData = getDayData(getDateKey(currentDate));
+        dayData.energyLevel = level;
+        saveData();
+        renderToday();
+      }
+    });
+
+    // Toggle handlers with keyboard support
+    function setupToggle(toggleEl, callback) {
+      toggleEl.addEventListener('click', callback);
+      toggleEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          callback();
+        }
+      });
+    }
+
+    setupToggle(document.getElementById('foundTimeToggle'), () => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.foundTime = !dayData.foundTime;
+      saveData();
+      renderToday();
+    });
+
+    document.getElementById('foundTimeNote').addEventListener('input', (e) => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.foundTimeNote = e.target.value;
+      saveData();
+    });
+
+    setupToggle(document.getElementById('dayCompleteToggle'), () => {
+      const dayData = getDayData(getDateKey(currentDate));
+      dayData.dayComplete = !dayData.dayComplete;
+      saveData();
+      renderToday();
+    });
+
+    // Add buttons
+    document.getElementById('addCommitment').addEventListener('click', () => addTodayCommitment());
+    document.getElementById('addFocus').addEventListener('click', () => addFocusBlock());
+    document.getElementById('addAction').addEventListener('click', () => addAction());
+
+    function addTodayCommitment() {
+      const dayData = getDayData(getDateKey(currentDate));
+      if (dayData.dayComplete) return;
+      dayData.commitments.push({ id: generateId(), time: '', text: '' });
+      saveData();
+      renderTodayCommitments(dayData);
+      const inputs = document.querySelectorAll('#commitmentsList .time-input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function addFocusBlock() {
+      const dayData = getDayData(getDateKey(currentDate));
+      if (dayData.dayComplete) return;
+      if (dayData.focusBlocks.length >= 3) {
+        return; // Silently block - message is already visible
+      }
+      dayData.focusBlocks.push({ id: generateId(), text: '' });
+      saveData();
+      renderFocusBlocks(dayData);
+      updateFocusButton(dayData);
+      const inputs = document.querySelectorAll('#focusList input[type="text"]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function addAction() {
+      const dayData = getDayData(getDateKey(currentDate));
+      if (dayData.dayComplete) return;
+      dayData.actions.push({ id: generateId(), text: '', done: false });
+      saveData();
+      renderActions(dayData);
+      const inputs = document.querySelectorAll('#actionsList input[type="text"]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function attachTodayCommitmentListeners() {
+      document.querySelectorAll('#commitmentsList .list-item').forEach(item => {
+        const id = item.dataset.id;
+
+        item.querySelectorAll('input').forEach(input => {
+          input.addEventListener('input', () => {
+            const dayData = getDayData(getDateKey(currentDate));
+            const commitment = dayData.commitments.find(c => c.id === id);
+            if (commitment) {
+              if (input.dataset.field === 'time') {
+                commitment.time = input.value;
+              } else {
+                commitment.text = input.value;
+              }
+              saveData();
+            }
+          });
+        });
+
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          const dayData = getDayData(getDateKey(currentDate));
+          dayData.commitments = dayData.commitments.filter(c => c.id !== id);
+          saveData();
+          renderTodayCommitments(dayData);
+        });
+      });
+    }
+
+    // Drag state managed at module level to survive listener reattachment
+    let draggedFocusId = null;
+
+    function attachFocusListeners() {
+      document.querySelectorAll('#focusList .list-item').forEach(item => {
+        const id = item.dataset.id;
+
+        item.querySelector('input').addEventListener('input', (e) => {
+          const dayData = getDayData(getDateKey(currentDate));
+          const focus = dayData.focusBlocks.find(f => f.id === id);
+          if (focus) {
+            focus.text = e.target.value;
+            saveData();
+          }
+        });
+
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          const dayData = getDayData(getDateKey(currentDate));
+          dayData.focusBlocks = dayData.focusBlocks.filter(f => f.id !== id);
+          saveData();
+          renderFocusBlocks(dayData);
+          updateFocusButton(dayData);
+        });
+
+        // Drag and drop
+        item.addEventListener('dragstart', (e) => {
+          draggedFocusId = id;
+          item.style.opacity = '0.5';
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        item.addEventListener('dragend', () => {
+          item.style.opacity = '1';
+          draggedFocusId = null;
+          // Clean up any leftover border styles
+          document.querySelectorAll('#focusList .list-item').forEach(el => {
+            el.style.borderTop = '';
+            el.style.borderBottom = '';
+          });
+        });
+
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          const rect = item.getBoundingClientRect();
+          const midY = rect.top + rect.height / 2;
+          // Reset borders first
+          item.style.borderTop = '';
+          item.style.borderBottom = '';
+          if (e.clientY < midY) {
+            item.style.borderTop = '2px solid var(--accent)';
+          } else {
+            item.style.borderBottom = '2px solid var(--accent)';
+          }
+        });
+
+        item.addEventListener('dragleave', () => {
+          item.style.borderTop = '';
+          item.style.borderBottom = '';
+        });
+
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          item.style.borderTop = '';
+          item.style.borderBottom = '';
+
+          if (draggedFocusId && draggedFocusId !== id) {
+            const dayData = getDayData(getDateKey(currentDate));
+            const fromIndex = dayData.focusBlocks.findIndex(f => f.id === draggedFocusId);
+            let toIndex = dayData.focusBlocks.findIndex(f => f.id === id);
+
+            if (fromIndex === -1 || toIndex === -1) return;
+
+            // Determine if dropping before or after based on mouse position
+            const rect = item.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            const insertAfter = e.clientY >= midY;
+
+            // Remove from original position
+            const [removed] = dayData.focusBlocks.splice(fromIndex, 1);
+
+            // Recalculate toIndex after removal
+            toIndex = dayData.focusBlocks.findIndex(f => f.id === id);
+            if (toIndex === -1) {
+              // Target was removed (shouldn't happen), just push
+              dayData.focusBlocks.push(removed);
+            } else {
+              // Insert at correct position
+              const insertIndex = insertAfter ? toIndex + 1 : toIndex;
+              dayData.focusBlocks.splice(insertIndex, 0, removed);
+            }
+
+            saveData();
+            renderFocusBlocks(dayData);
+          }
+        });
+      });
+    }
+
+    function attachActionListeners() {
+      document.querySelectorAll('#actionsList .list-item').forEach(item => {
+        const id = item.dataset.id;
+
+        item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+          const dayData = getDayData(getDateKey(currentDate));
+          const action = dayData.actions.find(a => a.id === id);
+          if (action) {
+            action.done = e.target.checked;
+            saveData();
+            renderActions(dayData);
+            if (dayData.dayComplete) {
+              updateDaySummary(dayData);
+            }
+          }
+        });
+
+        item.querySelector('input[type="text"]').addEventListener('input', (e) => {
+          const dayData = getDayData(getDateKey(currentDate));
+          const action = dayData.actions.find(a => a.id === id);
+          if (action) {
+            action.text = e.target.value;
+            saveData();
+          }
+        });
+
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          const dayData = getDayData(getDateKey(currentDate));
+          dayData.actions = dayData.actions.filter(a => a.id !== id);
+          saveData();
+          renderActions(dayData);
+          if (dayData.dayComplete) {
+            updateDaySummary(dayData);
+          }
+        });
+      });
+    }
+
+    // ===== MONTH VIEW =====
+    function renderMonth() {
+      const year = viewMonth.getFullYear();
+      const month = viewMonth.getMonth();
+
+      document.getElementById('monthTitle').textContent = viewMonth.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric'
+      });
+
+      // Calculate monthly insights
+      renderMonthlyInsights(year, month);
+
+      const grid = document.getElementById('calendarGrid');
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      let html = days.map(d => `<div class="calendar-header" role="columnheader">${d}</div>`).join('');
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startPad = firstDay.getDay();
+      const todayKey = getDateKey(new Date());
+
+      // Previous month padding
+      const prevMonthLast = new Date(year, month, 0).getDate();
+      for (let i = startPad - 1; i >= 0; i--) {
+        const d = new Date(year, month - 1, prevMonthLast - i);
+        html += renderCalendarDay(d, true, todayKey);
+      }
+
+      // Current month
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(year, month, d);
+        html += renderCalendarDay(date, false, todayKey);
+      }
+
+      // Next month padding
+      const endPad = 6 - lastDay.getDay();
+      for (let d = 1; d <= endPad; d++) {
+        const date = new Date(year, month + 1, d);
+        html += renderCalendarDay(date, true, todayKey);
+      }
+
+      grid.innerHTML = html;
+
+      // Click handlers
+      grid.querySelectorAll('.calendar-day').forEach(day => {
+        day.addEventListener('click', () => {
+          const dateKey = day.dataset.date;
+          if (dateKey) {
+            currentDate = parseDateKey(dateKey);
+            showView('today');
+          }
+        });
+      });
+    }
+
+    function renderMonthlyInsights(year, month) {
+      const container = document.getElementById('monthlyInsights');
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      let energyLevels = [];
+      let totalArtifacts = 0;
+      let foundTimeDays = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayData = data.days[dateKey];
+        if (dayData) {
+          if (dayData.energyLevel > 0) {
+            energyLevels.push(dayData.energyLevel);
+          }
+          totalArtifacts += dayData.artifactsShipped || 0;
+          if (dayData.foundTime) {
+            foundTimeDays++;
+          }
+        }
+      }
+
+      if (energyLevels.length === 0 && totalArtifacts === 0 && foundTimeDays === 0) {
+        container.textContent = 'No data logged this month yet.';
+        return;
+      }
+
+      let insights = [];
+
+      if (energyLevels.length > 0) {
+        const counts = {};
+        energyLevels.forEach(e => counts[e] = (counts[e] || 0) + 1);
+        const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        const energyLabels = { 1: 'very low', 2: 'low', 3: 'moderate', 4: 'high', 5: 'very high' };
+        insights.push(`Most common energy: ${energyLabels[mostCommon[0]]} (${mostCommon[1]} days)`);
+      }
+
+      if (totalArtifacts > 0) {
+        insights.push(`${totalArtifacts} artifact${totalArtifacts === 1 ? '' : 's'} shipped`);
+      }
+
+      if (foundTimeDays > 0) {
+        insights.push(`${foundTimeDays} "found time" day${foundTimeDays === 1 ? '' : 's'}`);
+      }
+
+      container.textContent = insights.join(' · ');
+    }
+
+    function renderCalendarDay(date, otherMonth, todayKey) {
+      const dateKey = getDateKey(date);
+      const dayData = data.days[dateKey];
+      const isToday = dateKey === todayKey;
+
+      let indicators = '';
+      let tooltipContent = '';
+      let hasData = false;
+
+      if (dayData) {
+        // Energy dot
+        if (dayData.energyLevel) {
+          indicators += `<div class="energy-dot" style="background: var(--energy-${dayData.energyLevel})" aria-hidden="true"></div>`;
+          const energyLabels = { 1: 'Very low', 2: 'Low', 3: 'Moderate', 4: 'High', 5: 'Very high' };
+          tooltipContent += `Energy: ${energyLabels[dayData.energyLevel]}<br>`;
+          hasData = true;
+        }
+
+        // Artifacts
+        if (dayData.artifactsShipped > 0) {
+          tooltipContent += `Artifacts: ${dayData.artifactsShipped}<br>`;
+          hasData = true;
+        }
+
+        // Actions count
+        const completed = dayData.actions ? dayData.actions.filter(a => a.done).length : 0;
+        const total = dayData.actions ? dayData.actions.length : 0;
+        if (total > 0) {
+          indicators += `<span class="actions-count">${completed}/${total}</span>`;
+          tooltipContent += `Actions: ${completed}/${total}<br>`;
+          hasData = true;
+        }
+
+        // Found time
+        if (dayData.foundTime) {
+          tooltipContent += `Found time: Yes`;
+          hasData = true;
+        }
+
+        // Habit dots (only active habits)
+        const activeHabits = data.habits.filter(h => !h.archived);
+        if (activeHabits.length > 0) {
+          let habitDots = '<div class="habit-dots" aria-hidden="true">';
+          activeHabits.forEach(h => {
+            const done = data.habitCompletions[h.id]?.[dateKey];
+            habitDots += `<div class="habit-dot ${done ? 'done' : ''}"></div>`;
+          });
+          habitDots += '</div>';
+          indicators += habitDots;
+        }
+      }
+
+      const tooltip = hasData ? `<div class="day-tooltip">${tooltipContent}</div>` : '';
+
+      return `
+        <div class="calendar-day ${otherMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}"
+             data-date="${dateKey}"
+             role="gridcell"
+             aria-label="${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}">
+          <div class="day-number">${date.getDate()}</div>
+          <div class="day-indicators">${indicators}</div>
+          ${tooltip}
+        </div>
+      `;
+    }
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+      viewMonth.setMonth(viewMonth.getMonth() - 1);
+      renderMonth();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+      viewMonth.setMonth(viewMonth.getMonth() + 1);
+      renderMonth();
+    });
+
+    document.getElementById('todayBtn').addEventListener('click', () => {
+      viewMonth = new Date();
+      currentDate = new Date();
+      showView('today');
+    });
+
+    // ===== HABITS VIEW =====
+    function renderHabits() {
+      const todayKey = getDateKey(currentDate);
+      const container = document.getElementById('habitsList');
+      const activeHabits = data.habits.filter(h => !h.archived);
+      const archivedHabits = data.habits.filter(h => h.archived);
+
+      if (activeHabits.length === 0) {
+        container.innerHTML = '<div class="empty-state">No habits defined yet. Start with one small habit.</div>';
+      } else {
+        container.innerHTML = activeHabits.map(h => {
+          const done = data.habitCompletions[h.id]?.[todayKey] || false;
+          return `
+            <div class="habit-row" data-id="${h.id}" role="listitem">
+              <input type="checkbox" class="habit-checkbox" ${done ? 'checked' : ''} aria-label="Mark habit as ${done ? 'incomplete' : 'complete'}">
+              <div class="habit-name">
+                <input type="text" value="${escapeHtml(h.name)}" placeholder="Habit name" aria-label="Habit name">
+              </div>
+              <div class="habit-actions">
+                <button class="habit-archive" aria-label="Archive habit">Archive</button>
+                <button class="habit-delete" aria-label="Delete habit">×</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Archived habits section
+      const archivedContainer = document.getElementById('archivedHabitsContainer');
+      const archivedList = document.getElementById('archivedHabitsList');
+
+      if (archivedHabits.length > 0) {
+        archivedContainer.classList.remove('hidden');
+        archivedList.innerHTML = archivedHabits.map(h => `
+          <div class="habit-row archived" data-id="${h.id}" role="listitem">
+            <div class="habit-name">
+              <input type="text" value="${escapeHtml(h.name)}" placeholder="Habit name" readonly aria-label="Archived habit name">
+            </div>
+            <div class="habit-actions">
+              <button class="habit-archive" aria-label="Restore habit">Restore</button>
+              <button class="habit-delete" aria-label="Delete habit permanently">×</button>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        archivedContainer.classList.add('hidden');
+      }
+
+      attachHabitListeners();
+      renderHabitsHeatmap();
+    }
+
+    function renderHabitsHeatmap() {
+      const container = document.getElementById('habitsHeatmap');
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      if (data.habits.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      data.habits.forEach(habit => {
+        const archivedLabel = habit.archived ? ' (archived)' : '';
+        html += `<div style="margin-bottom: 0.75rem;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem;">${escapeHtml(habit.name) || 'Unnamed'}${archivedLabel}</div>
+          <div class="heatmap" role="img" aria-label="Habit completion for ${escapeHtml(habit.name) || 'Unnamed'}">`;
+
+        for (let d = 1; d <= 31; d++) {
+          if (d > daysInMonth) {
+            html += `<div class="heatmap-cell empty" aria-hidden="true"></div>`;
+          } else {
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const done = data.habitCompletions[habit.id]?.[dateKey];
+            html += `<div class="heatmap-cell ${done ? 'done' : ''}" aria-label="Day ${d}: ${done ? 'completed' : 'not completed'}">${d}</div>`;
+          }
+        }
+
+        html += '</div></div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function attachHabitListeners() {
+      const todayKey = getDateKey(currentDate);
+
+      // Active habits
+      document.querySelectorAll('#habitsList .habit-row').forEach(row => {
+        const id = row.dataset.id;
+
+        row.querySelector('.habit-checkbox')?.addEventListener('change', (e) => {
+          if (!data.habitCompletions[id]) data.habitCompletions[id] = {};
+          data.habitCompletions[id][todayKey] = e.target.checked;
+          saveData();
+          renderHabitsHeatmap();
+        });
+
+        row.querySelector('.habit-name input')?.addEventListener('input', (e) => {
+          const habit = data.habits.find(h => h.id === id);
+          if (habit) {
+            habit.name = e.target.value;
+            saveData();
+          }
+        });
+
+        row.querySelector('.habit-archive')?.addEventListener('click', () => {
+          const habit = data.habits.find(h => h.id === id);
+          if (habit) {
+            habit.archived = true;
+            saveData();
+            renderHabits();
+          }
+        });
+
+        row.querySelector('.habit-delete')?.addEventListener('click', () => {
+          if (confirm('Delete this habit? Historical data will be lost.')) {
+            data.habits = data.habits.filter(h => h.id !== id);
+            delete data.habitCompletions[id];
+            saveData();
+            renderHabits();
+          }
+        });
+      });
+
+      // Archived habits
+      document.querySelectorAll('#archivedHabitsList .habit-row').forEach(row => {
+        const id = row.dataset.id;
+
+        row.querySelector('.habit-archive')?.addEventListener('click', () => {
+          const habit = data.habits.find(h => h.id === id);
+          if (habit) {
+            habit.archived = false;
+            saveData();
+            renderHabits();
+          }
+        });
+
+        row.querySelector('.habit-delete')?.addEventListener('click', () => {
+          if (confirm('Permanently delete this habit and all its history?')) {
+            data.habits = data.habits.filter(h => h.id !== id);
+            delete data.habitCompletions[id];
+            saveData();
+            renderHabits();
+          }
+        });
+      });
+    }
+
+    document.getElementById('addHabit').addEventListener('click', () => {
+      const activeHabits = data.habits.filter(h => !h.archived);
+      if (activeHabits.length >= 10) {
+        alert('Maximum 10 active habits allowed');
+        return;
+      }
+      data.habits.push({ id: generateId(), name: '', archived: false });
+      saveData();
+      renderHabits();
+      const inputs = document.querySelectorAll('#habitsList .habit-name input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+
+    // ===== COMMITMENTS VIEW (formerly Goals) =====
+    function renderCommitments() {
+      const container = document.getElementById('commitmentCardsList');
+
+      if (data.goals.length === 0) {
+        container.innerHTML = '<div class="empty-state">No commitments defined yet. What are you willing to invest in this year?</div>';
+      } else {
+        container.innerHTML = data.goals.map(g => {
+          const costMissing = !g.weeklyCost || !g.weeklyCost.trim();
+          return `
+          <div class="commitment-card" data-id="${g.id}">
+            <textarea placeholder="Commitment description" aria-label="Commitment description">${escapeHtml(g.description) || ''}</textarea>
+            <div class="commitment-cost">
+              <label>Weekly cost (time/energy):</label>
+              <input type="text" value="${escapeHtml(g.weeklyCost) || ''}" placeholder="e.g., 4 hours, high focus" data-field="weeklyCost" aria-label="Weekly cost">
+              <span class="commitment-cost-hint ${costMissing ? 'visible' : ''}" aria-live="polite">Required</span>
+            </div>
+            <div class="milestones">
+              <div class="milestone">
+                <label>Q1</label>
+                <input type="text" value="${escapeHtml(g.q1) || ''}" data-quarter="q1" placeholder="Milestone" aria-label="Q1 milestone">
+              </div>
+              <div class="milestone">
+                <label>Q2</label>
+                <input type="text" value="${escapeHtml(g.q2) || ''}" data-quarter="q2" placeholder="Milestone" aria-label="Q2 milestone">
+              </div>
+              <div class="milestone">
+                <label>Q3</label>
+                <input type="text" value="${escapeHtml(g.q3) || ''}" data-quarter="q3" placeholder="Milestone" aria-label="Q3 milestone">
+              </div>
+              <div class="milestone">
+                <label>Q4</label>
+                <input type="text" value="${escapeHtml(g.q4) || ''}" data-quarter="q4" placeholder="Milestone" aria-label="Q4 milestone">
+              </div>
+            </div>
+            <div class="progress-row">
+              <div class="progress-bar" role="progressbar" aria-valuenow="${g.progress || 0}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-fill" style="width: ${g.progress || 0}%"></div>
+              </div>
+              <input type="number" class="progress-input" value="${g.progress || 0}" min="0" max="100" aria-label="Progress percentage">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">%</span>
+              <button class="commitment-delete" aria-label="Delete commitment">Delete</button>
+            </div>
+          </div>
+        `}).join('');
+      }
+
+      attachCommitmentCardListeners();
+    }
+
+    function attachCommitmentCardListeners() {
+      document.querySelectorAll('.commitment-card').forEach(card => {
+        const id = card.dataset.id;
+        const goal = data.goals.find(g => g.id === id);
+        if (!goal) return;
+
+        card.querySelector('textarea')?.addEventListener('input', (e) => {
+          goal.description = e.target.value;
+          saveData();
+        });
+
+        const costInput = card.querySelector('[data-field="weeklyCost"]');
+        const costHint = card.querySelector('.commitment-cost-hint');
+
+        costInput?.addEventListener('input', (e) => {
+          goal.weeklyCost = e.target.value;
+          saveData();
+          // Update hint visibility
+          costHint?.classList.toggle('visible', !e.target.value.trim());
+        });
+
+        card.querySelectorAll('.milestone input').forEach(input => {
+          input.addEventListener('input', (e) => {
+            goal[e.target.dataset.quarter] = e.target.value;
+            saveData();
+          });
+        });
+
+        card.querySelector('.progress-input')?.addEventListener('input', (e) => {
+          goal.progress = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+          saveData();
+          const fill = card.querySelector('.progress-fill');
+          const bar = card.querySelector('.progress-bar');
+          if (fill) fill.style.width = goal.progress + '%';
+          if (bar) bar.setAttribute('aria-valuenow', goal.progress);
+        });
+
+        card.querySelector('.commitment-delete')?.addEventListener('click', () => {
+          if (confirm('Delete this commitment?')) {
+            data.goals = data.goals.filter(g => g.id !== id);
+            saveData();
+            renderCommitments();
+          }
+        });
+      });
+    }
+
+    document.getElementById('addCommitmentCard').addEventListener('click', () => {
+      if (data.goals.length >= 10) {
+        alert('Maximum 10 commitments allowed');
+        return;
+      }
+      data.goals.push({
+        id: generateId(),
+        description: '',
+        q1: '', q2: '', q3: '', q4: '',
+        progress: 0,
+        weeklyCost: ''
+      });
+      saveData();
+      renderCommitments();
+    });
+
+    // ===== WEEKLY REVIEW =====
+    function renderWeeklyReview() {
+      const weekKey = getWeekKey(viewWeek);
+      const dates = getWeekDates(viewWeek);
+
+      document.getElementById('weekLabel').textContent =
+        `Week ${viewWeek.week}, ${viewWeek.year} (${formatShortDate(dates.start)} – ${formatShortDate(dates.end)})`;
+
+      const review = data.weeklyReviews[weekKey] || {
+        shipped: '', metrics: '', friction: '', doubleDown: ''
+      };
+
+      document.getElementById('reviewShipped').value = review.shipped;
+      document.getElementById('reviewMetrics').value = review.metrics;
+      document.getElementById('reviewFriction').value = review.friction;
+      document.getElementById('reviewDoubleDown').value = review.doubleDown;
+
+      // Calculate and display week stats
+      renderWeekStats(dates);
+    }
+
+    function renderWeekStats(dates) {
+      const container = document.getElementById('weekStats');
+
+      let totalActions = 0;
+      let completedActions = 0;
+      let totalArtifacts = 0;
+      let energyLevels = [];
+
+      // Iterate through each day of the week
+      const currentDay = new Date(dates.start);
+      while (currentDay <= dates.end) {
+        const dateKey = getDateKey(currentDay);
+        const dayData = data.days[dateKey];
+
+        if (dayData) {
+          totalActions += (dayData.actions || []).length;
+          completedActions += (dayData.actions || []).filter(a => a.done).length;
+          totalArtifacts += dayData.artifactsShipped || 0;
+          if (dayData.energyLevel > 0) {
+            energyLevels.push(dayData.energyLevel);
+          }
+        }
+
+        currentDay.setDate(currentDay.getDate() + 1);
+      }
+
+      if (totalActions === 0 && totalArtifacts === 0 && energyLevels.length === 0) {
+        container.textContent = 'No data logged for this week yet.';
+        return;
+      }
+
+      let stats = [];
+
+      stats.push(`${completedActions}/${totalActions} actions completed`);
+      stats.push(`${totalArtifacts} artifact${totalArtifacts === 1 ? '' : 's'} shipped`);
+
+      if (energyLevels.length > 0) {
+        const avgEnergy = (energyLevels.reduce((a, b) => a + b, 0) / energyLevels.length).toFixed(1);
+        stats.push(`Avg energy: ${avgEnergy}/5`);
+      }
+
+      container.textContent = stats.join(' · ');
+    }
+
+    function saveWeeklyReview() {
+      const weekKey = getWeekKey(viewWeek);
+      data.weeklyReviews[weekKey] = {
+        shipped: document.getElementById('reviewShipped').value,
+        metrics: document.getElementById('reviewMetrics').value,
+        friction: document.getElementById('reviewFriction').value,
+        doubleDown: document.getElementById('reviewDoubleDown').value
+      };
+      saveData();
+    }
+
+    document.getElementById('reviewShipped').addEventListener('input', saveWeeklyReview);
+    document.getElementById('reviewMetrics').addEventListener('input', saveWeeklyReview);
+    document.getElementById('reviewFriction').addEventListener('input', saveWeeklyReview);
+    document.getElementById('reviewDoubleDown').addEventListener('input', saveWeeklyReview);
+
+    document.getElementById('prevWeek').addEventListener('click', () => {
+      viewWeek.week--;
+      if (viewWeek.week < 1) {
+        viewWeek.year--;
+        viewWeek.week = getWeeksInYear(viewWeek.year);
+      }
+      renderWeeklyReview();
+    });
+
+    document.getElementById('nextWeek').addEventListener('click', () => {
+      const maxWeeks = getWeeksInYear(viewWeek.year);
+      viewWeek.week++;
+      if (viewWeek.week > maxWeeks) {
+        viewWeek.year++;
+        viewWeek.week = 1;
+      }
+      renderWeeklyReview();
+    });
+
+    // ===== SETTINGS =====
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const exportData = JSON.stringify(data, null, 2);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `planner-2026-backup-${getDateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+
+          // Validate basic structure
+          if (typeof imported !== 'object' || imported === null) {
+            throw new Error('Invalid format: not an object');
+          }
+
+          // Check for required collections (with flexibility for older formats)
+          if (!imported.days || typeof imported.days !== 'object') {
+            throw new Error('Invalid format: missing days object');
+          }
+
+          // Apply migrations to imported data
+          const migrated = migrateData(imported);
+
+          // OVERWRITE current data with imported data
+          data = migrated;
+          saveData();
+          renderToday();
+          alert('Data imported successfully. Your previous data has been replaced.');
+        } catch (err) {
+          alert('Failed to import: ' + err.message);
+        }
+      };
+      reader.onerror = () => {
+        alert('Failed to read file');
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // Fresh template export - creates a copy with daily data cleared but habits/commitments preserved
+    document.getElementById('templateBtn').addEventListener('click', () => {
+      const template = {
+        meta: { version: CURRENT_VERSION },
+        days: {},
+        habits: data.habits.map(h => ({ ...h })), // Preserve habits
+        habitCompletions: {}, // Clear completions
+        goals: data.goals.map(g => ({
+          ...g,
+          progress: 0 // Reset progress
+        })),
+        weeklyReviews: {}
+      };
+
+      const exportData = JSON.stringify(template, null, 2);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `planner-template-${getDateKey(new Date())}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
+        if (confirm('Really delete everything?')) {
+          localStorage.removeItem(STORAGE_KEY);
+          data = createEmptyData();
+          saveData();
+          renderToday();
+          alert('All data has been reset');
+        }
+      }
+    });
+
+    // ===== KEYBOARD SHORTCUTS =====
+    document.addEventListener('keydown', (e) => {
+      // Escape always exits focus mode
+      if (e.key === 'Escape') {
+        if (document.body.classList.contains('focus-mode')) {
+          exitFocusMode();
+          return;
+        }
+        // Blur active element if in input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          e.target.blur();
+        }
+        return;
+      }
+
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      const activeView = document.querySelector('.view.active');
+      if (activeView?.id !== 'today-view') return;
+
+      // Check if day is complete - block shortcuts for adding/editing
+      const dayData = getDayData(getDateKey(currentDate));
+      if (dayData.dayComplete && ['a', 'c', 'f', '1', '2', '3', '4', '5'].includes(e.key.toLowerCase())) {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          e.preventDefault();
+          addAction();
+          break;
+        case 'c':
+          e.preventDefault();
+          addTodayCommitment();
+          break;
+        case 'f':
+          e.preventDefault();
+          addFocusBlock();
+          break;
+        case '1': case '2': case '3': case '4': case '5':
+          e.preventDefault();
+          const level = parseInt(e.key);
+          const currentDayData = getDayData(getDateKey(currentDate));
+          currentDayData.energyLevel = level;
+          saveData();
+          renderToday();
+          break;
+      }
+    });
+
+    // ===== INIT =====
+    renderToday();
+  </script>
+</body>
+</html>

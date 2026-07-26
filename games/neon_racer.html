@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Racer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d0408;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #hud, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(13, 4, 8, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 42, 95, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(255, 42, 95, 0.2);
+            border-color: rgba(255, 42, 95, 0.8);
+            transform: scale(1.05);
+        }
+
+        #hud {
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .hud-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .hud-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        .hud-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        #warningIndicator {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(255, 0, 0, 0.85);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: 1.5px;
+            box-shadow: 0 0 20px #ff0000;
+            display: none;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, 0) scale(1); opacity: 0.8; }
+            100% { transform: translate(-50%, 0) scale(1.05); opacity: 1; }
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 4, 8, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+
+    <div id="hud">
+        <div class="hud-stat">
+            <span class="hud-label">Rank</span>
+            <span id="rankVal" class="hud-value" style="color: #ffcc02;">1st</span>
+        </div>
+        <div class="hud-stat">
+            <span class="hud-label">Speed</span>
+            <span id="speedVal" class="hud-value">0 <span class="text-xs">MPH</span></span>
+        </div>
+        <div class="hud-stat">
+            <span class="hud-label">Lap</span>
+            <span id="lapVal" class="hud-value">1/2</span>
+        </div>
+    </div>
+
+    <div id="warningIndicator">⚠️ OVER SPEED LIMIT: SLOW DOWN! ⚠️</div>
+    <div id="crashAlert" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(255, 42, 95, 0.9); color: white; padding: 12px 32px; border-radius: 12px; font-weight: 800; font-size: 2rem; box-shadow: 0 0 25px #ff2a5f; display: none;">💥 CRASHED! 2s PENALTY</div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-pink-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-pink-500/10">
+            <i class="fa-solid fa-car-on text-6xl text-pink-500 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">NEON RACER</h1>
+            <p class="text-gray-400 mb-6">Hold click/touch to accelerate. Release to slide/brake. Slow down for curves to avoid spinning out! Win by completing 2 laps in 1st place.</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-pink-500/30">
+                Start Race
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-pink-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-pink-500/10">
+            <i id="gameOverIcon" class="fa-solid fa-triangle-exclamation text-6xl text-red-500 mb-4"></i>
+            <h1 id="gameOverTitle" class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">RACED OVER</h1>
+            <p id="gameOverText" class="text-gray-400 mb-6">Vehicle integrity lost in high speed corner crash.</p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-pink-500/30">
+                Race Again
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const rankVal = document.getElementById('rankVal');
+        const speedVal = document.getElementById('speedVal');
+        const lapVal = document.getElementById('lapVal');
+        const warningIndicator = document.getElementById('warningIndicator');
+
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const gameOverIcon = document.getElementById('gameOverIcon');
+        const gameOverText = document.getElementById('gameOverText');
+
+        let isPlaying = false;
+        let isPressing = false;
+        
+        let trackPoints = [];
+        let particles = [];
+        let totalLaps = 2;
+
+        // Player configuration
+        const player = {
+            progress: 0,
+            speed: 0,
+            accel: 0.12,
+            friction: 0.04,
+            maxSpeed: 7.2,
+            color: '#00FFFF',
+            size: 9,
+            lap: 1,
+            finished: false,
+            slipProgress: 0, // Tracks danger time over curve speed limits
+            crashTimer: 0
+        };
+
+        // Opponents configuration
+        const opponents = [
+            {
+                name: "AI Cyber",
+                progress: 10,
+                speed: 0,
+                baseMaxSpeed: 4.1, // Reduced to make them slower overall
+                accel: 0.08,
+                decel: 0.15,
+                color: '#ffcc02',
+                size: 8,
+                lap: 1,
+                finished: false,
+                startDelay: 0,
+                tempSlowing: 0
+            },
+            {
+                name: "AI Pulse",
+                progress: 20,
+                speed: 0,
+                baseMaxSpeed: 3.7, // Reduced to make them slower overall
+                accel: 0.09,
+                decel: 0.12,
+                color: '#a55eae',
+                size: 8,
+                lap: 1,
+                finished: false,
+                startDelay: 0,
+                tempSlowing: 0
+            }
+        ];
+
+        // Track Spline Definition (Normalized coordinates)
+        const controlPoints = [
+            { x: 0.22, y: 0.3 },
+            { x: 0.5, y: 0.2 },
+            { x: 0.78, y: 0.25 },
+            { x: 0.85, y: 0.55 },
+            { x: 0.7, y: 0.78 },
+            { x: 0.45, y: 0.6 },
+            { x: 0.25, y: 0.8 },
+            { x: 0.12, y: 0.55 }
+        ];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            generateTrackPoints();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Catmull-Rom Spline Interpolation for closed loop
+        function generateTrackPoints() {
+            trackPoints = [];
+            const segments = controlPoints.length;
+            const pointsPerSegment = 50;
+
+            for (let i = 0; i < segments; i++) {
+                const p0 = controlPoints[(i - 1 + segments) % segments];
+                const p1 = controlPoints[i];
+                const p2 = controlPoints[(i + 1) % segments];
+                const p3 = controlPoints[(i + 2) % segments];
+
+                for (let j = 0; j < pointsPerSegment; j++) {
+                    const t = j / pointsPerSegment;
+                    const t2 = t * t;
+                    const t3 = t2 * t;
+
+                    // Catmull-Rom math formula
+                    const x = 0.5 * (
+                        (2 * p1.x) +
+                        (-p0.x + p2.x) * t +
+                        (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+                        (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3
+                    );
+                    const y = 0.5 * (
+                        (2 * p1.y) +
+                        (-p0.y + p2.y) * t +
+                        (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+                        (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3
+                    );
+
+                    trackPoints.push({
+                        x: x * canvas.width,
+                        y: y * canvas.height,
+                        curvature: 0,
+                        safeSpeed: 7.2
+                    });
+                }
+            }
+
+            calculateTrackCurvature();
+        }
+
+        // Mathematical Curvature calculation for dynamically computing corner speed limits
+        function calculateTrackCurvature() {
+            const N = trackPoints.length;
+            const curvatures = [];
+
+            for (let i = 0; i < N; i++) {
+                const pPrev = trackPoints[(i - 1 + N) % N];
+                const pCurr = trackPoints[i];
+                const pNext = trackPoints[(i + 1) % N];
+
+                const theta1 = Math.atan2(pCurr.y - pPrev.y, pCurr.x - pPrev.x);
+                const theta2 = Math.atan2(pNext.y - pCurr.y, pNext.x - pCurr.x);
+
+                let diff = theta2 - theta1;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                curvatures.push(Math.abs(diff));
+            }
+
+            // Apply a moving average filter to smooth curvature spikes
+            const filterSize = 7;
+            for (let i = 0; i < N; i++) {
+                let sum = 0;
+                for (let k = -filterSize; k <= filterSize; k++) {
+                    sum += curvatures[(i + k + N) % N];
+                }
+                const avgCurvature = sum / (filterSize * 2 + 1);
+                
+                // Safe speed inversely proportional to curvature
+                // base safety speed is 7.2, drops dynamically on curves
+                const safetyFactor = 170; // sensitivity
+                trackPoints[i].safeSpeed = Math.max(2.8, 7.2 - avgCurvature * safetyFactor);
+            }
+        }
+
+        class RacerParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.size = Math.random() * 2 + 1.5;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.05 + 0.03;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Input Setup
+        function setAcceleration(e) {
+            if (isPlaying && e.target === canvas) {
+                isPressing = true;
+                if (e.cancelable) e.preventDefault();
+            }
+        }
+        function releaseAcceleration() {
+            isPressing = false;
+        }
+
+        window.addEventListener('mousedown', setAcceleration);
+        window.addEventListener('mouseup', releaseAcceleration);
+        window.addEventListener('touchstart', setAcceleration, { passive: false });
+        window.addEventListener('touchend', releaseAcceleration);
+
+        // Keyboard support (Space, W, Up Arrow)
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+                isPressing = true;
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+                isPressing = false;
+            }
+        });
+
+        function getInterpolatedPosition(progress) {
+            const N = trackPoints.length;
+            const idx1 = Math.floor(progress) % N;
+            const idx2 = (idx1 + 1) % N;
+            const t = progress - Math.floor(progress);
+
+            const p1 = trackPoints[idx1];
+            const p2 = trackPoints[idx2];
+
+            return {
+                x: p1.x + (p2.x - p1.x) * t,
+                y: p1.y + (p2.y - p1.y) * t,
+                safeSpeed: p1.safeSpeed
+            };
+        }
+
+        function createCrashBurst(x, y, color) {
+            for (let i = 0; i < 35; i++) {
+                particles.push(new RacerParticle(x, y, color));
+                particles.push(new RacerParticle(x, y, '#ffffff'));
+            }
+        }
+
+        function updatePositions() {
+            // Rank sorting array
+            const ranking = [
+                { id: 'player', progress: player.progress + (player.lap - 1) * 400, finished: player.finished },
+                ...opponents.map((opp, index) => ({ id: index, progress: opp.progress + (opp.lap - 1) * 400, finished: opp.finished }))
+            ];
+
+            ranking.sort((a, b) => {
+                if (a.finished && !b.finished) return -1;
+                if (!a.finished && b.finished) return 1;
+                return b.progress - a.progress;
+            });
+
+            const playerRank = ranking.findIndex(item => item.id === 'player') + 1;
+            const suffix = ['st', 'nd', 'rd'][playerRank - 1] || 'th';
+            rankVal.innerText = `${playerRank}${suffix}`;
+            
+            if (playerRank === 1) {
+                rankVal.style.color = '#ffcc02';
+            } else {
+                rankVal.style.color = '#ffffff';
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Clear Background
+            ctx.fillStyle = '#060204';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid draw
+            ctx.strokeStyle = 'rgba(255, 42, 95, 0.015)';
+            ctx.lineWidth = 1;
+            const gridSize = 70;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw Track Road Surface
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Outer road limit
+            ctx.strokeStyle = 'rgba(255, 42, 95, 0.1)';
+            ctx.lineWidth = 45;
+            ctx.beginPath();
+            ctx.moveTo(trackPoints[0].x, trackPoints[0].y);
+            for (let i = 1; i < trackPoints.length; i++) {
+                ctx.lineTo(trackPoints[i].x, trackPoints[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+
+            // Core neon lines
+            ctx.shadowBlur = 18;
+            ctx.shadowColor = '#ff2a5f';
+            ctx.strokeStyle = '#ff2a5f';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Draw Start/Finish grid line
+            const startP = trackPoints[0];
+            const nextP = trackPoints[1];
+            const dx = nextP.x - startP.x;
+            const dy = nextP.y - startP.y;
+            const angle = Math.atan2(dy, dx) + Math.PI/2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(startP.x - 22 * Math.cos(angle), startP.y - 22 * Math.sin(angle));
+            ctx.lineTo(startP.x + 22 * Math.cos(angle), startP.y + 22 * Math.sin(angle));
+            ctx.stroke();
+            ctx.restore();
+
+            // Update Player Physics
+            if (!player.finished) {
+                if (player.crashTimer > 0) {
+                    player.crashTimer--;
+                    player.speed = 0;
+                    
+                    // Emit smoke particles on crash stun
+                    if (Math.random() < 0.35) {
+                        const pos = getInterpolatedPosition(player.progress);
+                        particles.push(new RacerParticle(pos.x, pos.y, '#95a5a6')); // grey smoke
+                    }
+
+                    if (player.crashTimer === 0) {
+                        document.getElementById('crashAlert').style.display = 'none';
+                    }
+                } else {
+                    if (isPressing) {
+                        player.speed = Math.min(player.maxSpeed, player.speed + player.accel);
+                    } else {
+                        player.speed = Math.max(0, player.speed - player.friction);
+                    }
+                }
+
+                // Checkpoint cross check
+                const lastProgress = player.progress;
+                player.progress = (player.progress + player.speed);
+                
+                if (player.progress >= 400) {
+                    player.progress %= 400;
+                    player.lap++;
+                    if (player.lap > totalLaps) {
+                        player.finished = true;
+                        player.speed = 0;
+                        checkRaceResults();
+                    }
+                    lapVal.innerText = `${Math.min(player.lap, totalLaps)}/${totalLaps}`;
+                }
+
+                // Current position vectors
+                const pos = getInterpolatedPosition(player.progress);
+                speedVal.innerHTML = `${Math.floor(player.speed * 20)} <span class="text-xs">MPH</span>`;
+
+                // Over Speed Collision Check
+                if (player.crashTimer === 0) {
+                    if (player.speed > pos.safeSpeed) {
+                        player.slipProgress += 1;
+                        warningIndicator.style.display = 'block';
+                        
+                        // Shake screen slightly on drift slip
+                        ctx.save();
+                        ctx.translate((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6);
+                        
+                        // Emit sparks
+                        if (Math.random() < 0.4) {
+                            particles.push(new RacerParticle(pos.x, pos.y, player.color));
+                        }
+                        
+                        // Crash threshold (allow slight warning buffer before losing)
+                        if (player.slipProgress > 15 || player.speed > pos.safeSpeed + 1.6) {
+                            ctx.restore();
+                            triggerCrash();
+                        }
+                    } else {
+                        player.slipProgress = Math.max(0, player.slipProgress - 0.5);
+                        if (player.slipProgress === 0) {
+                            warningIndicator.style.display = 'none';
+                        }
+                    }
+                }
+            }
+
+            // Update AI Competitors
+            opponents.forEach(opp => {
+                if (!opp.finished) {
+                    // Check if AI is currently waiting on its starting delay
+                    if (opp.startDelay > 0) {
+                        opp.startDelay--;
+                        return;
+                    }
+
+                    // Safe AI pathing brake checks
+                    const lookAheadIndex = Math.floor(opp.progress + 25) % trackPoints.length;
+                    const safeLimit = trackPoints[lookAheadIndex].safeSpeed;
+
+                    // AI targets slightly below speed limit to never crash
+                    let targetSpeed = Math.min(opp.baseMaxSpeed, safeLimit - 0.15);
+
+                    // Random temporary deceleration (simulates driver mistake or letting the player catch up)
+                    if (Math.random() < 0.008) {
+                        opp.tempSlowing = Math.floor(Math.random() * 60) + 30; // slow down for 30-90 frames
+                    }
+
+                    if (opp.tempSlowing > 0) {
+                        opp.tempSlowing--;
+                        targetSpeed *= 0.65; // Reduce target speed by 35%
+                    }
+
+                    if (opp.speed < targetSpeed) {
+                        opp.speed = Math.min(opp.baseMaxSpeed, opp.speed + opp.accel);
+                    } else {
+                        opp.speed = Math.max(0, opp.speed - opp.decel);
+                    }
+
+                    opp.progress += opp.speed;
+                    if (opp.progress >= 400) {
+                        opp.progress %= 400;
+                        opp.lap++;
+                        if (opp.lap > totalLaps) {
+                            opp.finished = true;
+                            opp.speed = 0;
+                            
+                            // If player was behind, check if player lost
+                            if (!player.finished) {
+                                // "completing the loop behind one of the AI racers also loses the game"
+                                // We can trigger loss instantly if any AI finishes before the player
+                                triggerLoss();
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Draw Opponents
+            opponents.forEach(opp => {
+                const pos = getInterpolatedPosition(opp.progress);
+                
+                // Draw AI glowing sphere
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = opp.color;
+                ctx.fillStyle = opp.color;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, opp.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, opp.size * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.restore();
+
+                // Spark trace
+                if (Math.random() < 0.15) {
+                    particles.push(new RacerParticle(pos.x, pos.y, opp.color));
+                }
+            });
+
+            // Draw Player Ball
+            if (!player.finished) {
+                const pos = getInterpolatedPosition(player.progress);
+                
+                // Flash player ball when crashed/stunned
+                if (player.crashTimer > 0 && Math.floor(player.crashTimer / 6) % 2 === 0) {
+                    // Skip rendering this frame to create flashing effect
+                } else {
+                    ctx.save();
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = player.color;
+                    ctx.fillStyle = player.color;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, player.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, player.size * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Continuous particle trail
+                if (player.speed > 1 && Math.random() < 0.3) {
+                    particles.push(new RacerParticle(pos.x, pos.y, player.color));
+                }
+            }
+
+            // Slip screen restore
+            if (player.slipProgress > 0) {
+                ctx.restore();
+            }
+
+            // Update & Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            updatePositions();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function triggerCrash() {
+            const pos = getInterpolatedPosition(player.progress);
+            createCrashBurst(pos.x, pos.y, player.color);
+            
+            player.crashTimer = 120; // 2 seconds penalty at 60 FPS
+            player.speed = 0;
+            player.slipProgress = 0;
+            warningIndicator.style.display = 'none';
+
+            // Show temporary crash notification overlay
+            document.getElementById('crashAlert').style.display = 'block';
+        }
+
+        function triggerLoss() {
+            isPlaying = false;
+            warningIndicator.style.display = 'none';
+
+            gameOverIcon.className = "fa-solid fa-flag-checkered text-6xl text-gray-500 mb-4";
+            gameOverTitle.innerText = "RACE DEFEAT";
+            gameOverText.innerText = "An opponent crossed the finish line before you. You must finish 1st to win!";
+
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function checkRaceResults() {
+            // Check if player won
+            const playerFinishedFirst = opponents.every(opp => opp.finished === false);
+            
+            if (playerFinishedFirst) {
+                // Victory!
+                gameOverIcon.className = "fa-solid fa-trophy text-6xl text-yellow-500 mb-4 animate-bounce";
+                gameOverTitle.innerText = "VICTORY!";
+                gameOverText.innerText = "You completed the race in 1st place! Stellar driving!";
+            } else {
+                // Completed but someone finished earlier
+                gameOverIcon.className = "fa-solid fa-flag-checkered text-6xl text-red-500 mb-4";
+                gameOverTitle.innerText = "DEFEAT";
+                gameOverText.innerText = "You completed the loop but finished behind the AI competitors.";
+            }
+
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            
+            // Reset player states
+            player.progress = 0;
+            player.speed = 0;
+            player.lap = 1;
+            player.finished = false;
+            player.slipProgress = 0;
+            player.crashTimer = 0;
+
+            // Reset AI states with random starting delays and resetting slowing factor
+            opponents[0].progress = 12;
+            opponents[0].speed = 0;
+            opponents[0].lap = 1;
+            opponents[0].finished = false;
+            opponents[0].startDelay = Math.floor(Math.random() * 80) + 40; // 40-120 frames (approx 0.6 - 2.0s) delay
+            opponents[0].tempSlowing = 0;
+
+            opponents[1].progress = 24;
+            opponents[1].speed = 0;
+            opponents[1].lap = 1;
+            opponents[1].finished = false;
+            opponents[1].startDelay = Math.floor(Math.random() * 80) + 70; // 70-150 frames (approx 1.1 - 2.5s) delay
+            opponents[1].tempSlowing = 0;
+
+            particles = [];
+            warningIndicator.style.display = 'none';
+            document.getElementById('crashAlert').style.display = 'none';
+            lapVal.innerText = `1/${totalLaps}`;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

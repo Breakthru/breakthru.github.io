@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Slasher</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0d0d1a;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(13, 13, 26, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 159, 67, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(255, 159, 67, 0.2);
+            border-color: rgba(255, 159, 67, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 13, 26, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    <div id="scoreDisplay">Score: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-orange-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-orange-500/10">
+            <i class="fa-solid fa-wand-magic-sparkles text-6xl text-orange-500 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">NEON SLASHER</h1>
+            <p class="text-gray-400 mb-6">Swipe or drag across the screen to slice the flying neon discs. Avoid the red unstable cores (bombs)!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-orange-500/30">
+                Start Slicing
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-red-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-red-500/10">
+            <i class="fa-solid fa-triangle-exclamation text-6xl text-red-500 mb-4 animate-bounce"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">CORE BLAST!</h1>
+            <p class="text-gray-400 mb-2">You sliced an unstable bomb core!</p>
+            <p class="text-2xl font-bold text-orange-400 mb-6">Score: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-red-500/30">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('neon_slasher_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let isPlaying = false;
+        let objects = [];
+        let particles = [];
+        let swipeTrail = []; // Array of points: {x, y, age}
+        let nextSpawnTime = 0;
+        const gravity = 0.15;
+
+        // Colors
+        const NEON_COLORS = ['#339CFF', '#00FFFF', '#1dd1a1', '#feca57', '#9b59b6'];
+        const BOMB_COLOR = '#ff4444';
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class NeonObject {
+            constructor() {
+                this.radius = Math.random() * 15 + 22;
+                this.x = Math.random() * (canvas.width - 100) + 50;
+                this.y = canvas.height + this.radius;
+                
+                // Parabolic trajectory Math
+                const targetX = canvas.width / 2 + (Math.random() - 0.5) * 200;
+                const heightTarget = Math.random() * (canvas.height * 0.4) + canvas.height * 0.2;
+                // Calculate initial velocities
+                this.vy = -Math.sqrt(2 * gravity * (canvas.height - heightTarget));
+                this.vx = (targetX - this.x) / (Math.abs(this.vy) / gravity);
+
+                this.isBomb = Math.random() < 0.2; // 20% bomb chance
+                this.color = this.isBomb ? BOMB_COLOR : NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+                this.sliced = false;
+                this.rotation = Math.random() * Math.PI;
+                this.rotSpeed = (Math.random() - 0.5) * 0.05;
+                
+                // Half-slices coordinates for post-slice drawing
+                this.sliceLeftX = 0;
+                this.sliceLeftY = 0;
+                this.sliceRightX = 0;
+                this.sliceRightY = 0;
+                this.sliceAngle = 0;
+            }
+
+            update() {
+                if (!this.sliced) {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += gravity;
+                } else {
+                    // Sliced halves fly apart
+                    this.sliceLeftX -= 2;
+                    this.sliceRightX += 2;
+                    this.sliceLeftY += gravity * 2;
+                    this.sliceRightY += gravity * 2;
+                    
+                    this.y += gravity * 4;
+                }
+                this.rotation += this.rotSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+
+                if (!this.sliced) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.isBomb ? 'rgba(255, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+                    ctx.fill();
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+
+                    // Inner detail
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    if (this.isBomb) {
+                        // Draw core warning icon
+                        ctx.fillStyle = '#ff4444';
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('⚠', this.x, this.y);
+                    }
+                } else {
+                    // Sliced halves drawing
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.sliceAngle);
+
+                    // Left Half
+                    ctx.save();
+                    ctx.translate(this.sliceLeftX, this.sliceLeftY);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, Math.PI / 2, (3 * Math.PI) / 2);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.fill();
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // Right Half
+                    ctx.save();
+                    ctx.translate(this.sliceRightX, this.sliceRightY);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, (3 * Math.PI) / 2, Math.PI / 2);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.fill();
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+
+            checkSlice(p1, p2) {
+                if (this.sliced) return false;
+                
+                // Distance from circle center to segment (p1 -> p2)
+                const A = this.x - p1.x;
+                const B = this.y - p1.y;
+                const C = p2.x - p1.x;
+                const D = p2.y - p1.y;
+
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                let param = -1;
+                if (lenSq !== 0) param = dot / lenSq;
+
+                let xx, yy;
+                if (param < 0) {
+                    xx = p1.x;
+                    yy = p1.y;
+                } else if (param > 1) {
+                    xx = p2.x;
+                    yy = p2.y;
+                } else {
+                    xx = p1.x + param * C;
+                    yy = p1.y + param * D;
+                }
+
+                const dx = this.x - xx;
+                const dy = this.y - yy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < this.radius) {
+                    this.sliceAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        class SlasherParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.size = Math.random() * 3 + 2;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.03 + 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Swipe trail tracking
+        let activeTouch = false;
+
+        function addSwipePoint(x, y) {
+            if (swipeTrail.length > 0) {
+                const prev = swipeTrail[swipeTrail.length - 1];
+                const dx = x - prev.x;
+                const dy = y - prev.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // If the drag is fast enough, check slices in between
+                if (dist > 5 && isPlaying) {
+                    for (let obj of objects) {
+                        if (obj.checkSlice(prev, {x, y})) {
+                            if (obj.isBomb) {
+                                triggerBombExplosion(obj.x, obj.y);
+                                gameOver();
+                            } else {
+                                obj.sliced = true;
+                                score++;
+                                scoreVal.innerText = score;
+                                createShatterEffect(obj.x, obj.y, obj.color);
+                            }
+                        }
+                    }
+                }
+            }
+            swipeTrail.push({ x, y, age: 30 });
+        }
+
+        function createShatterEffect(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new SlasherParticle(x, y, color));
+            }
+        }
+
+        function triggerBombExplosion(x, y) {
+            for (let i = 0; i < 40; i++) {
+                const p = new SlasherParticle(x, y, '#ff0000');
+                p.vx *= 2.5;
+                p.vy *= 2.5;
+                particles.push(p);
+            }
+        }
+
+        function handleStart(e) {
+            activeTouch = true;
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            swipeTrail = [];
+            addSwipePoint(x, y);
+        }
+
+        function handleMove(e) {
+            if (!activeTouch) return;
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            addSwipePoint(x, y);
+            e.preventDefault();
+        }
+
+        function handleEnd() {
+            activeTouch = false;
+        }
+
+        window.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        window.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+
+        function spawnManager() {
+            const now = Date.now();
+            if (now > nextSpawnTime) {
+                // Spawn group of 1 to 3 items
+                const count = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < count; i++) {
+                    objects.push(new NeonObject());
+                }
+                nextSpawnTime = now + Math.random() * 1200 + 800; // Time till next group spawn
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Draw Background grid
+            ctx.fillStyle = '#0a0a14';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid draw
+            ctx.strokeStyle = 'rgba(255, 159, 67, 0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Spawn and update objects
+            spawnManager();
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                obj.update();
+                obj.draw();
+
+                // Remove offscreen objects
+                if (obj.y > canvas.height + 100) {
+                    objects.splice(i, 1);
+                }
+            }
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Draw swipe trail
+            ctx.save();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ffffff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for (let i = 1; i < swipeTrail.length; i++) {
+                const p1 = swipeTrail[i - 1];
+                const p2 = swipeTrail[i];
+                ctx.lineWidth = (p2.age / 30) * 8; // Taper trail
+                ctx.globalAlpha = p2.age / 30;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Age swipe trail points
+            for (let i = swipeTrail.length - 1; i >= 0; i--) {
+                swipeTrail[i].age -= 1.5;
+                if (swipeTrail[i].age <= 0) {
+                    swipeTrail.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            score = 0;
+            scoreVal.innerText = score;
+            objects = [];
+            particles = [];
+            swipeTrail = [];
+            nextSpawnTime = Date.now() + 500;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            finalScoreVal.innerText = score;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('neon_slasher_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Dark theme (default) */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --bg-quaternary: #4a4a4a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-muted: #a0a0a0;
+            --border-primary: #555555;
+            --border-secondary: #666666;
+            --accent-primary: #4dabf7;
+            --accent-primary-hover: #339af0;
+            --accent-secondary: #868e96;
+            --accent-secondary-hover: #adb5bd;
+            --accent-success: #51cf66;
+            --accent-success-hover: #40c057;
+            --key-bg: #1c2631;
+            --key-border: #2a3441;
+            --index-bg: #2b2416;
+            --index-border: #3d3326;
+            --value-bg: #2a1e2b;
+            --value-border: #3d2a3e;
+            --shadow: rgba(0,0,0,0.3);
+            --markdown-bg: #2a2a2a;
+            --markdown-border: #555555;
+            --code-bg: rgba(255,255,255,0.1);
+            --link-color: #74c0fc;
+            --link-visited: #b197fc;
+        }
+
+        [data-theme="light"] {
+            /* Light theme */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --bg-quaternary: #e9ecef;
+            --text-primary: #333333;
+            --text-secondary: #6c757d;
+            --text-muted: #495057;
+            --border-primary: #dddddd;
+            --border-secondary: #dee2e6;
+            --accent-primary: #007bff;
+            --accent-primary-hover: #0056b3;
+            --accent-secondary: #6c757d;
+            --accent-secondary-hover: #5a6268;
+            --accent-success: #28a745;
+            --accent-success-hover: #218838;
+            --key-bg: #e3f2fd;
+            --key-border: #bbdefb;
+            --index-bg: #fff3e0;
+            --index-border: #ffcc02;
+            --value-bg: #f3e5f5;
+            --value-border: #ce93d8;
+            --shadow: rgba(0,0,0,0.1);
+            --markdown-bg: #f6f8fa;
+            --markdown-border: #e1e4e8;
+            --code-bg: rgba(27,31,35,.05);
+            --link-color: #0366d6;
+            --link-visited: #6f42c1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-primary);
+            padding: 15px 0;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 20px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 2rem;
+        }
+
+        .upload-area {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-primary);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .file-input {
+            margin-top: 10px;
+        }
+
+        .search-section {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px var(--shadow);
+            display: none;
+        }
+
+        .search-controls {
+            position: relative;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .search-btn, .clear-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .search-btn:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .clear-btn {
+            background: var(--accent-secondary);
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: var(--accent-secondary-hover);
+        }
+
+        .suggestions {
+            position: absolute;
+            top: calc(100% + 2px);
+            left: 0;
+            right: 130px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestions-list {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-secondary);
+            color: var(--text-primary);
+            transition: background-color 0.3s;
+        }
+
+        .suggestion-item:hover, .suggestion-item.highlighted {
+            background: var(--bg-tertiary);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-results {
+            display: none;
+        }
+
+        .search-results h3 {
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+
+        .search-result-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-result-item:hover {
+            background: var(--bg-quaternary);
+        }
+
+        .result-path {
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .main-content {
+            display: none;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .breadcrumb-item {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .breadcrumb-item:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .breadcrumb-item.inactive {
+            background: var(--accent-secondary);
+        }
+
+        .breadcrumb-item.inactive:hover {
+            background: var(--accent-secondary-hover);
+        }
+
+        .json-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .json-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary);
+            border-radius: 4px;
+            padding: 12px;
+            transition: background-color 0.3s;
+            color: var(--text-primary);
+        }
+
+        .json-item.clickable {
+            cursor: pointer;
+        }
+
+        .json-item.clickable:hover {
+            background: var(--bg-quaternary);
+        }
+
+        .key-item {
+            background: var(--key-bg);
+            border-color: var(--key-border);
+        }
+
+        .index-item {
+            background: var(--index-bg);
+            border-color: var(--index-border);
+        }
+
+        .value-item {
+            background: var(--value-bg);
+            border-color: var(--value-border);
+        }
+
+        .item-icon {
+            margin-right: 8px;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .more-btn {
+            background: var(--accent-success);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .more-btn:hover {
+            background: var(--accent-success-hover);
+        }
+
+        .item-count {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .markdown-content {
+            border: 1px solid var(--markdown-border);
+            border-radius: 6px;
+            padding: 16px;
+            background: var(--markdown-bg);
+            margin-top: 10px;
+            color: var(--text-primary);
+        }
+
+        .markdown-content h1, .markdown-content h2, .markdown-content h3,
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-content code {
+            background: var(--code-bg);
+            border-radius: 3px;
+            font-size: 85%;
+            margin: 0;
+            padding: .2em .4em;
+        }
+
+        .markdown-content pre {
+            background: var(--markdown-bg);
+            border-radius: 6px;
+            font-size: 85%;
+            line-height: 1.45;
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid var(--border-primary);
+            color: var(--text-secondary);
+            padding: 0 16px;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin-bottom: 16px;
+            padding-left: 32px;
+        }
+
+        .markdown-content a {
+            color: var(--link-color);
+            text-decoration: underline;
+        }
+
+        .markdown-content a:visited {
+            color: var(--link-visited);
+        }
+
+        @media (max-width: 768px) {
+            .content-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .breadcrumbs {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .search-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body data-theme="dark">
+    <div class="header">
+        <div class="header-content">
+            <h1>JSON Viewer</h1>
+            <button id="themeToggle" class="theme-toggle">
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+    </div>
+    <div class="container">
+
+        <div class="upload-area" id="uploadArea">
+            <div>
+                <p>📁 Upload a JSON file to view its contents</p>
+                <input type="file" id="fileInput" class="file-input" accept=".json" />
+                <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                    Drag and drop a JSON file here or click to browse
+                </p>
+            </div>
+        </div>
+
+        <div class="search-section" id="searchSection">
+            <div class="search-controls">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search for keys or values..." />
+                <button id="searchBtn" class="search-btn">🔍 Search</button>
+                <button id="clearBtn" class="clear-btn">Clear</button>
+
+                <div class="suggestions" id="suggestions">
+                    <div class="suggestions-list" id="suggestionsList"></div>
+                </div>
+            </div>
+
+            <div class="search-results" id="searchResults">
+                <h3>Search Results</h3>
+                <div id="searchResultsList"></div>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <div class="content-layout">
+                <div>
+                    <h3>📍 Path</h3>
+                    <div class="breadcrumbs" id="breadcrumbs"></div>
+                </div>
+
+                <div>
+                    <h3>📄 Content</h3>
+                    <div class="json-content" id="jsonContent"></div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class JSONNavigator {
+            constructor(data) {
+                this.data = data;
+                this.currentPath = [];
+                this.displayedItems = 20;
+            }
+
+            navigateToPath(path) {
+                this.currentPath = [...path];
+                this.displayedItems = 20;
+            }
+
+            getCurrentData() {
+                let current = this.data;
+                for (const segment of this.currentPath) {
+                    current = current[segment];
+                }
+                return current;
+            }
+
+            search(query, limit = 50) {
+                const results = [];
+                this._searchRecursive(this.data, [], query.toLowerCase(), results, limit);
+                return results;
+            }
+
+            _searchRecursive(obj, path, query, results, limit) {
+                if (results.length >= limit) return;
+
+                if (typeof obj === 'object' && obj !== null) {
+                    if (Array.isArray(obj)) {
+                        obj.forEach((item, index) => {
+                            if (results.length >= limit) return;
+                            this._searchRecursive(item, [...path, index], query, results, limit);
+                        });
+                    } else {
+                        Object.entries(obj).forEach(([key, value]) => {
+                            if (results.length >= limit) return;
+
+                            // Search in keys
+                            if (key.toLowerCase().includes(query)) {
+                                results.push({ path: [...path, key], value, type: 'key' });
+                            }
+
+                            // Search in values
+                            if (typeof value === 'string') {
+                                const normalizedValue = value.replace(/\s+/g, ' ').trim().toLowerCase();
+                                const normalizedQuery = query.replace(/\s+/g, ' ').trim();
+                                if (normalizedValue.includes(normalizedQuery)) {
+                                    results.push({ path: [...path, key], value, type: 'value' });
+                                }
+                            }
+
+                            this._searchRecursive(value, [...path, key], query, results, limit);
+                        });
+                    }
+                } else if (typeof obj === 'string') {
+                    const normalizedObj = obj.replace(/\s+/g, ' ').trim().toLowerCase();
+                    const normalizedQuery = query.replace(/\s+/g, ' ').trim();
+                    if (normalizedObj.includes(normalizedQuery)) {
+                        results.push({ path, value: obj, type: 'value' });
+                    }
+                }
+            }
+
+            getSearchSuggestions(partial, limit = 20) {
+                const suggestions = new Set();
+                this._getSuggestionsRecursive(this.data, partial.toLowerCase(), suggestions, limit);
+                return Array.from(suggestions).slice(0, limit);
+            }
+
+            _getSuggestionsRecursive(obj, partial, suggestions, limit) {
+                if (suggestions.size >= limit) return;
+
+                if (typeof obj === 'object' && obj !== null) {
+                    if (Array.isArray(obj)) {
+                        obj.forEach(item => {
+                            if (suggestions.size >= limit) return;
+                            this._getSuggestionsRecursive(item, partial, suggestions, limit);
+                        });
+                    } else {
+                        Object.entries(obj).forEach(([key, value]) => {
+                            if (suggestions.size >= limit) return;
+
+                            if (key.toLowerCase().includes(partial)) {
+                                suggestions.add(key);
+                            }
+
+                            if (typeof value === 'string' && value.toLowerCase().includes(partial)) {
+                                // Normalize whitespace to avoid newline/space mismatches
+                                const normalizedValue = value.replace(/\s+/g, ' ').trim();
+                                const suggestionText = normalizedValue.substring(0, 50);
+                                suggestions.add(suggestionText);
+                            }
+
+                            this._getSuggestionsRecursive(value, partial, suggestions, limit);
+                        });
+                    }
+                }
+            }
+        }
+
+        let navigator = null;
+        let searchTimeout = null;
+        let selectedSuggestionIndex = -1;
+
+        // Theme Management
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+
+        function toggleTheme() {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            updateThemeToggleButton(newTheme);
+        }
+
+        function updateThemeToggleButton(theme) {
+            if (theme === 'dark') {
+                themeIcon.textContent = '🌙';
+            } else {
+                themeIcon.textContent = '☀️';
+            }
+        }
+
+        // Initialize theme from localStorage or default to dark
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            body.setAttribute('data-theme', savedTheme);
+            updateThemeToggleButton(savedTheme);
+        }
+
+        // Initialize theme on page load
+        initializeTheme();
+
+        // Theme toggle event listener
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // DOM Elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const searchSection = document.getElementById('searchSection');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const suggestions = document.getElementById('suggestions');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const searchResults = document.getElementById('searchResults');
+        const searchResultsList = document.getElementById('searchResultsList');
+        const mainContent = document.getElementById('mainContent');
+        const breadcrumbs = document.getElementById('breadcrumbs');
+        const jsonContent = document.getElementById('jsonContent');
+        const pagination = document.getElementById('pagination');
+
+        // Utility Functions
+        function truncateText(text, maxLength = 30) {
+            if (text.length > maxLength) {
+                return text.substring(0, maxLength - 3) + '...';
+            }
+            return text;
+        }
+
+        function getPreviewText(value, maxLength = 100) {
+            if (typeof value === 'object' && value !== null) {
+                return truncateText(JSON.stringify(value), maxLength);
+            }
+            return truncateText(String(value), maxLength);
+        }
+
+        function detectMarkdown(text) {
+            if (typeof text !== 'string') return false;
+
+            // Common markdown patterns
+            const markdownPatterns = [
+                /^#{1,6}\s/m,           // Headers
+                /\*\*.*\*\*/,           // Bold
+                /\*.*\*/,               // Italic
+                /`.*`/,                 // Inline code
+                /```[\s\S]*?```/,       // Code blocks
+                /^\s*[-*+]\s/m,         // Unordered lists
+                /^\s*\d+\.\s/m,         // Ordered lists
+                /\[.*\]\(.*\)/,         // Links
+                /^\s*>/m,               // Blockquotes
+                /\|.*\|/                // Tables
+            ];
+
+            return markdownPatterns.some(pattern => pattern.test(text));
+        }
+
+        function renderMarkdown(text) {
+            try {
+                return marked.parse(text);
+            } catch (e) {
+                return text;
+            }
+        }
+
+        // File Upload Handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                alert('Please select a JSON file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    navigator = new JSONNavigator(data);
+
+                    // Show search and main content
+                    searchSection.style.display = 'block';
+                    mainContent.style.display = 'block';
+                    uploadArea.style.display = 'none';
+
+                    // Clear search state
+                    searchInput.value = '';
+                    suggestions.style.display = 'none';
+                    searchResults.style.display = 'none';
+
+                    // Render initial view
+                    renderView();
+                } catch (error) {
+                    alert('Invalid JSON file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Search Handlers
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            selectedSuggestionIndex = -1;
+
+            if (!query) {
+                suggestions.style.display = 'none';
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                updateSuggestions(query);
+            }, 300);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            const suggestionItems = suggestionsList.querySelectorAll('.suggestion-item');
+
+            if (suggestions.style.display === 'none' || suggestionItems.length === 0) {
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestionItems.length - 1);
+                    updateSuggestionHighlight(suggestionItems);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                    updateSuggestionHighlight(suggestionItems);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedSuggestionIndex >= 0) {
+                        selectSuggestion(suggestionItems[selectedSuggestionIndex].textContent);
+                    } else {
+                        performSearch();
+                    }
+                    break;
+                case 'Escape':
+                    suggestions.style.display = 'none';
+                    selectedSuggestionIndex = -1;
+                    break;
+            }
+        });
+
+        searchBtn.addEventListener('click', () => {
+            performSearch();
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            clearSearch();
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+                suggestions.style.display = 'none';
+                selectedSuggestionIndex = -1;
+            }
+        });
+
+        function updateSuggestions(query) {
+            if (!navigator) return;
+
+            const suggestionResults = navigator.getSearchSuggestions(query, 10);
+            selectedSuggestionIndex = -1;
+
+            if (suggestionResults.length > 0) {
+                suggestionsList.innerHTML = '';
+                suggestionResults.forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.textContent = suggestion;
+                    item.addEventListener('click', () => {
+                        selectSuggestion(suggestion);
+                    });
+                    suggestionsList.appendChild(item);
+                });
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        }
+
+        function updateSuggestionHighlight(suggestionItems) {
+            suggestionItems.forEach((item, index) => {
+                if (index === selectedSuggestionIndex) {
+                    item.classList.add('highlighted');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('highlighted');
+                }
+            });
+        }
+
+        function selectSuggestion(suggestion) {
+            searchInput.value = suggestion;
+            suggestions.style.display = 'none';
+            selectedSuggestionIndex = -1;
+            performSearch();
+        }
+
+        function performSearch() {
+            if (!navigator) return;
+
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            suggestions.style.display = 'none';
+
+            const results = navigator.search(query, 20);
+
+            if (results.length > 0) {
+                searchResultsList.innerHTML = '';
+                results.forEach(result => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+
+                    const pathDiv = document.createElement('div');
+                    pathDiv.className = 'result-path';
+                    pathDiv.textContent = `🔍 ${result.path.join(' → ') || 'root'}`;
+
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'result-value';
+                    valueDiv.textContent = getPreviewText(result.value, 100);
+
+                    item.appendChild(pathDiv);
+                    item.appendChild(valueDiv);
+
+                    item.addEventListener('click', () => {
+                        navigator.navigateToPath(result.path.slice(0, -1));
+                        renderView();
+                        searchResults.style.display = 'none';
+                    });
+
+                    searchResultsList.appendChild(item);
+                });
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.style.display = 'none';
+                alert('No results found');
+            }
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            suggestions.style.display = 'none';
+            searchResults.style.display = 'none';
+            selectedSuggestionIndex = -1;
+            navigator.navigateToPath([]);
+            renderView();
+        }
+
+        // Render Functions
+        function renderView() {
+            if (!navigator) return;
+
+            renderBreadcrumbs();
+            renderContent();
+        }
+
+        function renderBreadcrumbs() {
+            breadcrumbs.innerHTML = '';
+
+            // Root button
+            const rootBtn = document.createElement('button');
+            rootBtn.className = 'breadcrumb-item' + (navigator.currentPath.length === 0 ? '' : ' inactive');
+            rootBtn.innerHTML = '🏠 root';
+            rootBtn.addEventListener('click', () => {
+                navigator.navigateToPath([]);
+                renderView();
+            });
+            breadcrumbs.appendChild(rootBtn);
+
+            // Path buttons
+            navigator.currentPath.forEach((segment, index) => {
+                const btn = document.createElement('button');
+                const isLast = index === navigator.currentPath.length - 1;
+                btn.className = 'breadcrumb-item' + (isLast ? '' : ' inactive');
+
+                const icon = typeof segment === 'string' ? '🔑' : '#️⃣';
+                btn.innerHTML = `${icon} ${segment}`;
+
+                btn.addEventListener('click', () => {
+                    navigator.navigateToPath(navigator.currentPath.slice(0, index + 1));
+                    renderView();
+                });
+
+                breadcrumbs.appendChild(btn);
+            });
+        }
+
+        function renderContent() {
+            const currentData = navigator.getCurrentData();
+            jsonContent.innerHTML = '';
+            pagination.innerHTML = '';
+
+            if (typeof currentData === 'object' && currentData !== null) {
+                if (Array.isArray(currentData)) {
+                    renderArray(currentData);
+                } else {
+                    renderObject(currentData);
+                }
+            } else {
+                renderPrimitive(currentData);
+            }
+        }
+
+        function renderObject(obj) {
+            const entries = Object.entries(obj);
+            const displayCount = Math.min(navigator.displayedItems, entries.length);
+
+            for (let i = 0; i < displayCount; i++) {
+                const [key, value] = entries[i];
+                const item = document.createElement('div');
+
+                if (typeof value === 'object' && value !== null) {
+                    // Navigable item
+                    item.className = 'json-item key-item clickable';
+                    item.innerHTML = `<span class="item-icon">🔑</span><strong>${key}</strong>`;
+                    item.addEventListener('click', () => {
+                        navigator.currentPath.push(key);
+                        navigator.displayedItems = 20;
+                        renderView();
+                    });
+                } else {
+                    // Value item
+                    item.className = 'json-item value-item';
+                    item.innerHTML = `<span class="item-icon">📝</span><strong>${key}:</strong> `;
+
+                    if (typeof value === 'string' && detectMarkdown(value)) {
+                        const valueSpan = document.createElement('span');
+                        valueSpan.textContent = truncateText(value, 100);
+                        item.appendChild(valueSpan);
+
+                        const markdownDiv = document.createElement('div');
+                        markdownDiv.className = 'markdown-content';
+                        markdownDiv.innerHTML = renderMarkdown(value);
+                        item.appendChild(markdownDiv);
+                    } else {
+                        const valueSpan = document.createElement('span');
+                        valueSpan.textContent = String(value);
+                        item.appendChild(valueSpan);
+                    }
+                }
+
+                jsonContent.appendChild(item);
+            }
+
+            renderPagination(entries.length);
+        }
+
+        function renderArray(arr) {
+            const displayCount = Math.min(navigator.displayedItems, arr.length);
+
+            for (let i = 0; i < displayCount; i++) {
+                const value = arr[i];
+                const item = document.createElement('div');
+
+                if (typeof value === 'object' && value !== null) {
+                    // Navigable item
+                    item.className = 'json-item index-item clickable';
+                    const preview = getPreviewText(value, 50);
+                    item.innerHTML = `<span class="item-icon">#️⃣</span><strong>${i}:</strong> ${preview}`;
+                    item.addEventListener('click', () => {
+                        navigator.currentPath.push(i);
+                        navigator.displayedItems = 20;
+                        renderView();
+                    });
+                } else {
+                    // Value item
+                    item.className = 'json-item value-item';
+                    item.innerHTML = `<span class="item-icon">📝</span><strong>${i}:</strong> `;
+
+                    if (typeof value === 'string' && detectMarkdown(value)) {
+                        const valueSpan = document.createElement('span');
+                        valueSpan.textContent = truncateText(value, 100);
+                        item.appendChild(valueSpan);
+
+                        const markdownDiv = document.createElement('div');
+                        markdownDiv.className = 'markdown-content';
+                        markdownDiv.innerHTML = renderMarkdown(value);
+                        item.appendChild(markdownDiv);
+                    } else {
+                        const valueSpan = document.createElement('span');
+                        valueSpan.textContent = String(value);
+                        item.appendChild(valueSpan);
+                    }
+                }
+
+                jsonContent.appendChild(item);
+            }
+
+            renderPagination(arr.length);
+        }
+
+        function renderPrimitive(value) {
+            const item = document.createElement('div');
+            item.className = 'json-item value-item';
+
+            if (typeof value === 'string' && detectMarkdown(value)) {
+                item.innerHTML = `<span class="item-icon">📝</span>`;
+
+                const valueSpan = document.createElement('span');
+                valueSpan.textContent = truncateText(value, 200);
+                item.appendChild(valueSpan);
+
+                const markdownDiv = document.createElement('div');
+                markdownDiv.className = 'markdown-content';
+                markdownDiv.innerHTML = renderMarkdown(value);
+                item.appendChild(markdownDiv);
+            } else {
+                item.innerHTML = `<span class="item-icon">📝</span>${String(value)}`;
+            }
+
+            jsonContent.appendChild(item);
+        }
+
+        function renderPagination(totalItems) {
+            if (totalItems <= navigator.displayedItems) {
+                if (totalItems > 20) {
+                    const countDiv = document.createElement('div');
+                    countDiv.className = 'item-count';
+                    countDiv.textContent = `Showing all ${totalItems} items`;
+                    pagination.appendChild(countDiv);
+                }
+                return;
+            }
+
+            const countDiv = document.createElement('div');
+            countDiv.className = 'item-count';
+            countDiv.textContent = `Showing first ${navigator.displayedItems} of ${totalItems} items`;
+            pagination.appendChild(countDiv);
+
+            const moreBtn = document.createElement('button');
+            moreBtn.className = 'more-btn';
+            moreBtn.textContent = 'More...';
+            moreBtn.addEventListener('click', () => {
+                navigator.displayedItems = Math.min(navigator.displayedItems + 20, totalItems);
+                renderContent();
+            });
+            pagination.appendChild(moreBtn);
+        }
+    </script>
+</body>
+</html>

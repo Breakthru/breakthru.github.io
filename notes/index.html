@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <!-- PWA Manifest & Mobile Icons -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Notes">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        /* SEARCH BAR STYLES */
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 45px;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: var(--card-bg);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        /* TAG SELECTOR STYLES */
+        .tag-selector {
+            margin-bottom: 20px;
+        }
+
+        .tag-selector-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .tag-select-container {
+            position: relative;
+        }
+
+        .tag-select {
+            width: 100%;
+            padding: 10px 12px;
+            padding-right: 40px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: var(--card-bg);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .tag-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Button Styles */
+        button {
+            cursor: pointer;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #ffffff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-secondary:hover {
+            background-color: #eef2ff;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Input Section */
+        .input-group {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+            flex-grow: 1;
+        }
+
+        input:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            margin-bottom: 20px;
+            display: none;
+        }
+        .filter-section.active {
+            display: block;
+        }
+
+        .tag-container {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-btn {
+            background-color: #fff;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag-btn:hover, .tag-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Note List */
+        .note-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .note-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .note-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #111827;
+        }
+
+        .note-tags {
+            font-size: 0.85rem;
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .note-tag-chip {
+            background: #eef2ff;
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .note-tag-chip:hover, .note-tag-chip.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .note-content {
+            color: #4b5563;
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        .note-meta {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        .delete-btn:hover {
+            background: #fecaca;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📝 Notes App</h1>
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="Search notes..."
+                oninput="handleSearchInput()"
+            >
+        </div>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="downloadNotes()">Download All Notes</button>
+            <button class="btn-secondary" onclick="triggerImportNotes()">Import Notes</button>
+            <input type="file" id="importFileInput" accept=".json,application/json" style="display: none;" onchange="importNotes(event)">
+        </div>
+    </header>
+
+    <div class="tag-selector">
+        <span class="tag-selector-label">Filter by Tag:</span>
+        <div class="tag-select-container">
+            <select class="tag-select" id="tagSelect">
+                <option value="">All Tags</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="filter-section" id="filterSection">
+        <div class="tag-container" id="tagContainer"></div>
+    </div>
+
+    <ul class="note-list" id="noteList"></ul>
+
+    <div class="input-group">
+        <div class="input-row" style="margin-bottom: 10px;">
+            <input type="text" id="titleInput" placeholder="Title (optional)">
+            <input type="text" id="tagInput" placeholder="Tag (optional)" style="flex: 0 0 150px;">
+        </div>
+        <textarea id="contentInput" placeholder="Write your note here..."></textarea>
+        <div style="text-align: right; margin-top: 10px;">
+            <button class="btn-primary" onclick="addNote()">Add Note</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- State Management ---
+    let notes = JSON.parse(localStorage.getItem('myNotes')) || [];
+    let currentFilterTag = localStorage.getItem('currentFilterTag') || '';
+
+    // --- DOM Elements ---
+    const titleInput = document.getElementById('titleInput');
+    const tagInput = document.getElementById('tagInput');
+    const contentInput = document.getElementById('contentInput');
+    const searchInput = document.getElementById('searchInput');
+    const filterSection = document.getElementById('filterSection');
+    const tagContainer = document.getElementById('tagContainer');
+    const tagSelect = document.getElementById('tagSelect');
+    const noteList = document.getElementById('noteList');
+
+    // --- Core Functions ---
+
+    function saveToLocalStorage() {
+        localStorage.setItem('myNotes', JSON.stringify(notes));
+        localStorage.setItem('currentFilterTag', currentFilterTag);
+    }
+
+    function addNote() {
+        const title = titleInput.value.trim();
+        const tag = tagInput.value.trim();
+        const content = contentInput.value.trim();
+
+        if (!title && !content) {
+            alert("Please enter at least a title or some content.");
+            return;
+        }
+
+        const newNote = {
+            id: Date.now(),
+            title: title, // Fixed: Added explicitly to state tracking
+            content: content,
+            tags: tag ? [tag] : [],
+            createdAt: new Date().toLocaleString() // Keeps Date and Time intact
+        };
+
+        notes.unshift(newNote);
+        saveToLocalStorage();
+        populateTagSelect(); // Fixed: Re-populates selector dropdown with the new tag option
+        renderNotes(searchInput.value);
+        clearInputs();
+    }
+
+    function deleteNote(id) {
+        if(confirm('Are you sure you want to delete this note?')) {
+            notes = notes.filter(note => note.id !== id);
+            saveToLocalStorage();
+            populateTagSelect(); // Re-sync tags dropdown upon removal
+            renderNotes(searchInput.value);
+        }
+    }
+
+    function clearInputs() {
+        titleInput.value = '';
+        tagInput.value = '';
+        contentInput.value = '';
+        titleInput.focus();
+    }
+
+    function downloadNotes() {
+        const dataStr = JSON.stringify(notes, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `notes_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function triggerImportNotes() {
+        document.getElementById('importFileInput').click();
+    }
+
+    function importNotes(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                let notesArray = [];
+
+                if (Array.isArray(importedData)) {
+                    notesArray = importedData;
+                } else if (importedData && Array.isArray(importedData.notes)) {
+                    notesArray = importedData.notes;
+                } else {
+                    alert('Invalid file format: Could not find an array of notes in the imported JSON.');
+                    return;
+                }
+
+                if (notesArray.length === 0) {
+                    alert('The imported file contains no notes.');
+                    return;
+                }
+
+                let importedCount = 0;
+                const existingIds = new Set(notes.map(n => n.id));
+
+                notesArray.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        let noteId = item.id || (Date.now() + Math.floor(Math.random() * 10000));
+                        while (existingIds.has(noteId)) {
+                            noteId = Date.now() + Math.floor(Math.random() * 10000);
+                        }
+                        existingIds.add(noteId);
+
+                        const formattedNote = {
+                            id: noteId,
+                            title: item.title ? String(item.title) : '',
+                            content: item.content ? String(item.content) : (item.body ? String(item.body) : ''),
+                            tags: Array.isArray(item.tags) ? item.tags.map(String) : (item.tag ? [String(item.tag)] : []),
+                            createdAt: item.createdAt ? String(item.createdAt) : new Date().toLocaleString()
+                        };
+
+                        notes.unshift(formattedNote);
+                        importedCount++;
+                    }
+                });
+
+                if (importedCount > 0) {
+                    saveToLocalStorage();
+                    populateTagSelect();
+                    renderNotes(searchInput.value);
+                    alert(`Successfully imported ${importedCount} note(s)!`);
+                } else {
+                    alert('No valid notes could be extracted from the file.');
+                }
+            } catch (err) {
+                alert('Error parsing JSON backup file. Please ensure the file is valid JSON.');
+                console.error('Import error:', err);
+            } finally {
+                event.target.value = '';
+            }
+        };
+
+        reader.readAsText(file);
+    }
+
+    function scrollToBottom(smooth = false) {
+        setTimeout(() => {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
+        }, 50);
+    }
+
+    // --- Rendering & Filtering ---
+
+    function renderNotes(filterText = '') {
+        noteList.innerHTML = '';
+        const filter = filterText.toLowerCase().trim();
+        
+        // Step 1: Filter notes based on the Main Search Bar (Matches Title, Content, or Tags)
+        let notesToRender = notes.filter(note => {
+            const matchesTitle = note.title ? note.title.toLowerCase().includes(filter) : false;
+            const matchesContent = note.content ? note.content.toLowerCase().includes(filter) : false;
+            const matchesTag = note.tags ? note.tags.some(t => t.toLowerCase().includes(filter)) : false;
+            return matchesTitle || matchesContent || matchesTag;
+        });
+
+        // Step 2: Filter further based on Dropdown / Secondary Tag Filter Choice
+        if (currentFilterTag) {
+            notesToRender = notesToRender.filter(note =>
+                note.tags && note.tags.some(t => t.toLowerCase() === currentFilterTag.toLowerCase())
+            );
+        }
+
+        if (notesToRender.length === 0) {
+            noteList.innerHTML = '<li class="empty-state">No notes found matching your criteria.</li>';
+            return;
+        }
+
+        // Step 3: Sort notes by timestamp ascending (oldest first, newest last at bottom)
+        notesToRender.sort((a, b) => {
+            const tA = getNoteTimestamp(a);
+            const tB = getNoteTimestamp(b);
+            return tA - tB;
+        });
+
+        // Render matching elements onto screen
+        notesToRender.forEach(note => {
+            const li = document.createElement('li');
+            li.className = 'note-card';
+            
+            const html = `
+                <div class="note-header">
+                    <div>
+                        ${note.title ? `<div class="note-title">${note.title}</div>` : ''}
+                        ${note.tags.length > 0 ? `<div class="note-tags">🏷️ ${note.tags.map(t => `<span class="note-tag-chip ${currentFilterTag.toLowerCase() === t.toLowerCase() ? 'active' : ''}" onclick="selectTagFilter('${t.replace(/'/g, "\\'")}')">${t}</span>`).join('')}</div>` : ''}
+                    </div>
+                    <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
+                </div>
+                <div class="note-content">${note.content || '(No content)'}</div>
+                <div class="note-meta">Created: ${note.createdAt}</div>
+            `;
+            
+            li.innerHTML = html;
+            noteList.appendChild(li);
+        });
+
+        // Step 4: Scroll to bottom so newest note & input form are in view
+        scrollToBottom();
+    }
+
+    function selectTagFilter(tag) {
+        if (currentFilterTag.toLowerCase() === tag.toLowerCase()) {
+            currentFilterTag = '';
+        } else {
+            currentFilterTag = tag;
+        }
+        saveToLocalStorage();
+        tagSelect.value = currentFilterTag;
+        tagInput.value = currentFilterTag; // Pre-populate tag field in Add Note form
+
+        if (currentFilterTag === '') {
+            filterSection.classList.remove('active');
+        } else {
+            filterSection.classList.add('active');
+            generateTagButtons();
+        }
+        renderNotes(searchInput.value);
+    }
+
+    function parseNoteDate(dateStr) {
+        if (!dateStr) return null;
+        let s = String(dateStr).trim();
+        
+        let normalized = s.replace(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:)/, '$1T$2');
+        let timestamp = Date.parse(normalized);
+        if (!isNaN(timestamp)) return timestamp;
+        
+        let ddmmyyyy = s.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})(?:\s*,\s*|\s+)?(\d{1,2}:\d{2}(?::\d{2})?)?/);
+        if (ddmmyyyy) {
+            let p1 = parseInt(ddmmyyyy[1], 10);
+            let p2 = parseInt(ddmmyyyy[2], 10);
+            let year = parseInt(ddmmyyyy[3], 10);
+            let timeStr = ddmmyyyy[4] || '00:00:00';
+            
+            let month = (p1 > 12) ? p2 : p1;
+            let day = (p1 > 12) ? p1 : p2;
+            
+            let isoStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${timeStr}`;
+            let t = Date.parse(isoStr);
+            if (!isNaN(t)) return t;
+        }
+        
+        return null;
+    }
+
+    function getNoteTimestamp(note) {
+        let t = parseNoteDate(note.createdAt);
+        if (t !== null) return t;
+        if (typeof note.id === 'number' && note.id > 1000000000000) return note.id;
+        return 0;
+    }
+
+    function getRecentTags() {
+        if (!notes || notes.length === 0) {
+            return currentFilterTag ? [currentFilterTag] : [];
+        }
+        
+        const now = Date.now();
+        const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+        
+        // Find notes created/updated in the last week relative to current system date/time
+        const recentNotes = notes.filter(note => {
+            let timestamp = getNoteTimestamp(note);
+            if (timestamp > 0) {
+                let diff = now - timestamp;
+                return diff >= 0 && diff <= oneWeekMs;
+            }
+            return false;
+        });
+        
+        const recentTagsSet = new Set(recentNotes.flatMap(n => n.tags || []));
+        
+        // Always include the currently selected tag if set (so user can see & click to unselect)
+        if (currentFilterTag) {
+            recentTagsSet.add(currentFilterTag);
+        }
+        
+        return Array.from(recentTagsSet);
+    }
+
+    function generateTagButtons() {
+        tagContainer.innerHTML = '';
+        const tagsToShow = getRecentTags();
+        
+        if (tagsToShow.length === 0) {
+            tagContainer.innerHTML = '<span style="font-size: 0.85rem; color: #9ca3af; padding: 4px 0;">No recent tags found.</span>';
+            return;
+        }
+
+        tagsToShow.forEach(tag => {
+            const button = document.createElement('button');
+            button.className = `tag-btn ${currentFilterTag.toLowerCase() === tag.toLowerCase() ? 'active' : ''}`;
+            button.innerText = tag;
+            button.onclick = () => {
+                selectTagFilter(tag);
+            };
+            tagContainer.appendChild(button);
+        });
+    }
+
+    // --- Tag Selector Dropdown Population Logic ---
+
+    function populateTagSelect() {
+        // Clear all except the first default option ("All Tags")
+        tagSelect.innerHTML = '<option value="">All Tags</option>';
+        const allTags = Array.from(new Set(notes.flatMap(n => n.tags || [])));
+
+        allTags.forEach(tag => {
+            const option = document.createElement('option');
+            option.value = tag;
+            option.text = tag;
+            tagSelect.appendChild(option);
+        });
+        
+        tagSelect.value = currentFilterTag; // Ensure UI displays selection matching internal state
+    }
+
+    function onTagSelect(event) {
+        currentFilterTag = event.target.value;
+        saveToLocalStorage();
+        tagInput.value = currentFilterTag; // Pre-populate tag field in Add Note form
+
+        if (currentFilterTag === '') {
+            filterSection.classList.remove('active');
+        } else {
+            filterSection.classList.add('active');
+            generateTagButtons();
+        }
+        renderNotes(searchInput.value);
+    }
+
+    // --- Input Subscriptions / Event Listeners ---
+
+    function handleSearchInput() {
+        const inputVal = searchInput.value;
+        renderNotes(inputVal);
+    }
+
+    // --- Initialization Execution Runtime ---
+    populateTagSelect();
+    
+    if (currentFilterTag) {
+        filterSection.classList.add('active');
+        tagInput.value = currentFilterTag;
+        generateTagButtons();
+    }
+    
+    renderNotes();
+    tagSelect.addEventListener('change', onTagSelect);
+
+    // --- PWA Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA Service Worker registered:', reg.scope))
+                .catch(err => console.log('PWA Service Worker registration failed:', err));
+        });
+    }
+</script>
+
+</body>
+</html>

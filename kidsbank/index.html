@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kids Reward Bank</title>
+    <meta name="description" content="Kids Bank & Reward Tracker - Track pocket money, gifts, study rewards, and purchases for children.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #080c14;
+            --bg-card: rgba(20, 28, 45, 0.75);
+            --border-card: rgba(255, 255, 255, 0.1);
+            --primary: #f59e0b;
+            --primary-hover: #d97706;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --accent: #6366f1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --bg-input: rgba(15, 23, 42, 0.85);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 860px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            align-self: flex-start;
+        }
+
+        .nav-back:hover {
+            color: var(--text-main);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .user-switcher {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--border-card);
+        }
+
+        .user-switcher label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .user-switcher select {
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Balance Banner Card */
+        .balance-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(99, 102, 241, 0.15));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            text-align: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.1), transparent 60%);
+            pointer-events: none;
+        }
+
+        .balance-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .balance-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fbbf24;
+            text-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .balance-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .stat-item .stat-lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-item .stat-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .stat-earned { color: var(--secondary); }
+        .stat-spent { color: var(--danger); }
+
+        /* Grid & Forms */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        input[type="text"], input[type="number"], select {
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 0.7rem 0.9rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.3rem;
+        }
+
+        .chip-btn {
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.35rem 0.7rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-card);
+            border-radius: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .chip-btn:hover {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--primary);
+            color: var(--text-main);
+        }
+
+        button.btn-submit {
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-submit:hover {
+            opacity: 0.92;
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* Transactions List */
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .tx-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1.1rem;
+            transition: border-color 0.2s;
+        }
+
+        .tx-item:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .tx-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .tx-icon.income {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .tx-icon.expense {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .tx-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .tx-ref {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .tx-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tx-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .tx-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .tx-amount.income { color: var(--secondary); }
+        .tx-amount.expense { color: var(--danger); }
+
+        .tx-running-balance {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Overview Cards for Parent Mode */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .overview-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-sm);
+            padding: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .overview-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .overview-balance {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .admin-toolbar {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.85rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-card);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            transition: all 0.15s ease;
+        }
+
+        .btn-sm:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .btn-sm-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-sm-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .balance-amount {
+                font-size: 2.3rem;
+            }
+            .tx-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.6rem;
+            }
+            .tx-right {
+                text-align: left;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="nav-back">&larr; Back to Application Index</a>
+
+        <!-- Login Screen Card -->
+        <div class="card" id="loginCard" style="max-width: 440px; margin: 2rem auto; text-align: center;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; justify-content: center;">🔑 Children's Bank Login</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Select your account and enter your password to log in.</p>
+            
+            <form onsubmit="handleLoginSubmit(event)">
+                <div class="form-group" style="text-align: left;">
+                    <label for="loginUserSelect">Select Account:</label>
+                    <select id="loginUserSelect" required></select>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label for="loginPasswordInput">Password:</label>
+                    <input type="password" id="loginPasswordInput" placeholder="Enter password (default: mum)" required>
+                </div>
+                <button type="submit" class="btn-submit btn-green">Log In &rarr;</button>
+                <div id="loginErrorMsg"></div>
+            </form>
+        </div>
+
+        <!-- Main Application Container (Visible when logged in) -->
+        <div id="mainAppContainer" style="display: none;">
+            <header>
+                <div class="header-title">
+                    <h1>🎁 Kids Reward Bank</h1>
+                    <p>Track cash gifts, study rewards, and purchases for children</p>
+                </div>
+                <div class="user-switcher" style="gap: 0.8rem;">
+                    <span id="loggedInBadge" style="font-size: 0.85rem; font-weight: 700; color: var(--primary);"></span>
+                    <button type="button" class="btn-sm" onclick="handleLogout()">Log Out 🚪</button>
+                </div>
+            </header>
+
+            <!-- Balance Banner for Active Child -->
+            <div class="card balance-card" id="balanceBanner">
+                <div class="balance-label" id="balanceAccountLabel">Current Available Balance</div>
+                <div class="balance-amount" id="balanceDisplay">£ 0.00</div>
+                <div class="balance-stats">
+                    <div class="stat-item">
+                        <span class="stat-lbl">Total Earned</span>
+                        <span class="stat-val stat-earned" id="totalEarnedDisplay">£ 0.00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-lbl">Total Spent</span>
+                        <span class="stat-val stat-spent" id="totalSpentDisplay">£ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent / Admin Actions (Only visible in Parent mode) -->
+            <div id="adminPanel" style="display: none;" class="grid-2">
+                <!-- Send Reward Form -->
+                <div class="card">
+                    <h2>🎁 Send Reward / Cash Gift</h2>
+                    <form id="rewardForm" onsubmit="handleSendReward(event)">
+                        <div class="form-group">
+                            <label for="rewardAccountTo">Send To (Select or Type New Child):</label>
+                            <input type="text" id="rewardAccountTo" list="rewardChildrenList" placeholder="Select or type child name (e.g. leo)" required>
+                            <datalist id="rewardChildrenList"></datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rewardAmount">Amount (£):</label>
+                            <input type="number" id="rewardAmount" step="0.01" min="0.01" max="100.00" value="1.00" required>
+                            <div class="chips-container">
+                                <button type="button" class="chip-btn" onclick="setRewardAmount('0.50')">+£0.50</button>
+                                <button type="button" class="chip-btn" onclick="setRewardAmount('1.00')">+£1.00</button>
+                                <button type="button" class="chip-btn" onclick="setRewardAmount('2.00')">+£2.00</button>
+                                <button type="button" class="chip-btn" onclick="setRewardAmount('5.00')">+£5.00</button>
+                                <button type="button" class="chip-btn" onclick="setRewardAmount('10.00')">+£10.00</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rewardRef">Description / Category:</label>
+                            <input type="text" id="rewardRef" placeholder="e.g. reading, maths, Christmas gift" required>
+                            <div class="chips-container">
+                                <button type="button" class="chip-btn" onclick="setRewardRef('reading')">reading</button>
+                                <button type="button" class="chip-btn" onclick="setRewardRef('writing')">writing</button>
+                                <button type="button" class="chip-btn" onclick="setRewardRef('maths')">maths</button>
+                                <button type="button" class="chip-btn" onclick="setRewardRef('tidying')">tidying</button>
+                                <button type="button" class="chip-btn" onclick="setRewardRef('listening')">listening</button>
+                                <button type="button" class="chip-btn" onclick="setRewardRef('Birthday gift')">Birthday gift</button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit btn-green">Send Reward &rarr;</button>
+                    </form>
+                </div>
+
+                <!-- Spend Rewards Form -->
+                <div class="card">
+                    <h2>🛒 Record Purchase / Spend</h2>
+                    <form id="spendForm" onsubmit="handleRecordSpend(event)">
+                        <div class="form-group">
+                            <label for="spendAccountFrom">Child Account (Select or Type New Child):</label>
+                            <input type="text" id="spendAccountFrom" list="spendChildrenList" placeholder="Select or type child name (e.g. leo)" required>
+                            <datalist id="spendChildrenList"></datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spendAmount">Amount (£):</label>
+                            <input type="number" id="spendAmount" step="0.01" min="0.01" max="500.00" value="1.00" required>
+                            <div class="chips-container">
+                                <button type="button" class="chip-btn" onclick="setSpendAmount('1.00')">£1.00</button>
+                                <button type="button" class="chip-btn" onclick="setSpendAmount('2.00')">£2.00</button>
+                                <button type="button" class="chip-btn" onclick="setSpendAmount('5.00')">£5.00</button>
+                                <button type="button" class="chip-btn" onclick="setSpendAmount('10.00')">£10.00</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spendRef">Item / Purchase Description:</label>
+                            <input type="text" id="spendRef" placeholder="e.g. Bought Lego set, Ice cream, Toy car" required>
+                            <div class="chips-container">
+                                <button type="button" class="chip-btn" onclick="setSpendRef('Bought toy')">Bought toy</button>
+                                <button type="button" class="chip-btn" onclick="setSpendRef('Lego set')">Lego set</button>
+                                <button type="button" class="chip-btn" onclick="setSpendRef('Ice cream')">Ice cream</button>
+                                <button type="button" class="chip-btn" onclick="setSpendRef('Comic book')">Comic book</button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit btn-red">Record Purchase &rarr;</button>
+                    </form>
+                </div>
+
+                <!-- Manage Passwords Card -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h2>🔑 Manage Children Passwords</h2>
+                    <form id="managePassForm" onsubmit="handleAdminChangePassword(event)" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                            <label for="passManageChild">Select Child Account:</label>
+                            <select id="passManageChild" required></select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                            <label for="passManageNew">New Password:</label>
+                            <input type="text" id="passManageNew" placeholder="Enter new password (e.g. mum123)" required>
+                        </div>
+                        <button type="submit" class="btn-submit btn-green" style="width: auto; padding: 0.7rem 1.4rem; margin-top: 0;">Update Password</button>
+                    </form>
+                </div>
+            </div>
+
+        <!-- Children Balances Overview (Parent Mode) -->
+        <div class="card" id="familyOverviewCard" style="display: none;">
+            <h2>
+                <span>👨‍👩‍👧‍👦 Family Accounts Overview</span>
+                <button type="button" class="btn-sm" onclick="addNewChildPrompt()">+ Add Child Account</button>
+            </h2>
+            <div class="overview-grid" id="overviewGrid"></div>
+        </div>
+
+        <!-- Transactions History List -->
+        <div class="card">
+            <h2>
+                <span id="transactionsTitle">Chronological Transactions</span>
+                <span id="txCountBadge" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);"></span>
+            </h2>
+            
+            <div class="transactions-list" id="transactionsList">
+                <!-- Transactions rendered dynamically -->
+            </div>
+
+            <!-- Admin Toolbar Controls -->
+            <div class="admin-toolbar" style="margin-top: 1.25rem; border-top: 1px solid var(--border-card); padding-top: 1rem;">
+                <button type="button" class="btn-sm" onclick="handleLogout()">🔒 Log Out</button>
+                <button type="button" class="btn-sm" onclick="loadSampleDemoData()">Load Sample Demo Data</button>
+                <button type="button" class="btn-sm" onclick="exportDataJSON()">Export Database</button>
+                <button type="button" class="btn-sm" onclick="importDataJSONPrompt()">Import Database</button>
+                <button type="button" class="btn-sm btn-sm-danger" onclick="clearAllData()">Reset All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Default Data & State ---
+        const DEFAULT_ACCOUNTS = ["sebas", "santi"];
+        const PARENT_ACCOUNT = "mum";
+        const ADMIN_PASSWORD = "secret";
+        
+        const rawAccounts = localStorage.getItem('kidsBank_accounts');
+        let accounts = rawAccounts !== null ? JSON.parse(rawAccounts) : null;
+
+        const rawTx = localStorage.getItem('kidsBank_transactions');
+        let transactions = rawTx !== null ? JSON.parse(rawTx) : null;
+
+        let currentUser = sessionStorage.getItem('kidsBank_loggedInUser') || localStorage.getItem('kidsBank_currentUser') || PARENT_ACCOUNT;
+        let passwords = JSON.parse(localStorage.getItem('kidsBank_passwords')) || {};
+        let isLoggedIn = sessionStorage.getItem('kidsBank_isLoggedIn') === 'true';
+
+        // Only populate initial sample demo data on VERY FIRST visit (never saved before)
+        if (transactions === null && rawAccounts === null) {
+            accounts = [...DEFAULT_ACCOUNTS];
+            transactions = [
+                { id: 1, family_id: 'sebas', account_from: 'mum', account_to: 'sebas', amount: 500, reference: 'reading', timestamp: '2026-07-20 10:30:00' },
+                { id: 2, family_id: 'sebas', account_from: 'mum', account_to: 'santi', amount: 500, reference: 'writing', timestamp: '2026-07-20 11:00:00' },
+                { id: 3, family_id: 'sebas', account_from: 'mum', account_to: 'sebas', amount: 1000, reference: 'Birthday gift from Grandma', timestamp: '2026-07-22 14:15:00' },
+                { id: 4, family_id: 'sebas', account_from: 'sebas', account_to: 'Store', amount: 350, reference: 'Bought comic book', timestamp: '2026-07-24 16:45:00' },
+                { id: 5, family_id: 'sebas', account_from: 'santi', account_to: 'Store', amount: 200, reference: 'Bought ice cream', timestamp: '2026-07-25 15:20:00' }
+            ];
+            saveState();
+        } else {
+            if (accounts === null) accounts = [];
+            if (transactions === null) transactions = [];
+        }
+
+        function getPasswordForUser(userName) {
+            const key = (userName || '').trim().toLowerCase();
+            if (key === PARENT_ACCOUNT) {
+                return passwords[PARENT_ACCOUNT] || ADMIN_PASSWORD;
+            }
+            return passwords[key] || "mum";
+        }
+
+        function setPasswordForUser(userName, newPass) {
+            const key = (userName || '').trim().toLowerCase();
+            passwords[key] = newPass.trim();
+            localStorage.setItem('kidsBank_passwords', JSON.stringify(passwords));
+        }
+
+        // Auto-discover child accounts from transactions in localStorage
+        function autoDiscoverAccounts() {
+            const discovered = new Set(accounts || []);
+            (transactions || []).forEach(tx => {
+                ['account_from', 'account_to'].forEach(key => {
+                    const name = (tx[key] || '').trim().toLowerCase();
+                    if (name && !['mum', 'admin', 'store', 'shop', 'merchant'].includes(name)) {
+                        discovered.add(name);
+                    }
+                });
+            });
+
+            accounts = Array.from(discovered);
+            if (accounts.length > 0 && !accounts.includes(currentUser) && currentUser !== PARENT_ACCOUNT) {
+                currentUser = accounts[0];
+            }
+        }
+
+        // Run auto-discovery on startup
+        autoDiscoverAccounts();
+
+        function saveState() {
+            localStorage.setItem('kidsBank_accounts', JSON.stringify(accounts));
+            localStorage.setItem('kidsBank_currentUser', currentUser);
+            localStorage.setItem('kidsBank_transactions', JSON.stringify(transactions));
+        }
+
+        // --- Formatting Helpers ---
+        function formatCurrency(pence) {
+            const pounds = (pence / 100).toFixed(2);
+            return `£ ${pounds}`;
+        }
+
+        function formatDate(tsStr) {
+            if (!tsStr) return '';
+            try {
+                const date = new Date(tsStr.replace(/-/g, '/'));
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (e) {}
+            return tsStr;
+        }
+
+        // --- Core Business Logic ---
+        function getAccountBalance(accountName) {
+            let balance = 0;
+            transactions.forEach(tx => {
+                const amt = parseInt(tx.amount) || 0;
+                if (tx.account_to.toLowerCase() === accountName.toLowerCase()) {
+                    balance += amt;
+                }
+                if (tx.account_from.toLowerCase() === accountName.toLowerCase()) {
+                    balance -= amt;
+                }
+            });
+            return balance;
+        }
+
+        function getAccountStats(accountName) {
+            let totalEarned = 0;
+            let totalSpent = 0;
+            transactions.forEach(tx => {
+                const amt = parseInt(tx.amount) || 0;
+                if (tx.account_to.toLowerCase() === accountName.toLowerCase()) {
+                    totalEarned += amt;
+                }
+                if (tx.account_from.toLowerCase() === accountName.toLowerCase()) {
+                    totalSpent += amt;
+                }
+            });
+            return { totalEarned, totalSpent, balance: totalEarned - totalSpent };
+        }
+
+        // --- UI Rendering ---
+        function renderUserSwitcher() {
+            const select = document.getElementById('activeUserSelect');
+            select.innerHTML = '';
+
+            // Children Options
+            accounts.forEach(acc => {
+                const opt = document.createElement('option');
+                opt.value = acc;
+                opt.textContent = `👶 ${acc.toUpperCase()}`;
+                select.appendChild(opt);
+            });
+
+            // Parent Option
+            const adminOpt = document.createElement('option');
+            adminOpt.value = PARENT_ACCOUNT;
+            adminOpt.textContent = `👑 Parent (Mum / Admin)`;
+            select.appendChild(adminOpt);
+
+            select.value = currentUser;
+        }
+
+        function renderLoginDropdown() {
+            autoDiscoverAccounts();
+            const select = document.getElementById('loginUserSelect');
+            if (!select) return;
+            select.innerHTML = '';
+
+            (accounts || []).forEach(acc => {
+                const opt = document.createElement('option');
+                opt.value = acc;
+                opt.textContent = `👶 ${acc.toUpperCase()}`;
+                select.appendChild(opt);
+            });
+
+            const adminOpt = document.createElement('option');
+            adminOpt.value = PARENT_ACCOUNT;
+            adminOpt.textContent = `👑 Parent (Mum / Admin)`;
+            select.appendChild(adminOpt);
+
+            select.value = (accounts.length > 0 && accounts.includes(currentUser)) ? currentUser : PARENT_ACCOUNT;
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const userSelect = document.getElementById('loginUserSelect').value;
+            const passInput = document.getElementById('loginPasswordInput').value;
+            const errorEl = document.getElementById('loginErrorMsg');
+
+            const expectedPass = getPasswordForUser(userSelect);
+
+            if (passInput === expectedPass) {
+                currentUser = userSelect;
+                isLoggedIn = true;
+                sessionStorage.setItem('kidsBank_loggedInUser', currentUser);
+                sessionStorage.setItem('kidsBank_isLoggedIn', 'true');
+                errorEl.textContent = '';
+                document.getElementById('loginPasswordInput').value = '';
+                
+                showAppScreen();
+            } else {
+                errorEl.style.marginTop = '0.5rem';
+                errorEl.style.color = '#ef4444';
+                errorEl.style.fontWeight = '600';
+                errorEl.textContent = `Incorrect password for ${userSelect.toUpperCase()}. (Default for kids is "mum")`;
+            }
+        }
+
+        function handleLogout() {
+            isLoggedIn = false;
+            sessionStorage.removeItem('kidsBank_isLoggedIn');
+            sessionStorage.removeItem('kidsBank_loggedInUser');
+            showLoginScreen();
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('mainAppContainer').style.display = 'none';
+            renderLoginDropdown();
+        }
+
+        function showAppScreen() {
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('mainAppContainer').style.display = 'block';
+            renderApp();
+        }
+
+        function populatePasswordManageDropdown() {
+            const select = document.getElementById('passManageChild');
+            if (!select) return;
+            select.innerHTML = '';
+            accounts.forEach(acc => {
+                const opt = document.createElement('option');
+                opt.value = acc;
+                opt.textContent = `${acc.toUpperCase()} (Pass: "${getPasswordForUser(acc)}")`;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleAdminChangePassword(e) {
+            e.preventDefault();
+            const childName = document.getElementById('passManageChild').value;
+            const newPass = document.getElementById('passManageNew').value.trim();
+
+            if (!childName || !newPass) {
+                alert('Please select a child and enter a valid new password.');
+                return;
+            }
+
+            setPasswordForUser(childName, newPass);
+            document.getElementById('passManageNew').value = '';
+            populatePasswordManageDropdown();
+            alert(`Successfully updated password for ${childName.toUpperCase()} to "${newPass}"!`);
+        }
+
+        function populateFormDropdowns() {
+            const rewardList = document.getElementById('rewardChildrenList');
+            const spendList = document.getElementById('spendChildrenList');
+
+            if (rewardList) {
+                rewardList.innerHTML = accounts.map(acc => `<option value="${acc}">${acc}</option>`).join('');
+            }
+            if (spendList) {
+                spendList.innerHTML = accounts.map(acc => `<option value="${acc}">${acc}</option>`).join('');
+            }
+        }
+
+        function renderApp() {
+            autoDiscoverAccounts();
+            populateFormDropdowns();
+
+            const badge = document.getElementById('loggedInBadge');
+            if (badge) {
+                if (currentUser === PARENT_ACCOUNT) {
+                    badge.textContent = `Logged in as: 👑 Parent (Mum / Admin)`;
+                } else {
+                    badge.textContent = `Logged in as: 👶 ${currentUser.toUpperCase()}`;
+                }
+            }
+
+            const isAdmin = (currentUser === PARENT_ACCOUNT);
+            document.getElementById('adminPanel').style.display = isAdmin ? 'grid' : 'none';
+            document.getElementById('familyOverviewCard').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('balanceBanner').style.display = isAdmin ? 'none' : 'block';
+
+            if (isAdmin) {
+                renderFamilyOverview();
+                renderAllTransactions();
+                populatePasswordManageDropdown();
+            } else {
+                renderChildDashboard(currentUser);
+            }
+        }
+
+        function renderChildDashboard(childName) {
+            document.getElementById('balanceAccountLabel').textContent = `${childName.toUpperCase()}'S AVAILABLE REWARD BALANCE`;
+            
+            const stats = getAccountStats(childName);
+            document.getElementById('balanceDisplay').textContent = formatCurrency(stats.balance);
+            document.getElementById('totalEarnedDisplay').textContent = formatCurrency(stats.totalEarned);
+            document.getElementById('totalSpentDisplay').textContent = formatCurrency(stats.totalSpent);
+
+            // Filter transactions involving childName
+            const childTxs = transactions.filter(tx => 
+                tx.account_to.toLowerCase() === childName.toLowerCase() ||
+                tx.account_from.toLowerCase() === childName.toLowerCase()
+            );
+
+            // Sort chronological ascending first to calculate cumulative running balance
+            childTxs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            let runningBalance = 0;
+            const enrichedTxs = childTxs.map(tx => {
+                const amt = parseInt(tx.amount) || 0;
+                const isIncome = (tx.account_to.toLowerCase() === childName.toLowerCase());
+                if (isIncome) {
+                    runningBalance += amt;
+                } else {
+                    runningBalance -= amt;
+                }
+                return { ...tx, isIncome, amountPence: amt, balanceAfter: runningBalance };
+            });
+
+            // Sort descending by timestamp (newest at top like a bank statement)
+            enrichedTxs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            document.getElementById('transactionsTitle').textContent = `Transactions for ${childName}`;
+            document.getElementById('txCountBadge').textContent = `(${enrichedTxs.length} entries)`;
+
+            const listEl = document.getElementById('transactionsList');
+            listEl.innerHTML = '';
+
+            if (enrichedTxs.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No transactions recorded for this account yet.</div>';
+                return;
+            }
+
+            enrichedTxs.forEach(tx => {
+                const item = document.createElement('div');
+                item.className = 'tx-item';
+
+                item.innerHTML = `
+                    <div class="tx-left">
+                        <div class="tx-icon ${tx.isIncome ? 'income' : 'expense'}">
+                            ${tx.isIncome ? '🎁' : '🛒'}
+                        </div>
+                        <div class="tx-details">
+                            <div class="tx-ref">${tx.reference}</div>
+                            <div class="tx-meta">
+                                <span>${formatDate(tx.timestamp)}</span>
+                                <span>• ${tx.isIncome ? `From: ${tx.account_from}` : `Paid to: ${tx.account_to}`}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tx-right">
+                        <div class="tx-amount ${tx.isIncome ? 'income' : 'expense'}">
+                            ${tx.isIncome ? '+' : '-'} ${formatCurrency(tx.amountPence)}
+                        </div>
+                        <div class="tx-running-balance">Balance: ${formatCurrency(tx.balanceAfter)}</div>
+                    </div>
+                `;
+
+                listEl.appendChild(item);
+            });
+        }
+
+        function renderAllTransactions() {
+            // Parent view: shows all family transactions
+            document.getElementById('transactionsTitle').textContent = `All Family Transactions`;
+            document.getElementById('txCountBadge').textContent = `(${transactions.length} total entries)`;
+
+            const listEl = document.getElementById('transactionsList');
+            listEl.innerHTML = '';
+
+            if (transactions.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No transactions recorded yet.</div>';
+                return;
+            }
+
+            const sortedTxs = [...transactions].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            sortedTxs.forEach(tx => {
+                const amt = parseInt(tx.amount) || 0;
+                const isIncome = accounts.includes(tx.account_to.toLowerCase());
+
+                const item = document.createElement('div');
+                item.className = 'tx-item';
+
+                item.innerHTML = `
+                    <div class="tx-left">
+                        <div class="tx-icon ${isIncome ? 'income' : 'expense'}">
+                            ${isIncome ? '🎁' : '🛒'}
+                        </div>
+                        <div class="tx-details">
+                            <div class="tx-ref">${tx.reference}</div>
+                            <div class="tx-meta">
+                                <span>${formatDate(tx.timestamp)}</span>
+                                <span>• ${tx.account_from} &rarr; ${tx.account_to}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tx-right">
+                        <div class="tx-amount ${isIncome ? 'income' : 'expense'}">
+                            ${isIncome ? '+' : '-'} ${formatCurrency(amt)}
+                        </div>
+                    </div>
+                `;
+
+                listEl.appendChild(item);
+            });
+        }
+
+        function renderFamilyOverview() {
+            const grid = document.getElementById('overviewGrid');
+            grid.innerHTML = '';
+
+            accounts.forEach(acc => {
+                const stats = getAccountStats(acc);
+                const card = document.createElement('div');
+                card.className = 'overview-card';
+                card.innerHTML = `
+                    <div class="overview-name">👶 ${acc.toUpperCase()}</div>
+                    <div class="overview-balance">${formatCurrency(stats.balance)}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        Earned: ${formatCurrency(stats.totalEarned)} | Spent: ${formatCurrency(stats.totalSpent)}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- Actions & User Event Handlers ---
+
+        function setRewardAmount(val) {
+            document.getElementById('rewardAmount').value = val;
+        }
+
+        function setRewardRef(val) {
+            document.getElementById('rewardRef').value = val;
+        }
+
+        function setSpendAmount(val) {
+            document.getElementById('spendAmount').value = val;
+        }
+
+        function setSpendRef(val) {
+            document.getElementById('spendRef').value = val;
+        }
+
+        function handleSendReward(e) {
+            e.preventDefault();
+            const accountToRaw = document.getElementById('rewardAccountTo').value.trim();
+            const amountFloat = parseFloat(document.getElementById('rewardAmount').value);
+            const ref = document.getElementById('rewardRef').value.trim();
+
+            if (!accountToRaw || isNaN(amountFloat) || amountFloat <= 0) {
+                alert('Please select or type a child name and enter a valid reward amount.');
+                return;
+            }
+
+            const accountTo = accountToRaw.toLowerCase();
+            const amountPence = Math.round(amountFloat * 100);
+            const newTx = {
+                id: Date.now(),
+                family_id: 'sebas',
+                account_from: PARENT_ACCOUNT,
+                account_to: accountTo,
+                amount: amountPence,
+                reference: ref || 'reward',
+                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+            };
+
+            transactions.push(newTx);
+            saveState();
+            renderApp();
+
+            document.getElementById('rewardAccountTo').value = '';
+            document.getElementById('rewardRef').value = '';
+            alert(`Successfully sent ${formatCurrency(amountPence)} to ${accountTo.toUpperCase()}!`);
+        }
+
+        function handleRecordSpend(e) {
+            e.preventDefault();
+            const accountFromRaw = document.getElementById('spendAccountFrom').value.trim();
+            const amountFloat = parseFloat(document.getElementById('spendAmount').value);
+            const ref = document.getElementById('spendRef').value.trim();
+
+            if (!accountFromRaw || isNaN(amountFloat) || amountFloat <= 0) {
+                alert('Please select or type a child name and enter a valid amount.');
+                return;
+            }
+
+            const accountFrom = accountFromRaw.toLowerCase();
+            const amountPence = Math.round(amountFloat * 100);
+            const currentBal = getAccountBalance(accountFrom);
+
+            if (amountPence > currentBal) {
+                if (!confirm(`${accountFrom.toUpperCase()}'s current balance is ${formatCurrency(currentBal)}. Are you sure you want to record this ${formatCurrency(amountPence)} spend?`)) {
+                    return;
+                }
+            }
+
+            const newTx = {
+                id: Date.now(),
+                family_id: 'sebas',
+                account_from: accountFrom,
+                account_to: 'Store',
+                amount: amountPence,
+                reference: ref || 'purchase',
+                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+            };
+
+            transactions.push(newTx);
+            saveState();
+            renderApp();
+
+            document.getElementById('spendAccountFrom').value = '';
+            document.getElementById('spendRef').value = '';
+            alert(`Recorded ${formatCurrency(amountPence)} purchase for ${accountFrom.toUpperCase()}!`);
+        }
+
+        function addNewChildPrompt() {
+            const name = prompt('Enter new child account name (e.g. leo, maria):');
+            if (name) {
+                const cleanName = name.trim().toLowerCase();
+                if (cleanName && !accounts.includes(cleanName)) {
+                    accounts.push(cleanName);
+                    saveState();
+                    renderApp();
+                } else if (accounts.includes(cleanName)) {
+                    alert('Account already exists.');
+                }
+            }
+        }
+
+        function loadSampleDemoData() {
+            if (confirm('Load sample transactions for Sebas & Santi?')) {
+                transactions = [
+                    { id: 1, family_id: 'sebas', account_from: 'mum', account_to: 'sebas', amount: 500, reference: 'reading', timestamp: '2026-07-20 10:30:00' },
+                    { id: 2, family_id: 'sebas', account_from: 'mum', account_to: 'santi', amount: 500, reference: 'writing', timestamp: '2026-07-20 11:00:00' },
+                    { id: 3, family_id: 'sebas', account_from: 'mum', account_to: 'sebas', amount: 1000, reference: 'Birthday gift from Grandma', timestamp: '2026-07-22 14:15:00' },
+                    { id: 4, family_id: 'sebas', account_from: 'sebas', account_to: 'Store', amount: 350, reference: 'Bought comic book', timestamp: '2026-07-24 16:45:00' },
+                    { id: 5, family_id: 'sebas', account_from: 'santi', account_to: 'Store', amount: 200, reference: 'Bought ice cream', timestamp: '2026-07-25 15:20:00' }
+                ];
+                saveState();
+                renderApp();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete ALL transactions and reset all children accounts?')) {
+                transactions = [];
+                accounts = [];
+                currentUser = PARENT_ACCOUNT;
+                localStorage.setItem('kidsBank_transactions', JSON.stringify([]));
+                localStorage.setItem('kidsBank_accounts', JSON.stringify([]));
+                localStorage.setItem('kidsBank_currentUser', PARENT_ACCOUNT);
+                saveState();
+                renderApp();
+                alert('All transactions and child accounts have been deleted.');
+            }
+        }
+
+        function exportDataJSON() {
+            const dataStr = JSON.stringify(transactions, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kids_bank_transactions_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importDataJSONPrompt() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,application/json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        if (Array.isArray(data)) {
+                            transactions = data;
+                            
+                            // Discover child accounts from imported transactions
+                            const discovered = new Set(accounts);
+                            data.forEach(tx => {
+                                ['account_from', 'account_to'].forEach(k => {
+                                    const name = (tx[k] || '').trim().toLowerCase();
+                                    if (name && !['mum', 'admin', 'store', 'shop', 'merchant'].includes(name)) {
+                                        discovered.add(name);
+                                    }
+                                });
+                            });
+                            accounts = Array.from(discovered);
+                            if (accounts.length > 0 && !accounts.includes(currentUser) && currentUser !== PARENT_ACCOUNT) {
+                                currentUser = accounts[0];
+                            }
+
+                            saveState();
+                            renderApp();
+                            alert(`Successfully imported ${data.length} transactions for: ${accounts.join(', ')}!`);
+                        } else {
+                            alert('Invalid file format: expected an array of transaction objects.');
+                        }
+                    } catch (err) {
+                        alert('Failed to parse JSON file.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // --- Init App ---
+        if (isLoggedIn && currentUser) {
+            showAppScreen();
+        } else {
+            showLoginScreen();
+        }
+    </script>
+</body>
+</html>

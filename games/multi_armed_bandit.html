@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAB Algorithm Comparison (Epsilon-Greedy vs. UCB-1)</title>
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        /* Custom styles for aesthetic enhancements */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate-900 */
+        }
+        .card {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        #reward-chart-container, #regret-chart-container {
+            height: 40vh; /* Responsive height for individual charts */
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-white mb-6 text-center">
+            Multi-Armed Bandit Algorithm Comparison
+        </h1>
+
+        <!-- Configuration Card -->
+        <div class="card bg-slate-800 p-6 rounded-xl mb-8">
+            <h2 class="text-xl font-semibold text-sky-400 mb-4">Simulation Parameters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                 <!-- Algorithm Selector -->
+                <div class="md:col-span-2">
+                    <label for="algorithmSelect" class="block text-sm font-medium text-slate-300 mb-1">Algorithms to Run</label>
+                    <select id="algorithmSelect"
+                        class="w-full p-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-sky-500 focus:border-sky-500">
+                        <option value="both">Epsilon-Greedy (Naive) vs. UCB-1</option>
+                        <option value="greedy">Epsilon-Greedy (Naive) Only</option>
+                        <option value="ucb">UCB-1 Only</option>
+                    </select>
+                </div>
+                <!-- Epsilon Input -->
+                <div>
+                    <label for="epsilon" class="block text-sm font-medium text-slate-300 mb-1">Epsilon ($\epsilon$)</label>
+                    <input type="number" id="epsilon" value="0.1" min="0.0" max="1.0" step="0.01"
+                           class="w-full p-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <!-- Steps Input -->
+                <div>
+                    <label for="steps" class="block text-sm font-medium text-slate-300 mb-1">Total Steps (T)</label>
+                    <input type="number" id="steps" value="1000" min="100" max="10000" step="100"
+                           class="w-full p-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <!-- Arms Input -->
+                <div class="md:col-span-2">
+                    <label for="arms" class="block text-sm font-medium text-slate-300 mb-1">Number of Arms (K)</label>
+                    <input type="number" id="arms" value="5" min="2" max="20" step="1"
+                           class="w-full p-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-sky-500 focus:border-sky-500">
+                </div>
+            </div>
+
+            <button id="runSimulation"
+                    class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition duration-300 transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-sky-500 focus:ring-opacity-50">
+                Run Simulation
+            </button>
+        </div>
+
+        <!-- Results Card and Charts -->
+        <div class="card bg-slate-800 p-6 rounded-xl text-white">
+            <h2 class="text-xl font-semibold text-sky-400 mb-4">Results</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Cumulative Reward Chart -->
+                <div>
+                    <h3 class="text-lg font-medium text-slate-200 mb-2">Cumulative Reward</h3>
+                    <div id="reward-chart-container">
+                        <canvas id="rewardChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Cumulative Regret Chart -->
+                <div>
+                    <h3 class="text-lg font-medium text-slate-200 mb-2">Cumulative Expected Regret</h3>
+                    <div id="regret-chart-container">
+                        <canvas id="regretChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stats" class="mt-8 text-slate-300 text-sm p-4 bg-slate-700 rounded-lg">
+                <!-- Summary statistics will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. MAB ENVIRONMENT (Bandit) CLASS ---
+        class Bandit {
+            constructor(k) {
+                this.k = k;
+                // Generate true reward probabilities (mean rewards) for each arm
+                this.true_means = Array(k).fill(0).map(() => Math.random());
+                this.best_arm_mean = Math.max(...this.true_means);
+                this.initialSamplingSteps = k * 10; // 10 pulls per arm for Naive Epsilon-Greedy
+            }
+
+            pull(a) {
+                const mean = this.true_means[a];
+                return Math.random() < mean ? 1 : 0;
+            }
+
+            getOptimalMean() {
+                return this.best_arm_mean;
+            }
+        }
+
+        // --- 2. EPSILON-GREEDY ALGORITHM (MODIFIED WITH INITIAL SAMPLING) ---
+        function runInitialSamplingEpsilonGreedy(k, steps, epsilon, bandit) {
+            const optimalMean = bandit.getOptimalMean();
+            let Q = Array(k).fill(0);
+            let N = Array(k).fill(0);
+            let cumulativeReward = 0;
+            let cumulativeExpectedRegret = 0;
+            const rewardHistory = [];
+            const regretHistory = [];
+            const initialSamplingSteps = bandit.initialSamplingSteps;
+
+            for (let t = 1; t <= steps; t++) {
+                let chosenArm;
+
+                // PHASE 1: INITIAL SAMPLING (Deterministic Exploration: pull each arm 10 times)
+                if (t <= initialSamplingSteps) {
+                    chosenArm = (t - 1) % k;
+                }
+                // PHASE 2: STANDARD EPSILON-GREEDY (Exploration/Exploitation)
+                else {
+                    if (Math.random() < epsilon) {
+                        // Exploration: Choose a random arm
+                        chosenArm = Math.floor(Math.random() * k);
+                    } else {
+                        // Exploitation: Choose the greedy arm (highest Q-value)
+                        const maxQ = Math.max(...Q);
+                        const bestArms = Q.map((q, index) => q === maxQ ? index : -1).filter(index => index !== -1);
+                        chosenArm = bestArms[Math.floor(Math.random() * bestArms.length)];
+                    }
+                }
+
+                const reward = bandit.pull(chosenArm);
+                cumulativeReward += reward;
+
+                N[chosenArm] += 1;
+                const n = N[chosenArm];
+                // Update Q-value
+                Q[chosenArm] = Q[chosenArm] + (reward - Q[chosenArm]) / n;
+
+                // Regret Calculation
+                const chosenArmMean = bandit.true_means[chosenArm];
+                const instantaneousRegret = optimalMean - chosenArmMean;
+                cumulativeExpectedRegret += instantaneousRegret;
+
+                rewardHistory.push(cumulativeReward);
+                regretHistory.push(cumulativeExpectedRegret);
+            }
+
+            return {
+                label: `Epsilon-Greedy (ε=${epsilon})`,
+                rewardHistory,
+                regretHistory,
+                totalAverageReward: (cumulativeReward / steps).toFixed(4),
+                color: 'rgb(56, 189, 248)' // Sky-400
+            };
+        }
+
+        // --- 3. UCB-1 ALGORITHM ---
+        function runUCB1(k, steps, bandit) {
+            const optimalMean = bandit.getOptimalMean();
+
+            let Q = Array(k).fill(0); // Estimated value
+            let N = Array(k).fill(0); // Count of pulls
+
+            let cumulativeReward = 0;
+            let cumulativeExpectedRegret = 0;
+            const rewardHistory = [];
+            const regretHistory = [];
+
+            for (let t = 1; t <= steps; t++) {
+                let chosenArm;
+
+                if (t <= k) {
+                    // Initial phase: pull each arm once to ensure N[a] > 0
+                    chosenArm = t - 1;
+                } else {
+                    // UCB-1 Phase
+                    let max_ucb = -Infinity;
+                    let best_arm = 0;
+
+                    for (let a = 0; a < k; a++) {
+                        // Confidence bound term: sqrt(2 * ln(t) / N[a])
+                        const confidence_bound = Math.sqrt(2 * Math.log(t) / N[a]);
+                        const ucb_value = Q[a] + confidence_bound;
+
+                        if (ucb_value > max_ucb) {
+                            max_ucb = ucb_value;
+                            best_arm = a;
+                        }
+                    }
+                    chosenArm = best_arm;
+                }
+
+                const reward = bandit.pull(chosenArm);
+                cumulativeReward += reward;
+
+                N[chosenArm] += 1;
+                const n = N[chosenArm];
+                // Update Q-value
+                Q[chosenArm] = Q[chosenArm] + (reward - Q[chosenArm]) / n;
+
+                // Regret Calculation
+                const chosenArmMean = bandit.true_means[chosenArm];
+                const instantaneousRegret = optimalMean - chosenArmMean;
+                cumulativeExpectedRegret += instantaneousRegret;
+
+                rewardHistory.push(cumulativeReward);
+                regretHistory.push(cumulativeExpectedRegret);
+            }
+
+             return {
+                label: 'UCB-1',
+                rewardHistory,
+                regretHistory,
+                totalAverageReward: (cumulativeReward / steps).toFixed(4),
+                color: 'rgb(249, 115, 22)' // Orange-600
+            };
+        }
+
+        // --- 4. COMPARATIVE SIMULATION RUNNER ---
+        function runComparativeSimulation(k, steps, epsilon, selectedAlgorithm) {
+            // Create a single Bandit instance so both algorithms face the same problem
+            const bandit = new Bandit(k);
+            const results = [];
+
+            if (selectedAlgorithm === 'greedy' || selectedAlgorithm === 'both') {
+                results.push(runInitialSamplingEpsilonGreedy(k, steps, epsilon, bandit));
+            }
+
+            if (selectedAlgorithm === 'ucb' || selectedAlgorithm === 'both') {
+                // UCB-1 does not use the epsilon parameter
+                results.push(runUCB1(k, steps, bandit));
+            }
+
+            // Calculate the theoretical best possible reward
+            const theoreticalBest = (bandit.getOptimalMean() * steps).toFixed(0);
+
+            return { results, theoreticalBest, steps };
+        }
+
+
+        // --- 5. CHARTING AND UI LOGIC ---
+
+        let chartInstances = {}; // Store references to chart objects
+
+        function initializeChart(chartId, title, labels, datasets, yAxisTitle) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+
+            // Destroy existing chart instance if it exists
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+            }
+
+            const chartData = {
+                labels: labels,
+                datasets: datasets.map(result => ({
+                    label: result.label,
+                    data: (chartId === 'rewardChart' ? result.rewardHistory : result.regretHistory),
+                    borderColor: result.color,
+                    backgroundColor: result.color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.1,
+                    fill: true,
+                }))
+            };
+
+            chartInstances[chartId] = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time Steps (t)', color: '#94a3b8' },
+                            grid: { color: 'rgba(100, 116, 139, 0.2)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            title: { display: true, text: yAxisTitle, color: '#94a3b8' },
+                            beginAtZero: true,
+                            grid: { color: 'rgba(100, 116, 139, 0.2)' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, labels: { usePointStyle: true, color: '#94a3b8' } },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+        }
+
+        function updateStats(results, theoreticalBest, steps) {
+            const statsElement = document.getElementById('stats');
+            let statsHTML = `<p>Simulation completed after ${steps} steps.</p><br/>`;
+            statsHTML += `<p>Maximum Theoretical Reward: <strong class="text-sky-400">${theoreticalBest}</strong></p><br/>`;
+
+            results.forEach(res => {
+                statsHTML += `
+                    <p class="text-base font-semibold" style="color: ${res.color};">${res.label}</p>
+                    <ul class="list-disc list-inside ml-4 text-sm">
+                        <li>Average Reward per Step: <strong class="text-white">${res.totalAverageReward}</strong></li>
+                    </ul>
+                `;
+            });
+
+            statsElement.innerHTML = statsHTML;
+        }
+
+        document.getElementById('runSimulation').addEventListener('click', () => {
+            const epsilon = parseFloat(document.getElementById('epsilon').value);
+            const steps = parseInt(document.getElementById('steps').value, 10);
+            const arms = parseInt(document.getElementById('arms').value, 10);
+            const selectedAlgorithm = document.getElementById('algorithmSelect').value;
+
+            // Basic input validation
+            if (isNaN(epsilon) || epsilon < 0 || epsilon > 1) {
+                document.getElementById('stats').innerHTML = `<p class="text-red-400">Error: Epsilon must be between 0 and 1.</p>`;
+                return;
+            }
+            if (isNaN(steps) || steps < 100) {
+                document.getElementById('stats').innerHTML = `<p class="text-red-400">Error: Steps must be at least 100.</p>`;
+                return;
+            }
+            if (isNaN(arms) || arms < 2) {
+                document.getElementById('stats').innerHTML = `<p class="text-red-400">Error: Arms must be at least 2.</p>`;
+                return;
+            }
+
+
+            // Run the simulation(s)
+            const { results, theoreticalBest, steps: actualSteps } = runComparativeSimulation(arms, steps, epsilon, selectedAlgorithm);
+
+            // Create labels for the X-axis (0 to steps)
+            const labels = Array.from({ length: actualSteps }, (_, i) => i + 1);
+
+            // Update the charts
+            initializeChart('rewardChart', 'Cumulative Reward', labels, results, 'Total Reward Gained');
+            initializeChart('regretChart', 'Cumulative Expected Regret', labels, results, 'Total Expected Regret');
+
+            // Update the statistics summary
+            updateStats(results, theoreticalBest, actualSteps);
+        });
+
+        // Initialize the charts with placeholder data on load
+        window.onload = function() {
+            // Run a default comparison simulation on load
+            document.getElementById('runSimulation').click();
+        };
+
+    </script>
+</body>
+</html>
+

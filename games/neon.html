@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Void</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30; /* Elevated above modals */
+        }
+        #backBtn:hover {
+            background: rgba(0, 242, 255, 0.2);
+            border-color: rgba(0, 242, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 5, 5, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    
+    <div id="scoreDisplay">Score: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-cyan-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-cyan-500/10">
+            <i class="fa-solid fa-bolt text-6xl text-cyan-400 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">NEON VOID</h1>
+            <p class="text-gray-400 mb-6">Drag anywhere on the screen to control the glowing orb. The goal of Neon Void is to avoid getting hit by the flying objects!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-cyan-500/30">
+                Initiate Dodge
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-pink-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-pink-500/10">
+            <i class="fa-solid fa-skull text-6xl text-pink-500 mb-4 animate-bounce"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">VOID CRASHED</h1>
+            <p class="text-gray-400 mb-2">Severe impact detected. Shield collapsed.</p>
+            <p class="text-2xl font-bold text-cyan-400 mb-6">Score: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-pink-500 to-cyan-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-pink-500/30">
+                Try Again
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+
+        // Game State
+        let isPlaying = false;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('neon_void_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let frameCount = 0;
+        let speedMultiplier = 1;
+
+        // Dimensions
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Snappy drag input handlers
+        let isDragging = false;
+        let mouseX = width / 2;
+        let mouseY = height * 0.75;
+
+        function updateCoords(e) {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            mouseX = clientX;
+            mouseY = clientY;
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateCoords(e);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateCoords(e);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.target === canvas) {
+                isDragging = true;
+                updateCoords(e);
+                if (isPlaying && e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                updateCoords(e);
+            }
+            if (isPlaying && e.target === canvas && e.cancelable) e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // --- CLASSES ---
+
+        class Player {
+            constructor() {
+                this.x = width / 2;
+                this.y = height * 0.75;
+                this.radius = 12;
+                this.color = '#00f2ff';
+            }
+
+            update() {
+                // Snappy dragging lerp chase
+                if (isDragging) {
+                    this.x += (mouseX - this.x) * 0.8;
+                    this.y += (mouseY - this.y) * 0.8;
+                }
+
+                // Boundaries
+                this.x = Math.max(this.radius, Math.min(width - this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(height - this.radius, this.y));
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.closePath();
+                
+                // Inner glow
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.7, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.closePath();
+                ctx.restore();
+            }
+        }
+
+        class Obstacle {
+            constructor() {
+                this.radius = Math.random() * 15 + 10; // Size between 10 and 25
+                this.x = Math.random() * (width - this.radius * 2) + this.radius;
+                this.y = -this.radius - 50; // Start above screen
+                
+                // Calculate speed based on game difficulty
+                this.speed = (Math.random() * 3 + 2.5) * speedMultiplier;
+                
+                // Color palette
+                const colors = ['#ff0055', '#ff9900', '#cc00ff'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                this.y += this.speed; // Obstacles always fall down
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.closePath();
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 3;
+                this.color = color;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 10,
+                    y: (Math.random() - 0.5) * 10
+                };
+                this.alpha = 1;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.02;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        let player;
+        let obstacles = [];
+        let particles = [];
+
+        function init() {
+            player = new Player();
+            obstacles = [];
+            particles = [];
+            score = 0;
+            speedMultiplier = 1;
+            frameCount = 0;
+            scoreVal.innerText = '0';
+            
+            // Set initial position
+            mouseX = width / 2;
+            mouseY = height * 0.75;
+            isDragging = false;
+            
+            isPlaying = true;
+            animate();
+        }
+
+        function spawnObstacle() {
+            if (frameCount % Math.floor(40 / speedMultiplier) === 0) {
+                obstacles.push(new Obstacle());
+            }
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function checkCollision(p, o) {
+            const dx = p.x - o.x;
+            const dy = p.y - o.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < p.radius + o.radius;
+        }
+
+        function drawBackground() {
+            // Draw a moving grid effect
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 242, 255, 0.03)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = 60;
+            const offset = (frameCount * 1.5) % gridSize;
+
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = offset; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function animate() {
+            if (!isPlaying) return;
+
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw dark background
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, width, height);
+            
+            drawBackground();
+            frameCount++;
+
+            // Increase difficulty
+            if (frameCount % 600 === 0) {
+                speedMultiplier += 0.06;
+            }
+
+            player.update();
+            player.draw();
+
+            // Obstacles Management
+            spawnObstacle();
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.update();
+                obs.draw();
+
+                // Collision Detection
+                if (checkCollision(player, obs)) {
+                    gameOver();
+                }
+
+                // Remove off-screen obstacles
+                if (obs.y > height + 50) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                    scoreVal.innerText = score;
+                }
+            }
+
+            // Particle Management
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function gameOver() {
+            createExplosion(player.x, player.y, player.color);
+            isPlaying = false;
+            
+            setTimeout(() => {
+                createExplosion(player.x, player.y, '#fff'); // White burst
+                finalScoreVal.innerText = score;
+                
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('neon_void_highscore', highScore);
+                    highScoreVal.innerText = highScore;
+                }
+                
+                gameOverModal.classList.remove('hidden');
+            }, 500);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            init();
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+
+    </script>
+</body>
+</html>

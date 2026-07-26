@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint — Daily Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f7f4;
+            --surface: #ffffff;
+            --surface-alt: #f0eeeb;
+            --text: #1a1a1a;
+            --text-muted: #6b6b6b;
+            --text-faint: #999999;
+            --border: #e0ddd8;
+            --accent: #2563eb;
+            --accent-light: #dbeafe;
+            --accent-dark: #1d4ed8;
+            --success: #059669;
+            --success-light: #d1fae5;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --danger: #dc2626;
+            --danger-light: #fee2e2;
+            --shadow: rgba(0, 0, 0, 0.04);
+            --shadow-lg: rgba(0, 0, 0, 0.08);
+            --complete: #4a5568;
+            --complete-light: #edf2f7;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface-alt: #262626;
+            --text: #f5f5f5;
+            --text-muted: #a3a3a3;
+            --text-faint: #525252;
+            --border: #333333;
+            --accent: #3b82f6;
+            --accent-light: #1e3a5f;
+            --accent-dark: #60a5fa;
+            --success: #34d399;
+            --success-light: #064e3b;
+            --warning: #fbbf24;
+            --warning-light: #451a03;
+            --danger: #f87171;
+            --danger-light: #450a0a;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+            --complete: #a0aec0;
+            --complete-light: #2d3748;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ========== ONBOARDING ========== */
+        .onboarding {
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+            display: flex; align-items: center; justify-content: center; padding: 24px;
+        }
+        .onboarding.hidden { display: none; }
+        .onboarding-content { max-width: 440px; text-align: center; }
+        .onboarding-logo {
+            width: 64px; height: 64px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px; margin: 0 auto 28px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+        }
+        .onboarding-content h1 { 
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.8rem; 
+            font-weight: 500; 
+            margin-bottom: 12px; 
+            letter-spacing: -0.02em; 
+        }
+        .onboarding-tagline { 
+            color: var(--text-muted); 
+            margin-bottom: 36px; 
+            font-size: 0.95rem; 
+            line-height: 1.7; 
+        }
+
+        .onboarding-btn {
+            padding: 12px 28px; border-radius: 8px;
+            font-family: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+            background: var(--text); color: var(--bg); border: none;
+            transition: all 0.15s;
+        }
+        .onboarding-btn:hover { opacity: 0.85; }
+
+        /* ========== MAIN LAYOUT ========== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+        }
+
+        .sidebar-home-link {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+
+        .sidebar-home-link:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .sidebar-logo-icon {
+            width: 32px; height: 32px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+
+        .sidebar-logo-text {
+            font-family: 'IBM Plex Serif', serif;
+            font-weight: 500;
+            font-size: 1.1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .sidebar-section {
+            margin-bottom: 28px;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-faint);
+            margin-bottom: 10px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .sidebar-nav-item:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .sidebar-nav-item.active {
+            background: var(--surface-alt);
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .sidebar-nav-item-icon {
+            font-size: 0.9rem;
+            width: 20px;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        .sidebar-spacer {
+            flex: 1;
+        }
+
+        .sidebar-footer {
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-footer-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            width: 100%;
+            background: none;
+            border: none;
+            font-family: inherit;
+            text-align: left;
+        }
+
+        .sidebar-footer-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .sidebar-footer-btn span:first-child {
+            opacity: 0.6;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px 48px;
+            max-width: 720px;
+        }
+
+        /* Date Header */
+        .date-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 36px;
+        }
+
+        .date-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .date-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.15s;
+            font-size: 0.85rem;
+        }
+
+        .date-nav-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .date-display {
+            text-align: center;
+        }
+
+        .date-display-main {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.25rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+
+        .date-display-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .date-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.85;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .btn-complete {
+            background: var(--complete-light);
+            color: var(--complete);
+            border: 1px solid var(--border);
+        }
+
+        .btn-complete:hover {
+            background: var(--complete);
+            color: var(--bg);
+        }
+
+        /* Blueprint Status */
+        .blueprint-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--success-light);
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 0.85rem;
+            color: var(--success);
+        }
+
+        .blueprint-status.hidden {
+            display: none;
+        }
+
+        /* Planner Sections */
+        .planner-section {
+            margin-bottom: 28px;
+        }
+
+        .planner-section-header {
+            margin-bottom: 12px;
+        }
+
+        .planner-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .planner-section-hint {
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            font-style: italic;
+        }
+
+        /* Why This Matters - P1 */
+        .why-section {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .why-input {
+            width: 100%;
+            padding: 12px 0;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.1rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .why-input:focus {
+            border-color: var(--text-muted);
+        }
+
+        .why-input::placeholder {
+            color: var(--text-faint);
+            font-style: italic;
+        }
+
+        /* Character hint for soft limits */
+        .char-hint {
+            font-size: 0.7rem;
+            color: var(--text-faint);
+            text-align: right;
+            margin-top: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .char-hint.visible {
+            opacity: 1;
+        }
+
+        .char-hint.warning {
+            color: var(--warning);
+        }
+
+        /* Constraints Section - P1 */
+        .constraints-section {
+            background: var(--surface-alt);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 28px;
+        }
+
+        .constraints-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .constraint-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .constraint-label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-faint);
+        }
+
+        .constraint-input {
+            padding: 8px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .constraint-input:focus {
+            border-color: var(--text-muted);
+        }
+
+        .constraint-input::placeholder {
+            color: var(--text-faint);
+        }
+
+        /* Goals / Focus */
+        .goal-input {
+            width: 100%;
+            padding: 10px 0;
+            background: none;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .goal-input::placeholder {
+            color: var(--text-faint);
+        }
+
+        /* Schedule Section */
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-alt);
+            border-radius: 6px;
+        }
+
+        .schedule-time {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            width: 50px;
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            outline: none;
+        }
+
+        .schedule-time::placeholder {
+            color: var(--text-faint);
+        }
+
+        .schedule-input {
+            flex: 1;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 0.875rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .schedule-input::placeholder {
+            color: var(--text-faint);
+        }
+
+        .schedule-delete {
+            opacity: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-faint);
+            padding: 4px;
+            transition: opacity 0.15s;
+            font-size: 0.9rem;
+        }
+
+        .schedule-item:hover .schedule-delete {
+            opacity: 1;
+        }
+
+        .schedule-delete:hover {
+            color: var(--danger);
+        }
+
+        .add-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            color: var(--text-faint);
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+
+        .add-row:hover {
+            background: var(--surface-alt);
+            color: var(--text-muted);
+        }
+
+        /* Task List */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        .task-checkbox:hover {
+            border-color: var(--text-muted);
+        }
+
+        .task-checkbox.checked {
+            background: var(--text-muted);
+            border-color: var(--text-muted);
+        }
+
+        .task-input {
+            flex: 1;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .task-input::placeholder {
+            color: var(--text-faint);
+        }
+
+        .task-item.completed .task-input {
+            text-decoration: line-through;
+            color: var(--text-faint);
+        }
+
+        /* Spending */
+        .spending-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .spending-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--surface-alt);
+            border-radius: 6px;
+        }
+
+        .spending-desc-input {
+            flex: 1;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 0.875rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .spending-amount-input {
+            width: 70px;
+            background: none;
+            border: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text);
+            outline: none;
+            text-align: right;
+        }
+
+        .spending-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            margin-top: 8px;
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .spending-total-amount {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* Notes */
+        .notes-textarea {
+            width: 100%;
+            min-height: 100px;
+            max-height: 200px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+            resize: vertical;
+            line-height: 1.6;
+            transition: border-color 0.15s;
+        }
+
+        .notes-textarea:focus {
+            border-color: var(--text-muted);
+        }
+
+        .notes-textarea::placeholder {
+            color: var(--text-faint);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 16px;
+            color: var(--text-faint);
+            font-size: 0.85rem;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* ========== ARCHIVE MODAL - P2 ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: var(--surface-alt);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: all 0.15s;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Archive List */
+        .archive-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .archive-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .archive-item:hover {
+            background: var(--border);
+        }
+
+        .archive-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .archive-item-date {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .archive-item-why {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .archive-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .archive-item:hover .archive-item-actions {
+            opacity: 1;
+        }
+
+        .archive-action-btn {
+            padding: 4px 8px;
+            border: none;
+            background: var(--surface);
+            color: var(--text-muted);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .archive-action-btn:hover {
+            color: var(--text);
+        }
+
+        .archive-action-btn.delete:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .archive-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-faint);
+            font-size: 0.9rem;
+        }
+
+        /* Archive View */
+        .archive-view {
+            padding: 16px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .archive-view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .archive-view-date {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .archive-view-section {
+            margin-bottom: 16px;
+        }
+
+        .archive-view-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-faint);
+            margin-bottom: 6px;
+        }
+
+        .archive-view-content {
+            font-size: 0.9rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .archive-view-content.italic {
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        /* Print Preview Modal */
+        .modal.print-modal {
+            max-width: 1000px;
+        }
+
+        .print-modal .modal-body {
+            display: flex;
+            gap: 0;
+            padding: 0;
+        }
+
+        .print-sidebar {
+            width: 240px;
+            padding: 20px;
+            border-right: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .print-preview-area {
+            flex: 1;
+            padding: 24px;
+            background: var(--surface-alt);
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .option-group {
+            margin-bottom: 20px;
+        }
+
+        .option-group-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-faint);
+            margin-bottom: 10px;
+        }
+
+        .option-select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .section-toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .section-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: var(--surface-alt);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .section-toggle:hover {
+            background: var(--border);
+        }
+
+        .toggle-switch {
+            width: 32px;
+            height: 18px;
+            background: var(--border);
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--success);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(14px);
+        }
+
+        /* Print Page */
+        .print-page {
+            width: 8.5in;
+            min-height: 11in;
+            background: white;
+            padding: 0.6in;
+            color: #1a1a1a;
+            font-family: 'IBM Plex Sans', sans-serif;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .print-page.a4 {
+            width: 210mm;
+            min-height: 297mm;
+        }
+
+        .print-page.a5 {
+            width: 148mm;
+            min-height: 210mm;
+            padding: 12mm;
+        }
+
+        .print-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 14px;
+            border-bottom: 1.5px solid #1a1a1a;
+            margin-bottom: 20px;
+        }
+
+        .print-date {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+        }
+
+        .print-weekday {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .print-why {
+            font-family: 'IBM Plex Serif', serif;
+            font-style: italic;
+            font-size: 0.95rem;
+            color: #444;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .print-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .print-section {
+            margin-bottom: 16px;
+        }
+
+        .print-section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .print-section-title {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .print-constraints {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+
+        .print-constraint {
+            flex: 1;
+        }
+
+        .print-constraint-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .print-constraint-value {
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        .print-schedule-item {
+            display: flex;
+            gap: 14px;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .print-schedule-time {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            color: #666;
+            width: 45px;
+        }
+
+        .print-schedule-text {
+            flex: 1;
+            font-size: 0.85rem;
+            min-height: 1.1em;
+        }
+
+        .print-task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+        }
+
+        .print-checkbox {
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid #333;
+            border-radius: 2px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .print-task-text {
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
+        .print-goal-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            min-height: 1.5em;
+        }
+
+        .print-spending-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+        }
+
+        .print-spending-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            margin-top: 6px;
+            border-top: 1.5px solid #333;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .print-notes-area {
+            min-height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        /* ========== TOAST ========== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px var(--shadow-lg);
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ========== PRINT STYLES ========== */
+        @media print {
+            body {
+                background: white !important;
+            }
+            .sidebar, .date-header, .print-sidebar, .modal-header, .modal-footer, .toast {
+                display: none !important;
+            }
+            .main-content, .modal-overlay, .modal, .modal-body, .print-preview-area {
+                all: unset !important;
+            }
+            .print-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        @page {
+            size: letter;
+            margin: 0.5in;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 24px;
+            }
+            .constraints-grid {
+                grid-template-columns: 1fr;
+            }
+            .print-modal .modal-body {
+                flex-direction: column;
+            }
+            .print-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Onboarding -->
+    <div class="onboarding" id="onboarding">
+        <div class="onboarding-content">
+            <div class="onboarding-logo">◇</div>
+            <h1>Blueprint</h1>
+            <p class="onboarding-tagline">A place to think before you act. Turn vague intention into a clear, calm plan — then print it and go.</p>
+            <button class="onboarding-btn" onclick="startApp()">Begin</button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo"><a href="index.html" class="sidebar-home-link" title="Back to Apps">&#8962;</a>
+                <div class="sidebar-logo-icon">&#9671;</div>
+                <span class="sidebar-logo-text">Blueprint</span>
+            </div>
+
+            <div class="sidebar-section">
+                <nav class="sidebar-nav">
+                    <div class="sidebar-nav-item active" onclick="goToToday()">
+                        <span class="sidebar-nav-item-icon">&#9675;</span>
+                        <span>Today</span>
+                    </div>
+                    <div class="sidebar-nav-item" onclick="openArchive()"><span class="sidebar-nav-item-icon">&#9634;</span>
+                        <span>Archive</span>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="sidebar-spacer"></div>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-footer-btn" onclick="toggleTheme()">
+                    <span>◐</span>
+                    <span>Toggle theme</span>
+                </button>
+                <button class="sidebar-footer-btn" onclick="exportData()">
+                    <span>↓</span>
+                    <span>Export data</span>
+                </button>
+                <button class="sidebar-footer-btn" onclick="importData()">
+                    <span>↑</span>
+                    <span>Import data</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="date-header">
+                <div class="date-nav">
+                    <button class="date-nav-btn" onclick="changeDate(-1)">←</button>
+                    <div class="date-display">
+                        <div class="date-display-main" id="dateMain">December 22, 2025</div>
+                        <div class="date-display-sub" id="dateSub">Monday</div>
+                    </div>
+                    <button class="date-nav-btn" onclick="changeDate(1)">→</button>
+                </div>
+                <div class="date-actions">
+                    <button class="btn btn-secondary" onclick="goToToday()">Today</button>
+                    <button class="btn btn-complete" onclick="completeBlueprint()" id="completeBtn">Complete</button>
+                    <button class="btn btn-primary" onclick="openPrintPreview()">Print</button>
+                </div>
+            </div>
+
+            <!-- Completed Status -->
+            <div class="blueprint-status hidden" id="completedStatus">
+                ✓ This blueprint is complete and archived.
+                <span style="margin-left: auto; cursor: pointer; text-decoration: underline;" onclick="reopenBlueprint()">Reopen</span>
+            </div>
+
+            <!-- Why This Matters - P1 -->
+            <div class="why-section">
+                <input type="text" class="why-input" id="whyInput" 
+                       placeholder="Why does this day matter?"
+                       maxlength="120"
+                       oninput="updateWhy(this.value); updateCharHint(this, 120)">
+                <div class="char-hint" id="whyCharHint"></div>
+            </div>
+
+            <!-- Constraints Section - P1 -->
+            <div class="planner-section">
+                <div class="planner-section-header">
+                    <div class="planner-section-title">Constraints</div>
+                    <div class="planner-section-hint">What shapes today's plan?</div>
+                </div>
+                <div class="constraints-section">
+                    <div class="constraints-grid">
+                        <div class="constraint-item">
+                            <label class="constraint-label">Time available</label>
+                            <input type="text" class="constraint-input" id="constraintTime" 
+                                   placeholder="e.g., 4 hours"
+                                   maxlength="30"
+                                   onchange="updateConstraint('time', this.value)">
+                        </div>
+                        <div class="constraint-item">
+                            <label class="constraint-label">Energy level</label>
+                            <input type="text" class="constraint-input" id="constraintEnergy" 
+                                   placeholder="e.g., low, need rest"
+                                   maxlength="30"
+                                   onchange="updateConstraint('energy', this.value)">
+                        </div>
+                        <div class="constraint-item">
+                            <label class="constraint-label">Non-negotiable</label>
+                            <input type="text" class="constraint-input" id="constraintFixed" 
+                                   placeholder="e.g., 2pm meeting"
+                                   maxlength="30"
+                                   onchange="updateConstraint('fixed', this.value)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Focus -->
+            <div class="planner-section" data-section="goals">
+                <div class="planner-section-header">
+                    <div class="planner-section-title">Focus</div>
+                    <div class="planner-section-hint">The one thing that would make this day a success</div>
+                </div>
+                <input type="text" class="goal-input" id="goal0" 
+                       placeholder="What's the essential outcome?"
+                       maxlength="100"
+                       oninput="updateGoal(0, this.value); updateCharHint(this, 100)">
+                <div class="char-hint" id="goalCharHint"></div>
+            </div>
+
+            <!-- Schedule -->
+            <div class="planner-section" data-section="schedule">
+                <div class="planner-section-header">
+                    <div class="planner-section-title">Time blocks</div>
+                    <div class="planner-section-hint">Rough structure, not a rigid timeline</div>
+                </div>
+                <div class="schedule-list" id="scheduleList"></div>
+                <div class="add-row" onclick="addScheduleItem()">+ Add block</div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="planner-section" data-section="tasks">
+                <div class="planner-section-header">
+                    <div class="planner-section-title">Actions</div>
+                    <div class="planner-section-hint">Concrete next steps — keep it short</div>
+                </div>
+                <div class="task-list" id="taskList"></div>
+                <div class="add-row" onclick="addTask()">+ Add action</div>
+            </div>
+
+            <!-- Spending -->
+            <div class="planner-section" data-section="spending">
+                <div class="planner-section-header">
+                    <div class="planner-section-title">Spending</div>
+                    <div class="planner-section-hint">Planned or tracked expenses</div>
+                </div>
+                <div class="spending-list" id="spendingList"></div>
+                <div class="add-row" onclick="addSpending()">+ Add expense</div>
+                <div class="spending-total">
+                    <span>Total</span>
+                    <span class="spending-total-amount" id="spendingTotal">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="planner-section" data-section="notes">
+                <div class="planner-section-header">
+                    <div class="planner-section-title">Notes</div>
+                    <div class="planner-section-hint">Context, reminders, anything else</div>
+                </div>
+                <textarea class="notes-textarea" id="notesArea" 
+                          placeholder="Capture what's on your mind..."
+                          maxlength="1000"
+                          oninput="updateNotes(this.value); updateCharHint(this, 1000)"></textarea>
+                <div class="char-hint" id="notesCharHint"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Archive Modal -->
+    <div class="modal-overlay" id="archiveModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Archive</h2>
+                <button class="modal-close" onclick="closeArchive()">×</button>
+            </div>
+            <div class="modal-body" id="archiveBody">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Preview Modal -->
+    <div class="modal-overlay" id="printModal">
+        <div class="modal print-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Print Preview</h2>
+                <button class="modal-close" onclick="closePrintPreview()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="print-sidebar">
+                    <div class="option-group">
+                        <div class="option-group-title">Paper Size</div>
+                        <select class="option-select" id="paperSize" onchange="updatePreview()">
+                            <option value="letter">US Letter</option>
+                            <option value="a4">A4</option>
+                            <option value="a5">A5</option>
+                        </select>
+                    </div>
+
+                    <div class="option-group">
+                        <div class="option-group-title">Include</div>
+                        <div class="section-toggles" id="printSectionToggles"></div>
+                    </div>
+
+                    <div class="option-group">
+                        <div class="option-group-title">Extra Lines</div>
+                        <select class="option-select" id="extraLines" onchange="updatePreview()">
+                            <option value="0">None</option>
+                            <option value="3" selected>A few</option>
+                            <option value="5">More</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="print-preview-area">
+                    <div class="print-page" id="printPage"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePrintPreview()">Cancel</button>
+                <button class="btn btn-primary" onclick="printPage()">Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastMessage">Saved</span>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" accept=".json" style="display: none" onchange="handleImport(event)">
+
+    <script>
+        // ========== STATE ==========
+        let currentDate = new Date();
+        let data = {};
+        let archive = [];
+        let sections = {
+            constraints: { enabled: true, label: 'Constraints' },
+            goals: { enabled: true, label: 'Focus' },
+            schedule: { enabled: true, label: 'Time blocks' },
+            tasks: { enabled: true, label: 'Actions' },
+            spending: { enabled: true, label: 'Spending' },
+            notes: { enabled: true, label: 'Notes' }
+        };
+
+        // ========== INITIALIZATION ==========
+        function init() {
+            loadData();
+            loadArchive();
+            loadSettings();
+            renderDate();
+            renderPlanner();
+            renderPrintSectionToggles();
+            checkOnboarding();
+        }
+
+        function checkOnboarding() {
+            const seen = localStorage.getItem('blueprint_onboarded');
+            if (seen) {
+                document.getElementById('onboarding').classList.add('hidden');
+            }
+        }
+
+        function startApp() {
+            localStorage.setItem('blueprint_onboarded', 'true');
+            document.getElementById('onboarding').classList.add('hidden');
+        }
+
+        // ========== DATA MANAGEMENT ==========
+        function getDateKey(date = currentDate) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function loadData() {
+            const stored = localStorage.getItem('blueprint_data');
+            data = stored ? JSON.parse(stored) : {};
+        }
+
+        function saveData() {
+            localStorage.setItem('blueprint_data', JSON.stringify(data));
+        }
+
+        function loadArchive() {
+            const stored = localStorage.getItem('blueprint_archive');
+            archive = stored ? JSON.parse(stored) : [];
+        }
+
+        function saveArchive() {
+            localStorage.setItem('blueprint_archive', JSON.stringify(archive));
+        }
+
+        function loadSettings() {
+            const theme = localStorage.getItem('blueprint_theme');
+            if (theme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        function getDayData() {
+            const key = getDateKey();
+            if (!data[key]) {
+                data[key] = {
+                    why: '',
+                    constraints: { time: '', energy: '', fixed: '' },
+                    schedule: [],
+                    tasks: [],
+                    goals: [''],
+                    spending: [],
+                    notes: '',
+                    completed: false
+                };
+            }
+            // Migrate old data
+            if (!data[key].constraints) {
+                data[key].constraints = { time: '', energy: '', fixed: '' };
+            }
+            if (data[key].why === undefined) {
+                data[key].why = '';
+            }
+            if (data[key].completed === undefined) {
+                data[key].completed = false;
+            }
+            return data[key];
+        }
+
+        // ========== DATE NAVIGATION ==========
+        function renderDate() {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('dateMain').textContent = currentDate.toLocaleDateString('en-US', options);
+            document.getElementById('dateSub').textContent = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+
+        function changeDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            renderDate();
+            renderPlanner();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            renderDate();
+            renderPlanner();
+        }
+
+        // ========== PLANNER RENDERING ==========
+        function renderPlanner() {
+            const dayData = getDayData();
+            
+            // Why this matters
+            document.getElementById('whyInput').value = dayData.why || '';
+            
+            // Constraints
+            document.getElementById('constraintTime').value = dayData.constraints?.time || '';
+            document.getElementById('constraintEnergy').value = dayData.constraints?.energy || '';
+            document.getElementById('constraintFixed').value = dayData.constraints?.fixed || '';
+            
+            // Other sections
+            renderGoals(dayData.goals);
+            renderSchedule(dayData.schedule);
+            renderTasks(dayData.tasks);
+            renderSpending(dayData.spending);
+            document.getElementById('notesArea').value = dayData.notes || '';
+            
+            // Completed status
+            updateCompletedStatus(dayData.completed);
+        }
+
+        function updateCompletedStatus(completed) {
+            const status = document.getElementById('completedStatus');
+            const completeBtn = document.getElementById('completeBtn');
+            
+            if (completed) {
+                status.classList.remove('hidden');
+                completeBtn.style.display = 'none';
+            } else {
+                status.classList.add('hidden');
+                completeBtn.style.display = '';
+            }
+        }
+
+        function renderGoals(items) {
+            const goal = items[0] || '';
+            document.getElementById('goal0').value = goal;
+        }
+
+        function renderSchedule(items) {
+            const container = document.getElementById('scheduleList');
+            if (items.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = items.map((item, i) => `
+                <div class="schedule-item">
+                    <input type="text" class="schedule-time" value="${escapeHtml(item.time)}" 
+                           placeholder="time" onchange="updateScheduleTime(${i}, this.value)">
+                    <input type="text" class="schedule-input" value="${escapeHtml(item.text)}" 
+                           placeholder="what's happening" 
+                           maxlength="60"
+                           onchange="updateScheduleText(${i}, this.value)">
+                    <button class="schedule-delete" onclick="deleteScheduleItem(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderTasks(items) {
+            const container = document.getElementById('taskList');
+            if (items.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = items.map((item, i) => `
+                <div class="task-item ${item.completed ? 'completed' : ''}">
+                    <div class="task-checkbox ${item.completed ? 'checked' : ''}" 
+                         onclick="toggleTask(${i})">
+                        ${item.completed ? '✓' : ''}
+                    </div>
+                    <input type="text" class="task-input" value="${escapeHtml(item.text)}" 
+                           placeholder="action item"
+                           maxlength="80"
+                           onchange="updateTaskText(${i}, this.value)">
+                    <button class="schedule-delete" onclick="deleteTask(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderSpending(items) {
+            const container = document.getElementById('spendingList');
+            if (items.length === 0) {
+                container.innerHTML = '';
+            } else {
+                container.innerHTML = items.map((item, i) => `
+                    <div class="spending-item">
+                        <input type="text" class="spending-desc-input" value="${escapeHtml(item.desc)}" 
+                               placeholder="description" onchange="updateSpendingDesc(${i}, this.value)">
+                        <input type="text" class="spending-amount-input" value="${escapeHtml(item.amount)}" 
+                               placeholder="$0" onchange="updateSpendingAmount(${i}, this.value)">
+                        <button class="schedule-delete" onclick="deleteSpending(${i})">×</button>
+                    </div>
+                `).join('');
+            }
+            updateSpendingTotal();
+        }
+
+        function updateSpendingTotal() {
+            const dayData = getDayData();
+            const total = dayData.spending.reduce((sum, item) => {
+                const num = parseFloat(item.amount.replace(/[^0-9.-]/g, '')) || 0;
+                return sum + num;
+            }, 0);
+            document.getElementById('spendingTotal').textContent = '$' + total.toFixed(2);
+        }
+
+        // ========== DATA UPDATES ==========
+        function updateWhy(value) {
+            const dayData = getDayData();
+            dayData.why = value;
+            saveData();
+        }
+
+        function updateConstraint(type, value) {
+            const dayData = getDayData();
+            dayData.constraints[type] = value;
+            saveData();
+        }
+
+        function updateGoal(index, value) {
+            const dayData = getDayData();
+            dayData.goals[index] = value;
+            saveData();
+        }
+
+        function addScheduleItem() {
+            const dayData = getDayData();
+            if (dayData.schedule.length >= 8) {
+                showToast('Consider keeping time blocks simple');
+                return;
+            }
+            dayData.schedule.push({ time: '', text: '' });
+            saveData();
+            renderSchedule(dayData.schedule);
+        }
+
+        function updateScheduleTime(index, value) {
+            const dayData = getDayData();
+            dayData.schedule[index].time = value;
+            saveData();
+        }
+
+        function updateScheduleText(index, value) {
+            const dayData = getDayData();
+            dayData.schedule[index].text = value;
+            saveData();
+        }
+
+        function deleteScheduleItem(index) {
+            const dayData = getDayData();
+            dayData.schedule.splice(index, 1);
+            saveData();
+            renderSchedule(dayData.schedule);
+        }
+
+        function addTask() {
+            const dayData = getDayData();
+            if (dayData.tasks.length >= 5) {
+                showToast('Five actions is usually enough');
+                return;
+            }
+            dayData.tasks.push({ text: '', completed: false });
+            saveData();
+            renderTasks(dayData.tasks);
+        }
+
+        function updateTaskText(index, value) {
+            const dayData = getDayData();
+            dayData.tasks[index].text = value;
+            saveData();
+        }
+
+        function toggleTask(index) {
+            const dayData = getDayData();
+            dayData.tasks[index].completed = !dayData.tasks[index].completed;
+            saveData();
+            renderTasks(dayData.tasks);
+        }
+
+        function deleteTask(index) {
+            const dayData = getDayData();
+            dayData.tasks.splice(index, 1);
+            saveData();
+            renderTasks(dayData.tasks);
+        }
+
+        function addSpending() {
+            const dayData = getDayData();
+            dayData.spending.push({ desc: '', amount: '' });
+            saveData();
+            renderSpending(dayData.spending);
+        }
+
+        function updateSpendingDesc(index, value) {
+            const dayData = getDayData();
+            dayData.spending[index].desc = value;
+            saveData();
+        }
+
+        function updateSpendingAmount(index, value) {
+            const dayData = getDayData();
+            dayData.spending[index].amount = value;
+            saveData();
+            updateSpendingTotal();
+        }
+
+        function deleteSpending(index) {
+            const dayData = getDayData();
+            dayData.spending.splice(index, 1);
+            saveData();
+            renderSpending(dayData.spending);
+        }
+
+        function updateNotes(value) {
+            const dayData = getDayData();
+            dayData.notes = value;
+            saveData();
+        }
+
+        // ========== SOFT CONSTRAINTS - P3 ==========
+        function updateCharHint(input, limit) {
+            const length = input.value.length;
+            const hintId = input.id + 'CharHint';
+            const hint = document.getElementById(hintId) || input.nextElementSibling;
+            
+            if (!hint || !hint.classList.contains('char-hint')) return;
+            
+            if (length > limit * 0.8) {
+                hint.textContent = `${length}/${limit}`;
+                hint.classList.add('visible');
+                if (length > limit * 0.95) {
+                    hint.classList.add('warning');
+                } else {
+                    hint.classList.remove('warning');
+                }
+            } else {
+                hint.classList.remove('visible', 'warning');
+            }
+        }
+
+        // ========== COMPLETE & ARCHIVE - P2 ==========
+        function completeBlueprint() {
+            const dayData = getDayData();
+            const key = getDateKey();
+            
+            // Mark as complete
+            dayData.completed = true;
+            saveData();
+            
+            // Archive it
+            const archiveEntry = {
+                date: key,
+                why: dayData.why,
+                constraints: { ...dayData.constraints },
+                goals: [...dayData.goals],
+                schedule: [...dayData.schedule],
+                tasks: [...dayData.tasks],
+                spending: [...dayData.spending],
+                notes: dayData.notes,
+                archivedAt: new Date().toISOString()
+            };
+            
+            // Remove existing archive for same date
+            archive = archive.filter(a => a.date !== key);
+            archive.unshift(archiveEntry);
+            
+            // Keep only last 30 entries
+            if (archive.length > 30) {
+                archive = archive.slice(0, 30);
+            }
+            
+            saveArchive();
+            updateCompletedStatus(true);
+            showToast('Blueprint archived');
+        }
+
+        function reopenBlueprint() {
+            const dayData = getDayData();
+            dayData.completed = false;
+            saveData();
+            updateCompletedStatus(false);
+            showToast('Blueprint reopened');
+        }
+
+        // ========== ARCHIVE MODAL - P2 ==========
+        function openArchive() {
+            renderArchiveList();
+            document.getElementById('archiveModal').classList.add('active');
+        }
+
+        function closeArchive() {
+            document.getElementById('archiveModal').classList.remove('active');
+        }
+
+        function renderArchiveList() {
+            const body = document.getElementById('archiveBody');
+            
+            if (archive.length === 0) {
+                body.innerHTML = '<div class="archive-empty">No archived blueprints yet.<br>Complete a day to see it here.</div>';
+                return;
+            }
+
+            body.innerHTML = `
+                <div class="archive-list">
+                    ${archive.map((entry, i) => {
+                        const date = new Date(entry.date + 'T12:00:00');
+                        const dateStr = date.toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        const why = entry.why || entry.goals?.[0] || 'No description';
+                        return `
+                            <div class="archive-item" onclick="viewArchiveEntry(${i})">
+                                <div class="archive-item-content">
+                                    <div class="archive-item-date">${dateStr}</div>
+                                    <div class="archive-item-why">${escapeHtml(why)}</div>
+                                </div>
+                                <div class="archive-item-actions">
+                                    <button class="archive-action-btn delete" onclick="event.stopPropagation(); deleteArchiveEntry(${i})">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function viewArchiveEntry(index) {
+            const entry = archive[index];
+            const body = document.getElementById('archiveBody');
+            
+            const date = new Date(entry.date + 'T12:00:00');
+            const dateStr = date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            body.innerHTML = `
+                <div class="archive-view">
+                    <div class="archive-view-header">
+                        <div class="archive-view-date">${dateStr}</div>
+                        <button class="btn btn-secondary" onclick="renderArchiveList()">← Back</button>
+                    </div>
+                    
+                    ${entry.why ? `
+                        <div class="archive-view-section">
+                            <div class="archive-view-label">Why it mattered</div>
+                            <div class="archive-view-content italic">${escapeHtml(entry.why)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${(entry.constraints?.time || entry.constraints?.energy || entry.constraints?.fixed) ? `
+                        <div class="archive-view-section">
+                            <div class="archive-view-label">Constraints</div>
+                            <div class="archive-view-content">
+                                ${entry.constraints.time ? `Time: ${escapeHtml(entry.constraints.time)}` : ''}
+                                ${entry.constraints.energy ? ` · Energy: ${escapeHtml(entry.constraints.energy)}` : ''}
+                                ${entry.constraints.fixed ? ` · Fixed: ${escapeHtml(entry.constraints.fixed)}` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${entry.goals?.[0] ? `
+                        <div class="archive-view-section">
+                            <div class="archive-view-label">Focus</div>
+                            <div class="archive-view-content">${escapeHtml(entry.goals[0])}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${entry.schedule?.length ? `
+                        <div class="archive-view-section">
+                            <div class="archive-view-label">Time blocks</div>
+                            <div class="archive-view-content">
+                                ${entry.schedule.map(s => `${s.time || '—'}: ${escapeHtml(s.text)}`).join('<br>')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${entry.tasks?.length ? `
+                        <div class="archive-view-section">
+                            <div class="archive-view-label">Actions</div>
+                            <div class="archive-view-content">
+                                ${entry.tasks.map(t => `${t.completed ? '✓' : '○'} ${escapeHtml(t.text)}`).join('<br>')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${entry.notes ? `
+                        <div class="archive-view-section">
+                            <div class="archive-view-label">Notes</div>
+                            <div class="archive-view-content">${escapeHtml(entry.notes)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function deleteArchiveEntry(index) {
+            if (confirm('Delete this archived blueprint?')) {
+                archive.splice(index, 1);
+                saveArchive();
+                renderArchiveList();
+                showToast('Deleted');
+            }
+        }
+
+        // ========== PRINT PREVIEW ==========
+        let printSections = {};
+
+        function openPrintPreview() {
+            printSections = {};
+            Object.keys(sections).forEach(key => {
+                printSections[key] = { ...sections[key] };
+            });
+            renderPrintSectionToggles();
+            updatePreview();
+            document.getElementById('printModal').classList.add('active');
+        }
+
+        function closePrintPreview() {
+            document.getElementById('printModal').classList.remove('active');
+        }
+
+        function renderPrintSectionToggles() {
+            const container = document.getElementById('printSectionToggles');
+            container.innerHTML = Object.keys(sections).map(key => `
+                <div class="section-toggle" onclick="togglePrintSection('${key}')">
+                    <span>${sections[key].label}</span>
+                    <div class="toggle-switch ${printSections[key]?.enabled ? 'active' : ''}" 
+                         id="print-toggle-${key}"></div>
+                </div>
+            `).join('');
+        }
+
+        function togglePrintSection(key) {
+            printSections[key].enabled = !printSections[key].enabled;
+            document.getElementById(`print-toggle-${key}`).classList.toggle('active');
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const dayData = getDayData();
+            const paperSize = document.getElementById('paperSize').value;
+            const extraLines = parseInt(document.getElementById('extraLines').value);
+
+            const page = document.getElementById('printPage');
+            page.className = 'print-page' + (paperSize !== 'letter' ? ' ' + paperSize : '');
+
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = currentDate.toLocaleDateString('en-US', options);
+            const weekday = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+            let html = `
+                <div class="print-header">
+                    <div class="print-date">${dateStr}</div>
+                    <div class="print-weekday">${weekday}</div>
+                </div>
+            `;
+
+            // Why this matters
+            if (dayData.why) {
+                html += `<div class="print-why">${escapeHtml(dayData.why)}</div>`;
+            }
+
+            // Constraints
+            if (printSections.constraints?.enabled) {
+                const c = dayData.constraints || {};
+                if (c.time || c.energy || c.fixed) {
+                    html += `
+                        <div class="print-constraints">
+                            ${c.time ? `<div class="print-constraint"><div class="print-constraint-label">Time</div><div class="print-constraint-value">${escapeHtml(c.time)}</div></div>` : ''}
+                            ${c.energy ? `<div class="print-constraint"><div class="print-constraint-label">Energy</div><div class="print-constraint-value">${escapeHtml(c.energy)}</div></div>` : ''}
+                            ${c.fixed ? `<div class="print-constraint"><div class="print-constraint-label">Fixed</div><div class="print-constraint-value">${escapeHtml(c.fixed)}</div></div>` : ''}
+                        </div>
+                    `;
+                }
+            }
+
+            html += `<div class="print-grid">`;
+
+            // Schedule
+            if (printSections.schedule?.enabled) {
+                html += `<div class="print-section"><div class="print-section-title">Time Blocks</div>`;
+                dayData.schedule.forEach(item => {
+                    html += `<div class="print-schedule-item"><span class="print-schedule-time">${escapeHtml(item.time) || '___'}</span><span class="print-schedule-text">${escapeHtml(item.text)}</span></div>`;
+                });
+                for (let i = 0; i < extraLines; i++) {
+                    html += `<div class="print-schedule-item"><span class="print-schedule-time">___</span><span class="print-schedule-text"></span></div>`;
+                }
+                html += `</div>`;
+            }
+
+            // Tasks
+            if (printSections.tasks?.enabled) {
+                html += `<div class="print-section"><div class="print-section-title">Actions</div>`;
+                dayData.tasks.forEach(item => {
+                    html += `<div class="print-task-item"><div class="print-checkbox"></div><span class="print-task-text">${escapeHtml(item.text)}</span></div>`;
+                });
+                for (let i = 0; i < extraLines; i++) {
+                    html += `<div class="print-task-item"><div class="print-checkbox"></div><span class="print-task-text"></span></div>`;
+                }
+                html += `</div>`;
+            }
+
+            // Goals
+            if (printSections.goals?.enabled && dayData.goals[0]) {
+                html += `<div class="print-section"><div class="print-section-title">Focus</div><div class="print-goal-item">${escapeHtml(dayData.goals[0])}</div></div>`;
+            }
+
+            // Spending
+            if (printSections.spending?.enabled && dayData.spending.length) {
+                const total = dayData.spending.reduce((sum, item) => {
+                    const num = parseFloat(item.amount.replace(/[^0-9.-]/g, '')) || 0;
+                    return sum + num;
+                }, 0);
+                html += `<div class="print-section"><div class="print-section-title">Spending</div>`;
+                dayData.spending.forEach(item => {
+                    html += `<div class="print-spending-item"><span>${escapeHtml(item.desc)}</span><span>${escapeHtml(item.amount)}</span></div>`;
+                });
+                html += `<div class="print-spending-total"><span>Total</span><span>$${total.toFixed(2)}</span></div></div>`;
+            }
+
+            // Notes
+            if (printSections.notes?.enabled && dayData.notes) {
+                html += `<div class="print-section full-width"><div class="print-section-title">Notes</div><div class="print-notes-area">${escapeHtml(dayData.notes)}</div></div>`;
+            }
+
+            html += `</div>`;
+            page.innerHTML = html;
+        }
+
+        function printPage() {
+            window.print();
+        }
+
+        // ========== THEME ==========
+        function toggleTheme() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('blueprint_theme', 'light');
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('blueprint_theme', 'dark');
+            }
+        }
+
+        // ========== IMPORT/EXPORT ==========
+        function exportData() {
+            const exportObj = {
+                data: data,
+                archive: archive,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `blueprint-export-${getDateKey()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported');
+        }
+
+        function importData() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.data) {
+                        data = { ...data, ...imported.data };
+                        saveData();
+                    }
+                    if (imported.archive) {
+                        archive = [...archive, ...imported.archive];
+                        // Dedupe by date
+                        const seen = new Set();
+                        archive = archive.filter(a => {
+                            if (seen.has(a.date)) return false;
+                            seen.add(a.date);
+                            return true;
+                        });
+                        saveArchive();
+                    }
+                    renderPlanner();
+                    showToast('Imported');
+                } catch (err) {
+                    showToast('Import failed');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ========== UTILITIES ==========
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;')
+                       .replace(/"/g, '&quot;');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2000);
+        }
+
+        // ========== INIT ==========
+        init();
+    </script>
+</body>
+</html>

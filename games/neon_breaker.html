@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Breaker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #140909;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #livesDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(20, 9, 9, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(238, 82, 83, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(238, 82, 83, 0.2);
+            border-color: rgba(238, 82, 83, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        #livesDisplay {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 9, 9, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    <div id="scoreDisplay">Score: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+    <div id="livesDisplay">Lives: <span id="livesVal">3</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-red-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-red-500/10">
+            <i class="fa-solid fa-cubes text-6xl text-red-500 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">NEON BREAKER</h1>
+            <p class="text-gray-400 mb-6">Drag the paddle at the bottom to bounce the glowing energy ball. Shatter all neon bricks to win!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-red-500/30">
+                Initiate Breaker
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-red-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-red-500/10">
+            <i id="gameOverIcon" class="fa-solid fa-skull-crossbones text-6xl text-red-500 mb-4"></i>
+            <h1 id="gameOverTitle" class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">GAME OVER</h1>
+            <p id="gameOverText" class="text-gray-400 mb-6">All integrity nodes destroyed.</p>
+            <p class="text-2xl font-bold text-red-400 mb-6">Score: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-red-500/30">
+                Try Again
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const livesVal = document.getElementById('livesVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const gameOverIcon = document.getElementById('gameOverIcon');
+        const gameOverText = document.getElementById('gameOverText');
+
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('neon_breaker_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let lives = 3;
+        let isPlaying = false;
+        let particles = [];
+        let bricks = [];
+
+        // Paddle Configuration
+        const paddle = {
+            width: 140,
+            height: 15,
+            x: 0,
+            y: 0,
+            color: '#ee5253'
+        };
+
+        // Ball Configuration
+        const ball = {
+            x: 0,
+            y: 0,
+            radius: 8,
+            vx: 0,
+            vy: 0,
+            speed: 5.5,
+            color: '#ffffff'
+        };
+
+        // Brick Configuration
+        const brickRows = 5;
+        let brickCols = 8;
+        const brickHeight = 25;
+        const brickPadding = 12;
+        const brickOffsetTop = 120;
+        const brickOffsetLeft = 30;
+        const BRICK_COLORS = ['#ff0055', '#ff9f43', '#feca57', '#1dd1a1', '#00f2ff'];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            paddle.y = canvas.height - 60;
+            if (!isPlaying) {
+                paddle.x = canvas.width / 2 - paddle.width / 2;
+                ball.x = canvas.width / 2;
+                ball.y = paddle.y - 15;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function initBricks() {
+            bricks = [];
+            // Dynamically scale columns based on width
+            brickCols = Math.floor((canvas.width - brickOffsetLeft * 2) / (100 + brickPadding));
+            if (brickCols < 4) brickCols = 4;
+            const dynamicBrickWidth = (canvas.width - brickOffsetLeft * 2 - (brickCols - 1) * brickPadding) / brickCols;
+
+            for (let r = 0; r < brickRows; r++) {
+                bricks[r] = [];
+                for (let c = 0; c < brickCols; c++) {
+                    bricks[r][c] = {
+                        x: brickOffsetLeft + c * (dynamicBrickWidth + brickPadding),
+                        y: brickOffsetTop + r * (brickHeight + brickPadding),
+                        width: dynamicBrickWidth,
+                        height: brickHeight,
+                        color: BRICK_COLORS[r % BRICK_COLORS.length],
+                        active: true
+                    };
+                }
+            }
+        }
+
+        class BreakerParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.size = Math.random() * 3 + 1.5;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.04 + 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Input Handlers
+        function handleMove(e) {
+            if (!isPlaying) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            // Center paddle on mouse/finger
+            paddle.x = clientX - paddle.width / 2;
+            // Prevent going out of screen
+            if (paddle.x < 0) paddle.x = 0;
+            if (paddle.x + paddle.width > canvas.width) paddle.x = canvas.width - paddle.width;
+        }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', (e) => {
+            handleMove(e);
+            e.preventDefault();
+        }, { passive: false });
+
+        function createShatterEffect(x, y, color) {
+            for (let i = 0; i < 10; i++) {
+                particles.push(new BreakerParticle(x, y, color));
+            }
+        }
+
+        function checkBrickCollisions() {
+            let activeBricksLeft = false;
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    const b = bricks[r][c];
+                    if (b.active) {
+                        activeBricksLeft = true;
+                        
+                        // Ball check with brick box
+                        if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + b.width) {
+                            if (ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + b.height) {
+                                b.active = false;
+                                ball.vy = -ball.vy;
+                                score += 20;
+                                scoreVal.innerText = score;
+                                createShatterEffect(b.x + b.width/2, b.y + b.height/2, b.color);
+                                return; // Handle one brick collision per frame
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!activeBricksLeft) {
+                handleVictory();
+            }
+        }
+
+        function resetBall() {
+            ball.x = paddle.x + paddle.width / 2;
+            ball.y = paddle.y - ball.radius - 5;
+            
+            // Send ball upwards with slight angle
+            ball.vx = (Math.random() - 0.5) * 3;
+            ball.vy = -ball.speed;
+        }
+
+        function updateBall() {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Wall Collisions
+            if (ball.x - ball.radius < 0) {
+                ball.x = ball.radius;
+                ball.vx = -ball.vx;
+                createShatterEffect(0, ball.y, '#ffffff');
+            }
+            if (ball.x + ball.radius > canvas.width) {
+                ball.x = canvas.width - ball.radius;
+                ball.vx = -ball.vx;
+                createShatterEffect(canvas.width, ball.y, '#ffffff');
+            }
+            if (ball.y - ball.radius < 0) {
+                ball.y = ball.radius;
+                ball.vy = -ball.vy;
+                createShatterEffect(ball.x, 0, '#ffffff');
+            }
+
+            // Paddle Collision
+            if (ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
+                if (ball.x + ball.radius >= paddle.x && ball.x - ball.radius <= paddle.x + paddle.width) {
+                    
+                    // Angle Steering logic
+                    const hitPoint = ball.x - (paddle.x + paddle.width / 2);
+                    const normalizedHit = hitPoint / (paddle.width / 2); // -1.0 to 1.0
+                    const maxSteerAngle = Math.PI / 3; // 60 degrees
+                    const angle = normalizedHit * maxSteerAngle;
+
+                    ball.vx = ball.speed * Math.sin(angle);
+                    ball.vy = -ball.speed * Math.cos(angle);
+                    
+                    // Push ball slightly above paddle to prevent multiple triggers
+                    ball.y = paddle.y - ball.radius;
+
+                    createShatterEffect(ball.x, ball.y, paddle.color);
+                }
+            }
+
+            // Bottom Drop Check
+            if (ball.y - ball.radius > canvas.height) {
+                lives--;
+                livesVal.innerText = lives;
+                if (lives <= 0) {
+                    gameOver();
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Draw Background grid
+            ctx.fillStyle = '#0f0505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(238, 82, 83, 0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 70;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw Paddle
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = paddle.color;
+            ctx.fillStyle = paddle.color;
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 6);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+
+            // Draw Bricks
+            for (let r = 0; r < brickRows; r++) {
+                for (let c = 0; c < brickCols; c++) {
+                    const b = bricks[r][c];
+                    if (b.active) {
+                        ctx.save();
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = b.color;
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                        ctx.strokeStyle = b.color;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.roundRect(b.x, b.y, b.width, b.height, 4);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
+            }
+
+            // Update & Draw Ball
+            updateBall();
+            checkBrickCollisions();
+
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ffffff';
+            ctx.fillStyle = ball.color;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Update & Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            score = 0;
+            scoreVal.innerText = score;
+            lives = 3;
+            livesVal.innerText = lives;
+            particles = [];
+            
+            initBricks();
+            paddle.x = canvas.width / 2 - paddle.width / 2;
+            resetBall();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            finalScoreVal.innerText = score;
+            
+            // Check High Score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('neon_breaker_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+
+            // Set GameOver text
+            gameOverIcon.className = "fa-solid fa-skull-crossbones text-6xl text-red-500 mb-4";
+            gameOverTitle.innerText = "GAME OVER";
+            gameOverTitle.className = "text-3xl font-extrabold text-white mb-2";
+            gameOverText.innerText = "All paddle integrity nodes destroyed.";
+
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function handleVictory() {
+            isPlaying = false;
+            finalScoreVal.innerText = score;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('neon_breaker_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+
+            // Set Victory text
+            gameOverIcon.className = "fa-solid fa-trophy text-6xl text-yellow-500 mb-4 animate-bounce";
+            gameOverTitle.innerText = "VICTORY ACHIEVED";
+            gameOverTitle.className = "text-3xl font-extrabold text-yellow-400 mb-2";
+            gameOverText.innerText = "All brick targets successfully eliminated!";
+
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

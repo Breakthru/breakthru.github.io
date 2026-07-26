@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Stack</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f0a14;
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #scoreDisplay, #highScoreDisplay, #backBtn {
+            position: absolute;
+            z-index: 10;
+            background: rgba(15, 10, 20, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(165, 94, 174, 0.3);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+        }
+
+        #backBtn {
+            top: 20px;
+            left: 20px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            z-index: 30;
+        }
+        #backBtn:hover {
+            background: rgba(165, 94, 174, 0.2);
+            border-color: rgba(165, 94, 174, 0.8);
+            transform: scale(1.05);
+        }
+
+        #scoreDisplay {
+            top: 20px;
+            right: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        #highScoreDisplay {
+            top: 75px;
+            right: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 10, 20, 0.9);
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <a id="backBtn" href="index.html">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back
+    </a>
+    <div id="scoreDisplay">Stack: <span id="scoreVal">0</span></div>
+    <div id="highScoreDisplay">Best: <span id="highScoreVal">0</span></div>
+
+    <!-- Start Modal -->
+    <div id="startModal" class="modal-container">
+        <div class="bg-gray-900 border border-purple-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-purple-500/10">
+            <i class="fa-solid fa-layer-group text-6xl text-purple-400 mb-4 animate-pulse"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">NEON STACK</h1>
+            <p class="text-gray-400 mb-6">Tap the screen to drop the moving slab onto the tower. Overhanging segments will be sliced away!</p>
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-purple-500 to-fuchsia-600 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-purple-500/30">
+                Start Stacking
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal-container hidden">
+        <div class="bg-gray-900 border border-purple-500/50 p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl shadow-purple-500/10">
+            <i class="fa-solid fa-hourglass-end text-6xl text-purple-500 mb-4 animate-bounce"></i>
+            <h1 class="text-3xl font-extrabold text-white mb-2" style="font-family: 'Fredoka One', cursive;">TOWER COLLAPSE</h1>
+            <p class="text-gray-400 mb-2">You missed the alignment completely.</p>
+            <p class="text-2xl font-bold text-purple-400 mb-6">Height: <span id="finalScoreVal">0</span></p>
+            <button onclick="resetGame()" class="w-full bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white font-bold py-3 px-6 rounded-xl hover:scale-105 transition transform duration-150 shadow-lg shadow-purple-500/30">
+                Build Anew
+            </button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const highScoreVal = document.getElementById('highScoreVal');
+        const startModal = document.getElementById('startModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('neon_stack_highscore')) || 0;
+        highScoreVal.innerText = highScore;
+
+        let isPlaying = false;
+        
+        // Game settings
+        const slabHeight = 35;
+        let speed = 4;
+        let stack = [];
+        let currentSlab = {};
+        let fallingPieces = [];
+        let particles = [];
+        
+        // Colors
+        const COLOR_PALETTE = ['#a55eae', '#8e44ad', '#9b59b6', '#5f27cd', '#341f97', '#6c5ce7'];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (!isPlaying) {
+                initGameSettings();
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function initGameSettings() {
+            stack = [
+                {
+                    x: canvas.width / 2 - 150,
+                    width: 300,
+                    color: COLOR_PALETTE[0]
+                }
+            ];
+            
+            currentSlab = {
+                x: 0,
+                width: 300,
+                dir: 1,
+                color: COLOR_PALETTE[1]
+            };
+            
+            fallingPieces = [];
+            particles = [];
+            speed = 4;
+        }
+
+        class StackParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 5;
+                this.vy = (Math.random() - 0.5) * 5;
+                this.size = Math.random() * 3 + 1;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.05 + 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class FallingPiece {
+            constructor(x, y, width, color) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.color = color;
+                this.vy = 0;
+                this.gravity = 0.3;
+                this.angle = 0;
+                this.rotSpeed = (Math.random() - 0.5) * 0.05;
+            }
+            update() {
+                this.vy += this.gravity;
+                this.y += this.vy;
+                this.angle += this.rotSpeed;
+            }
+            draw() {
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.translate(this.x + this.width / 2, this.y + slabHeight / 2);
+                ctx.rotate(this.angle);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.width / 2, -slabHeight / 2, this.width, slabHeight);
+                ctx.restore();
+            }
+        }
+
+        function createDust(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push(new StackParticle(x, y, color));
+            }
+        }
+
+        function handleTap() {
+            if (!isPlaying) return;
+
+            const topStacked = stack[stack.length - 1];
+            
+            // Check overlap
+            const leftBound = topStacked.x;
+            const rightBound = topStacked.x + topStacked.width;
+            
+            const curLeft = currentSlab.x;
+            const curRight = currentSlab.x + currentSlab.width;
+
+            if (curRight <= leftBound || curLeft >= rightBound) {
+                // Completely missed
+                gameOver();
+                return;
+            }
+
+            // Calculate overlap interval
+            const nextLeft = Math.max(leftBound, curLeft);
+            const nextRight = Math.min(rightBound, curRight);
+            const nextWidth = nextRight - nextLeft;
+
+            // Spawn falling offcuts
+            if (curLeft < leftBound) {
+                // Cut off left side
+                fallingPieces.push(new FallingPiece(curLeft, canvas.height - 100 - (stack.length * slabHeight), leftBound - curLeft, currentSlab.color));
+                createDust(leftBound, canvas.height - 100 - (stack.length * slabHeight), currentSlab.color);
+            } else if (curRight > rightBound) {
+                // Cut off right side
+                fallingPieces.push(new FallingPiece(rightBound, canvas.height - 100 - (stack.length * slabHeight), curRight - rightBound, currentSlab.color));
+                createDust(rightBound, canvas.height - 100 - (stack.length * slabHeight), currentSlab.color);
+            }
+
+            // Successful stack addition
+            stack.push({
+                x: nextLeft,
+                width: nextWidth,
+                color: currentSlab.color
+            });
+
+            score++;
+            scoreVal.innerText = score;
+
+            // Speed up slightly
+            speed = 4 + Math.floor(score / 5) * 0.5;
+
+            // Next slab setup
+            currentSlab = {
+                x: (Math.random() > 0.5) ? 0 : canvas.width - nextWidth,
+                width: nextWidth,
+                dir: (Math.random() > 0.5) ? 1 : -1,
+                color: COLOR_PALETTE[stack.length % COLOR_PALETTE.length]
+            };
+
+            createDust(nextLeft + nextWidth / 2, canvas.height - 100 - ((stack.length - 1) * slabHeight), '#ffffff');
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            if (isPlaying && e.target === canvas) {
+                handleTap();
+            }
+        });
+        window.addEventListener('touchstart', (e) => {
+            if (isPlaying && e.target === canvas) {
+                handleTap();
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Clear screen
+            ctx.fillStyle = '#08050a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid draw
+            ctx.strokeStyle = 'rgba(165, 94, 174, 0.02)';
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Move current slab
+            currentSlab.x += speed * currentSlab.dir;
+            if (currentSlab.x < 0) {
+                currentSlab.x = 0;
+                currentSlab.dir = 1;
+            }
+            if (currentSlab.x + currentSlab.width > canvas.width) {
+                currentSlab.x = canvas.width - currentSlab.width;
+                currentSlab.dir = -1;
+            }
+
+            // Camera translation: center view on stack top
+            ctx.save();
+            const stackHeightTotal = stack.length * slabHeight;
+            const threshold = canvas.height * 0.45;
+            let cameraY = 0;
+            if (stackHeightTotal > threshold) {
+                cameraY = stackHeightTotal - threshold;
+                ctx.translate(0, cameraY);
+            }
+
+            // Draw stack tower
+            for (let i = 0; i < stack.length; i++) {
+                const s = stack[i];
+                const yPos = canvas.height - 100 - (i * slabHeight);
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = s.color;
+                ctx.fillStyle = s.color;
+                ctx.fillRect(s.x, yPos, s.width, slabHeight);
+                ctx.restore();
+            }
+
+            // Draw current active moving slab
+            const currentY = canvas.height - 100 - (stack.length * slabHeight);
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = currentSlab.color;
+            ctx.fillStyle = currentSlab.color;
+            ctx.fillRect(currentSlab.x, currentY, currentSlab.width, slabHeight);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(currentSlab.x, currentY, currentSlab.width, slabHeight);
+            ctx.restore();
+
+            // Update & Draw falling sliced chunks
+            for (let i = fallingPieces.length - 1; i >= 0; i--) {
+                const p = fallingPieces[i];
+                p.update();
+                p.draw();
+                // Remove when fallen offscreen (accounted for camera offset)
+                if (p.y - cameraY > canvas.height + 100) {
+                    fallingPieces.splice(i, 1);
+                }
+            }
+
+            ctx.restore(); // Restore camera translation
+
+            // Update & Draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            startModal.classList.add('hidden');
+            isPlaying = true;
+            score = 0;
+            scoreVal.innerText = score;
+            initGameSettings();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            finalScoreVal.innerText = score;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('neon_stack_highscore', highScore);
+                highScoreVal.innerText = highScore;
+            }
+
+            // Draw full screen shadow
+            ctx.fillStyle = 'rgba(8, 5, 10, 0.6)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            gameOverModal.classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>

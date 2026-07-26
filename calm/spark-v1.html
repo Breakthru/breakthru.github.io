@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark - Idea Development</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --surface-alt: #f3f4f6;
+            --text: #111827;
+            --text-muted: #6b7280;
+            --text-faint: #9ca3af;
+            --border: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-lg: rgba(0, 0, 0, 0.1);
+
+            --spark: #f59e0b;
+            --spark-light: #fef3c7;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #3b82f6;
+            --info-light: #dbeafe;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface-alt: #262626;
+            --text: #f5f5f5;
+            --text-muted: #a3a3a3;
+            --text-faint: #525252;
+            --border: #333333;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+
+            --spark: #fbbf24;
+            --spark-light: #451a03;
+            --success: #34d399;
+            --success-light: #064e3b;
+            --warning: #fbbf24;
+            --warning-light: #451a03;
+            --danger: #f87171;
+            --danger-light: #450a0a;
+            --info: #60a5fa;
+            --info-light: #1e3a5f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .back-link:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--spark), #d97706);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-btn {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .header-btn.primary {
+            background: var(--spark);
+            border-color: var(--spark);
+            color: white;
+        }
+
+        .header-btn.primary:hover {
+            background: #d97706;
+        }
+
+        /* ==================== MAIN LAYOUT ==================== */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ==================== STATS ROW ==================== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--spark);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-top: 4px;
+        }
+
+        /* ==================== TABS ==================== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            background: var(--spark);
+            color: white;
+        }
+
+        .tab-count {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--surface-alt);
+            color: var(--text-muted);
+        }
+
+        .tab-btn.active .tab-count {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* ==================== IDEAS GRID ==================== */
+        .ideas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .idea-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .idea-card:hover {
+            border-color: var(--text-muted);
+            box-shadow: 0 4px 16px var(--shadow-lg);
+        }
+
+        .idea-card.selected {
+            border-color: var(--spark);
+            box-shadow: 0 0 0 2px var(--spark-light);
+        }
+
+        .idea-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .idea-status {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .idea-status.spark { background: var(--spark-light); color: var(--spark); }
+        .idea-status.developing { background: var(--info-light); color: var(--info); }
+        .idea-status.ready { background: var(--success-light); color: var(--success); }
+        .idea-status.parked { background: var(--surface-alt); color: var(--text-muted); }
+
+        .idea-menu-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-faint);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.15s;
+        }
+
+        .idea-card:hover .idea-menu-btn {
+            opacity: 1;
+        }
+
+        .idea-menu-btn:hover {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .idea-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .idea-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .idea-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .idea-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .idea-tag {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            background: var(--surface-alt);
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+
+        .idea-date {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+        }
+
+        .idea-progress {
+            margin-top: 12px;
+        }
+
+        .idea-progress-bar {
+            height: 4px;
+            background: var(--surface-alt);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .idea-progress-fill {
+            height: 100%;
+            background: var(--spark);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .idea-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ==================== EMPTY STATE ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .empty-text {
+            font-size: 0.9rem;
+            max-width: 300px;
+            margin: 0 auto 20px;
+        }
+
+        .empty-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: var(--spark);
+            color: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .empty-btn:hover {
+            background: #d97706;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: var(--surface-alt);
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: var(--bg);
+            color: var(--text);
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--spark);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            margin-top: 6px;
+        }
+
+        /* Checklist */
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--surface-alt);
+            border-radius: 8px;
+        }
+
+        .checklist-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .checklist-checkbox.checked {
+            background: var(--spark);
+            border-color: var(--spark);
+            color: white;
+        }
+
+        .checklist-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .checklist-text.completed {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .checklist-delete {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            color: var(--text-faint);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.15s;
+        }
+
+        .checklist-item:hover .checklist-delete {
+            opacity: 1;
+        }
+
+        .checklist-delete:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .checklist-add {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .checklist-add-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .checklist-add-input:focus {
+            outline: none;
+            border-color: var(--spark);
+        }
+
+        .checklist-add-btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            background: var(--surface-alt);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .checklist-add-btn:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        /* Tags input */
+        .tags-input-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            min-height: 44px;
+        }
+
+        .tags-input-wrapper:focus-within {
+            border-color: var(--spark);
+        }
+
+        .tag-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: var(--surface-alt);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .tag-chip-remove {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: none;
+            background: transparent;
+            color: var(--text-faint);
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tag-chip-remove:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .tags-input {
+            flex: 1;
+            min-width: 100px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .modal-btn.secondary {
+            background: var(--surface-alt);
+            color: var(--text-muted);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .modal-btn.primary {
+            background: var(--spark);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #d97706;
+        }
+
+        .modal-btn.danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .modal-btn.danger:hover {
+            background: #dc2626;
+        }
+
+        /* ==================== CONTEXT MENU ==================== */
+        .context-menu {
+            position: fixed;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px var(--shadow-lg);
+            min-width: 160px;
+            z-index: 600;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95);
+            transition: all 0.15s;
+        }
+
+        .context-menu.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .context-menu-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .context-menu-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .context-menu-item:hover {
+            background: var(--surface-alt);
+        }
+
+        .context-menu-item.danger {
+            color: var(--danger);
+        }
+
+        .context-menu-item.danger:hover {
+            background: var(--danger-light);
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text);
+            color: var(--bg);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 600px) {
+            .header-inner {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .ideas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                margin: 16px;
+                max-height: calc(100vh - 32px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <a href="index.html" class="back-link" title="Back to Apps">←</a>
+                <div class="header-title">
+                    <div class="header-icon">✦</div>
+                    <h1>Spark</h1>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" onclick="exportData()">↓ Export</button>
+                <button class="header-btn" onclick="document.getElementById('importInput').click()">↑ Import</button>
+                <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
+                <button class="header-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+                <button class="header-btn primary" onclick="openNewIdeaModal()">+ New Idea</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total Ideas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statSpark">0</div>
+                <div class="stat-label">Sparks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statDeveloping">0</div>
+                <div class="stat-label">Developing</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statReady">0</div>
+                <div class="stat-label">Ready</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-status="all" onclick="setFilter('all')">
+                All <span class="tab-count" id="countAll">0</span>
+            </button>
+            <button class="tab-btn" data-status="spark" onclick="setFilter('spark')">
+                Sparks <span class="tab-count" id="countSpark">0</span>
+            </button>
+            <button class="tab-btn" data-status="developing" onclick="setFilter('developing')">
+                Developing <span class="tab-count" id="countDeveloping">0</span>
+            </button>
+            <button class="tab-btn" data-status="ready" onclick="setFilter('ready')">
+                Ready <span class="tab-count" id="countReady">0</span>
+            </button>
+            <button class="tab-btn" data-status="parked" onclick="setFilter('parked')">
+                Parked <span class="tab-count" id="countParked">0</span>
+            </button>
+        </div>
+
+        <div class="ideas-grid" id="ideasGrid">
+            <!-- Populated by JS -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">✦</div>
+            <div class="empty-title">No ideas yet</div>
+            <div class="empty-text">Capture ideas from your inbox or create a new spark to get started.</div>
+            <button class="empty-btn" onclick="openNewIdeaModal()">Create First Idea</button>
+        </div>
+    </main>
+
+    <!-- New/Edit Idea Modal -->
+    <div class="modal-overlay" id="ideaModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">New Idea</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="ideaId">
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="ideaTitle" placeholder="What's the idea?">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="ideaDescription" placeholder="Describe the idea in more detail..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="ideaStatus">
+                        <option value="spark">Spark - Just captured</option>
+                        <option value="developing">Developing - Working on it</option>
+                        <option value="ready">Ready - Can be acted on</option>
+                        <option value="parked">Parked - On hold</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags</label>
+                    <div class="tags-input-wrapper" id="tagsWrapper" onclick="document.getElementById('tagsInput').focus()">
+                        <input type="text" class="tags-input" id="tagsInput" placeholder="Add tags...">
+                    </div>
+                    <div class="form-hint">Press Enter or comma to add a tag</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Development Checklist</label>
+                    <div class="checklist" id="checklist">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="checklist-add">
+                        <input type="text" class="checklist-add-input" id="checklistInput" placeholder="Add a step...">
+                        <button class="checklist-add-btn" onclick="addChecklistItem()">Add</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-textarea" id="ideaNotes" placeholder="Additional notes, research, links..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveIdea()">Save Idea</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="editIdea(contextMenuIdeaId)">✎ Edit</div>
+        <div class="context-menu-item" onclick="duplicateIdea(contextMenuIdeaId)">⊕ Duplicate</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="setIdeaStatus(contextMenuIdeaId, 'spark')">✦ Mark as Spark</div>
+        <div class="context-menu-item" onclick="setIdeaStatus(contextMenuIdeaId, 'developing')">⚡ Mark as Developing</div>
+        <div class="context-menu-item" onclick="setIdeaStatus(contextMenuIdeaId, 'ready')">✓ Mark as Ready</div>
+        <div class="context-menu-item" onclick="setIdeaStatus(contextMenuIdeaId, 'parked')">⏸ Mark as Parked</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" onclick="deleteIdea(contextMenuIdeaId)">✕ Delete</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ==================== STATE ====================
+        const STORAGE_KEY = 'spark_ideas';
+        const CAPTURE_KEY = 'calmTools_capture';
+        let ideas = [];
+        let currentFilter = 'all';
+        let currentTags = [];
+        let currentChecklist = [];
+        let contextMenuIdeaId = null;
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            initTheme();
+            loadData();
+            checkForNewIdeas();
+            render();
+            setupEventListeners();
+        }
+
+        // ==================== THEME ====================
+        function initTheme() {
+            const saved = localStorage.getItem('calmToolsTheme');
+            if (saved === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('themeBtn').textContent = '☀️';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('calmToolsTheme', 'light');
+                document.getElementById('themeBtn').textContent = '🌙';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('calmToolsTheme', 'dark');
+                document.getElementById('themeBtn').textContent = '☀️';
+            }
+        }
+
+        // ==================== DATA ====================
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    ideas = JSON.parse(stored);
+                } catch (e) {
+                    ideas = [];
+                }
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
+        }
+
+        function checkForNewIdeas() {
+            // Check capture inbox for ideas to import
+            const captureData = localStorage.getItem(CAPTURE_KEY);
+            if (!captureData) return;
+
+            try {
+                const captureItems = JSON.parse(captureData);
+                const ideaItems = captureItems.filter(item => item.tag === 'idea');
+
+                if (ideaItems.length > 0) {
+                    // Import ideas
+                    ideaItems.forEach(item => {
+                        const idea = {
+                            id: generateId(),
+                            title: item.text.slice(0, 100),
+                            description: item.text.length > 100 ? item.text : '',
+                            status: 'spark',
+                            tags: [],
+                            checklist: [],
+                            notes: '',
+                            createdAt: item.createdAt,
+                            updatedAt: new Date().toISOString(),
+                            fromCapture: true
+                        };
+                        ideas.unshift(idea);
+                    });
+
+                    // Remove imported ideas from capture
+                    const remaining = captureItems.filter(item => item.tag !== 'idea');
+                    localStorage.setItem(CAPTURE_KEY, JSON.stringify(remaining));
+
+                    saveData();
+                    showToast(`Imported ${ideaItems.length} idea${ideaItems.length > 1 ? 's' : ''} from Capture`);
+                }
+            } catch (e) {
+                console.error('Error checking capture:', e);
+            }
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // ==================== RENDER ====================
+        function render() {
+            renderStats();
+            renderTabs();
+            renderIdeas();
+        }
+
+        function renderStats() {
+            const total = ideas.length;
+            const spark = ideas.filter(i => i.status === 'spark').length;
+            const developing = ideas.filter(i => i.status === 'developing').length;
+            const ready = ideas.filter(i => i.status === 'ready').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statSpark').textContent = spark;
+            document.getElementById('statDeveloping').textContent = developing;
+            document.getElementById('statReady').textContent = ready;
+        }
+
+        function renderTabs() {
+            const counts = {
+                all: ideas.length,
+                spark: ideas.filter(i => i.status === 'spark').length,
+                developing: ideas.filter(i => i.status === 'developing').length,
+                ready: ideas.filter(i => i.status === 'ready').length,
+                parked: ideas.filter(i => i.status === 'parked').length
+            };
+
+            document.getElementById('countAll').textContent = counts.all;
+            document.getElementById('countSpark').textContent = counts.spark;
+            document.getElementById('countDeveloping').textContent = counts.developing;
+            document.getElementById('countReady').textContent = counts.ready;
+            document.getElementById('countParked').textContent = counts.parked;
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.status === currentFilter);
+            });
+        }
+
+        function renderIdeas() {
+            const filtered = currentFilter === 'all'
+                ? ideas
+                : ideas.filter(i => i.status === currentFilter);
+
+            const container = document.getElementById('ideasGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            container.innerHTML = filtered.map(idea => {
+                const progress = getIdeaProgress(idea);
+                const date = new Date(idea.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                return `
+                    <div class="idea-card" data-id="${idea.id}" onclick="editIdea('${idea.id}')">
+                        <div class="idea-header">
+                            <span class="idea-status ${idea.status}">${idea.status}</span>
+                            <button class="idea-menu-btn" onclick="event.stopPropagation(); showContextMenu(event, '${idea.id}')">⋮</button>
+                        </div>
+                        <div class="idea-title">${escapeHtml(idea.title)}</div>
+                        ${idea.description ? `<div class="idea-description">${escapeHtml(idea.description)}</div>` : ''}
+                        ${idea.checklist.length > 0 ? `
+                            <div class="idea-progress">
+                                <div class="idea-progress-bar">
+                                    <div class="idea-progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                                <div class="idea-progress-text">
+                                    <span>${idea.checklist.filter(c => c.done).length}/${idea.checklist.length} steps</span>
+                                    <span>${progress}%</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="idea-footer">
+                            <div class="idea-tags">
+                                ${idea.tags.slice(0, 3).map(tag => `<span class="idea-tag">${escapeHtml(tag)}</span>`).join('')}
+                                ${idea.tags.length > 3 ? `<span class="idea-tag">+${idea.tags.length - 3}</span>` : ''}
+                            </div>
+                            <span class="idea-date">${date}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getIdeaProgress(idea) {
+            if (idea.checklist.length === 0) return 0;
+            const done = idea.checklist.filter(c => c.done).length;
+            return Math.round((done / idea.checklist.length) * 100);
+        }
+
+        // ==================== FILTER ====================
+        function setFilter(status) {
+            currentFilter = status;
+            render();
+        }
+
+        // ==================== MODAL ====================
+        function openNewIdeaModal() {
+            document.getElementById('modalTitle').textContent = 'New Idea';
+            document.getElementById('ideaId').value = '';
+            document.getElementById('ideaTitle').value = '';
+            document.getElementById('ideaDescription').value = '';
+            document.getElementById('ideaStatus').value = 'spark';
+            document.getElementById('ideaNotes').value = '';
+            currentTags = [];
+            currentChecklist = [];
+            renderTagsInput();
+            renderChecklist();
+            openModal();
+            document.getElementById('ideaTitle').focus();
+        }
+
+        function editIdea(id) {
+            const idea = ideas.find(i => i.id === id);
+            if (!idea) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Idea';
+            document.getElementById('ideaId').value = id;
+            document.getElementById('ideaTitle').value = idea.title;
+            document.getElementById('ideaDescription').value = idea.description || '';
+            document.getElementById('ideaStatus').value = idea.status;
+            document.getElementById('ideaNotes').value = idea.notes || '';
+            currentTags = [...(idea.tags || [])];
+            currentChecklist = [...(idea.checklist || [])].map(c => ({...c}));
+            renderTagsInput();
+            renderChecklist();
+            openModal();
+        }
+
+        function openModal() {
+            document.getElementById('ideaModal').classList.add('visible');
+        }
+
+        function closeModal() {
+            document.getElementById('ideaModal').classList.remove('visible');
+        }
+
+        function saveIdea() {
+            const id = document.getElementById('ideaId').value;
+            const title = document.getElementById('ideaTitle').value.trim();
+            const description = document.getElementById('ideaDescription').value.trim();
+            const status = document.getElementById('ideaStatus').value;
+            const notes = document.getElementById('ideaNotes').value.trim();
+
+            if (!title) {
+                showToast('Please enter a title');
+                return;
+            }
+
+            if (id) {
+                // Update existing
+                const index = ideas.findIndex(i => i.id === id);
+                if (index !== -1) {
+                    ideas[index] = {
+                        ...ideas[index],
+                        title,
+                        description,
+                        status,
+                        tags: currentTags,
+                        checklist: currentChecklist,
+                        notes,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            } else {
+                // Create new
+                const idea = {
+                    id: generateId(),
+                    title,
+                    description,
+                    status,
+                    tags: currentTags,
+                    checklist: currentChecklist,
+                    notes,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                ideas.unshift(idea);
+            }
+
+            saveData();
+            render();
+            closeModal();
+            showToast(id ? 'Idea updated' : 'Idea created');
+        }
+
+        // ==================== TAGS ====================
+        function renderTagsInput() {
+            const wrapper = document.getElementById('tagsWrapper');
+            const input = document.getElementById('tagsInput');
+
+            // Remove existing chips
+            wrapper.querySelectorAll('.tag-chip').forEach(el => el.remove());
+
+            // Add chips before input
+            currentTags.forEach((tag, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'tag-chip';
+                chip.innerHTML = `${escapeHtml(tag)}<button class="tag-chip-remove" onclick="removeTag(${i})">×</button>`;
+                wrapper.insertBefore(chip, input);
+            });
+        }
+
+        function removeTag(index) {
+            currentTags.splice(index, 1);
+            renderTagsInput();
+        }
+
+        function setupTagsInput() {
+            const input = document.getElementById('tagsInput');
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const tag = input.value.trim().replace(',', '');
+                    if (tag && !currentTags.includes(tag)) {
+                        currentTags.push(tag);
+                        renderTagsInput();
+                    }
+                    input.value = '';
+                } else if (e.key === 'Backspace' && !input.value && currentTags.length > 0) {
+                    currentTags.pop();
+                    renderTagsInput();
+                }
+            });
+        }
+
+        // ==================== CHECKLIST ====================
+        function renderChecklist() {
+            const container = document.getElementById('checklist');
+
+            if (currentChecklist.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-faint); font-size: 0.9rem; padding: 12px; text-align: center;">No steps added yet</div>';
+                return;
+            }
+
+            container.innerHTML = currentChecklist.map((item, i) => `
+                <div class="checklist-item">
+                    <div class="checklist-checkbox ${item.done ? 'checked' : ''}" onclick="toggleChecklistItem(${i})">
+                        ${item.done ? '✓' : ''}
+                    </div>
+                    <span class="checklist-text ${item.done ? 'completed' : ''}">${escapeHtml(item.text)}</span>
+                    <button class="checklist-delete" onclick="removeChecklistItem(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function addChecklistItem() {
+            const input = document.getElementById('checklistInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            currentChecklist.push({ text, done: false });
+            renderChecklist();
+            input.value = '';
+            input.focus();
+        }
+
+        function toggleChecklistItem(index) {
+            currentChecklist[index].done = !currentChecklist[index].done;
+            renderChecklist();
+        }
+
+        function removeChecklistItem(index) {
+            currentChecklist.splice(index, 1);
+            renderChecklist();
+        }
+
+        function setupChecklistInput() {
+            document.getElementById('checklistInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addChecklistItem();
+                }
+            });
+        }
+
+        // ==================== CONTEXT MENU ====================
+        function showContextMenu(e, id) {
+            e.preventDefault();
+            contextMenuIdeaId = id;
+
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.add('visible');
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').classList.remove('visible');
+            contextMenuIdeaId = null;
+        }
+
+        function setIdeaStatus(id, status) {
+            const idea = ideas.find(i => i.id === id);
+            if (idea) {
+                idea.status = status;
+                idea.updatedAt = new Date().toISOString();
+                saveData();
+                render();
+                showToast(`Marked as ${status}`);
+            }
+            hideContextMenu();
+        }
+
+        function duplicateIdea(id) {
+            const idea = ideas.find(i => i.id === id);
+            if (idea) {
+                const duplicate = {
+                    ...idea,
+                    id: generateId(),
+                    title: idea.title + ' (copy)',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    checklist: idea.checklist.map(c => ({...c, done: false}))
+                };
+                ideas.unshift(duplicate);
+                saveData();
+                render();
+                showToast('Idea duplicated');
+            }
+            hideContextMenu();
+        }
+
+        function deleteIdea(id) {
+            if (!confirm('Delete this idea?')) {
+                hideContextMenu();
+                return;
+            }
+
+            ideas = ideas.filter(i => i.id !== id);
+            saveData();
+            render();
+            showToast('Idea deleted');
+            hideContextMenu();
+        }
+
+        // ==================== EXPORT/IMPORT ====================
+        function exportData() {
+            const data = {
+                app: 'spark',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                ideas: ideas
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spark-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Data exported');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.ideas && Array.isArray(data.ideas)) {
+                        ideas = data.ideas;
+                        saveData();
+                        render();
+                        showToast(`Imported ${ideas.length} ideas`);
+                    } else {
+                        showToast('Invalid file format');
+                    }
+                } catch (err) {
+                    showToast('Error reading file');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ==================== UTILITIES ====================
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;')
+                       .replace(/"/g, '&quot;');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2500);
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            setupTagsInput();
+            setupChecklistInput();
+
+            // Close context menu on click outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.context-menu') && !e.target.closest('.idea-menu-btn')) {
+                    hideContextMenu();
+                }
+            });
+
+            // Close modal on escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    hideContextMenu();
+                }
+            });
+
+            // Close modal on overlay click
+            document.getElementById('ideaModal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeModal();
+                }
+            });
+        }
+
+        // ==================== INIT ====================
+        init();
+    </script>
+</body>
+</html>

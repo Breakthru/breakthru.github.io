@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Anchors Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #faf8f5;
+            --surface: #ffffff;
+            --text: #2c2c2c;
+            --text-muted: #6b6b6b;
+            --accent: #c4854c;
+            --accent-light: #f5ebe0;
+            --border: #e8e4df;
+            --shadow: rgba(44, 44, 44, 0.06);
+            --danger: #e74c3c;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1a1a;
+            --surface: #252525;
+            --text: #e8e4df;
+            --text-muted: #9a9a9a;
+            --accent: #d4954c;
+            --accent-light: #3d3020;
+            --border: #3a3a3a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Onboarding Overlay */
+        .onboarding {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        .onboarding.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .onboarding-content {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .onboarding-logo {
+            width: 64px;
+            height: 64px;
+            background: var(--accent);
+            border-radius: 16px;
+            margin: 0 auto 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .onboarding-logo svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+        }
+
+        .onboarding h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.8rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .typing-container {
+            min-height: 80px;
+            margin-bottom: 40px;
+        }
+
+        .typing-text {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: var(--accent);
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .onboarding-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
+        }
+
+        .onboarding-buttons.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .onboarding-btn {
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .onboarding-btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .onboarding-btn-primary:hover {
+            background: #b37740;
+            transform: translateY(-2px);
+        }
+
+        .onboarding-btn-secondary {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .onboarding-btn-secondary:hover {
+            background: var(--surface);
+            border-color: var(--text-muted);
+        }
+
+        .onboarding-features {
+            display: flex;
+            gap: 32px;
+            margin-top: 48px;
+            opacity: 0;
+            transition: opacity 0.5s 0.3s;
+        }
+
+        .onboarding-features.visible {
+            opacity: 1;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: all 0.15s;
+        }
+
+        .header-btn:hover {
+            background: var(--bg-alt);
+            color: var(--text);
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-small {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-small svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .brand-name {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .icon-btn:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .philosophy {
+            background: var(--accent-light);
+            padding: 20px 24px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .philosophy strong {
+            color: var(--text);
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            padding-left: 48px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            background: var(--surface);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .search-results {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: var(--accent-light);
+        }
+
+        .search-result-date {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .search-result-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .search-result-text mark {
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .date-nav button {
+            background: none;
+            border: 1px solid var(--border);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .date-nav button:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .current-date {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .day-counter {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-left: 12px;
+        }
+
+        /* Unsaved indicator */
+        .unsaved-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+
+        [data-theme="dark"] .unsaved-indicator {
+            background: #3d3520;
+            border-color: #a68307;
+            color: #ffc107;
+        }
+
+        .unsaved-indicator.visible {
+            display: flex;
+        }
+
+        .unsaved-dot {
+            width: 8px;
+            height: 8px;
+            background: #ffc107;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            padding: 16px;
+            background: var(--surface);
+            border-radius: 8px;
+            margin-bottom: 32px;
+            border: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .shuffle-btn {
+            background: var(--accent-light);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .shuffle-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .question-block {
+            margin-bottom: 28px;
+        }
+
+        .question-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .question-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .question-text {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.15rem;
+            font-style: italic;
+            color: var(--text);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .category-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: var(--bg);
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .thoughts-section textarea {
+            min-height: 200px;
+        }
+
+        .quick-checks {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            background: var(--bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .check-item:hover {
+            border-color: var(--accent);
+        }
+
+        .check-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .check-item label {
+            cursor: pointer;
+        }
+
+        .habit-label {
+            cursor: pointer;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .habit-label:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .habit-edit {
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            width: 80px;
+        }
+
+        .habit-edit:focus {
+            outline: none;
+        }
+
+        .mood-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .mood-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mood-btn:hover {
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .mood-btn.selected {
+            background: var(--accent-light);
+            border-color: var(--accent);
+        }
+
+        .sleep-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .sleep-input label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .sleep-input input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            width: 160px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .sleep-input input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .gratitude-section {
+            margin-bottom: 20px;
+        }
+
+        .gratitude-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .gratitude-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .gratitude-items input {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .gratitude-items input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #b37740;
+        }
+
+        .btn-secondary {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+            border-color: var(--text-muted);
+        }
+
+        /* Weekly Review Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 900;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .review-section {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .review-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .review-section-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .mood-chart {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            height: 60px;
+            margin-bottom: 8px;
+        }
+
+        .mood-bar {
+            flex: 1;
+            background: var(--accent-light);
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 4px;
+            font-size: 1.2rem;
+            min-height: 30px;
+        }
+
+        .mood-labels {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mood-label {
+            flex: 1;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .habit-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .habit-stat {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .habit-stat-name {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .habit-stat-value {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .entries-summary {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .past-entries {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .past-entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .past-entries h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.5rem;
+        }
+
+        .entry-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .entry-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .entry-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .entry-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .entry-item-mood {
+            font-size: 1.2rem;
+        }
+
+        .entry-item-date {
+            font-weight: 500;
+        }
+
+        .entry-item-preview {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            max-width: 350px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .entry-item-delete {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 1rem;
+            transition: color 0.2s;
+            opacity: 0.5;
+        }
+
+        .entry-item-delete:hover {
+            color: var(--danger);
+            opacity: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--text);
+            color: var(--bg);
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .question-bank-toggle {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .question-bank-toggle button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .question-bank-toggle button:hover {
+            color: var(--accent);
+        }
+
+        .question-bank {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .question-bank.show {
+            display: block;
+        }
+
+        .question-bank h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .question-bank-intro {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .category-section {
+            margin-bottom: 28px;
+        }
+
+        .category-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .question-list {
+            list-style: none;
+        }
+
+        .question-list li {
+            padding: 8px 0;
+            font-size: 0.9rem;
+            color: var(--text);
+            border-bottom: 1px solid var(--bg);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .question-list li:hover {
+            color: var(--accent);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            .onboarding h1 {
+                font-size: 2rem;
+            }
+
+            .onboarding-features {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .entry-item-preview {
+                display: none;
+            }
+
+            .stats-bar {
+                gap: 16px;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .quick-checks {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .habit-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .shuffle-btn, .actions, .past-entries, .question-bank-toggle, .date-nav button, .stats-bar, .footer, .top-bar, .search-container, .onboarding, .unsaved-indicator {
+                display: none !important;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+
+            textarea {
+                border: 1px solid #ddd;
+                min-height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Onboarding Overlay -->
+    <div class="onboarding" id="onboarding">
+        <div class="onboarding-content">
+            <div class="onboarding-logo">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <h1>Daily Anchors</h1>
+            <div class="typing-container">
+                <p class="typing-text" id="typingText"></p><span class="typing-cursor" id="typingCursor"></span>
+            </div>
+            <div class="onboarding-buttons" id="onboardingButtons">
+                <button class="onboarding-btn onboarding-btn-primary" onclick="startJournal('today')">Start Today's Entry</button>
+                <button class="onboarding-btn onboarding-btn-secondary" onclick="startJournal('browse')">Browse Past Entries</button>
+            </div>
+            <div class="onboarding-features" id="onboardingFeatures">
+                <div class="feature">
+                    <div class="feature-icon">🎲</div>
+                    <div class="feature-text">120 reflection questions</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-text">Private & local</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">Track your streaks</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Review Modal -->
+    <div class="modal-overlay" id="weeklyReviewModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Weekly Review</h2>
+                <button class="modal-close" onclick="closeWeeklyReview()">×</button>
+            </div>
+            <div id="weeklyReviewContent">
+                <!-- Content inserted by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <a href="index.html" class="header-btn" title="Back to Apps">⌂</a>
+                <div class="logo-small">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <span class="brand-name">Daily Anchors</span>
+            </div>
+            <div class="top-bar-right">
+                <button class="icon-btn" onclick="showHome()" title="Home">🏠</button>
+                <button class="icon-btn" onclick="openWeeklyReview()" title="Weekly Review">📊</button>
+                <button class="icon-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode" id="darkModeBtn">🌙</button>
+            </div>
+        </div>
+
+        <div class="philosophy">
+            <strong>Before you start:</strong> You do not need to answer every question or use every field. This journal is meant to be adapted, ignored, and reshaped as your season changes. Skip what doesn't serve you. The only rule is showing up.
+        </div>
+
+        <!-- Search -->
+        <div class="search-container">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search your entries..." oninput="handleSearch(this.value)">
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="totalEntries">0</div>
+                <div class="stat-label">Entries</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="currentStreak">0</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="longestStreak">0</div>
+                <div class="stat-label">Best Streak</div>
+            </div>
+        </div>
+
+        <!-- Unsaved Indicator -->
+        <div class="unsaved-indicator" id="unsavedIndicator">
+            <span class="unsaved-dot"></span>
+            <span>You have unsaved changes</span>
+        </div>
+
+        <div class="date-nav">
+            <button onclick="changeDate(-1)">←</button>
+            <span class="current-date" id="currentDate"></span>
+            <span class="day-counter" id="dayCounter">Day 1</span>
+            <button onclick="changeDate(1)">→</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Reflections</h2>
+                <button class="shuffle-btn" onclick="shuffleQuestions()">↻ New Questions</button>
+            </div>
+
+            <div id="questionsContainer">
+                <!-- Questions will be inserted here -->
+            </div>
+        </div>
+
+        <div class="card thoughts-section">
+            <div class="card-header">
+                <h2 class="card-title">Today</h2>
+            </div>
+
+            <div class="mood-selector">
+                <button class="mood-btn" data-mood="😊" onclick="selectMood('😊')">😊</button>
+                <button class="mood-btn" data-mood="😌" onclick="selectMood('😌')">😌</button>
+                <button class="mood-btn" data-mood="😐" onclick="selectMood('😐')">😐</button>
+                <button class="mood-btn" data-mood="😔" onclick="selectMood('😔')">😔</button>
+                <button class="mood-btn" data-mood="😤" onclick="selectMood('😤')">😤</button>
+                <button class="mood-btn" data-mood="🔥" onclick="selectMood('🔥')">🔥</button>
+            </div>
+
+            <div class="sleep-input">
+                <label>Sleep:</label>
+                <input type="text" id="sleep" placeholder="e.g., 7 hours or 11pm-6am" oninput="markUnsaved()">
+            </div>
+
+            <div class="quick-checks" id="habitsContainer">
+                <!-- Habits inserted by JS -->
+            </div>
+
+            <div class="gratitude-section">
+                <div class="gratitude-label">Three things I'm grateful for:</div>
+                <div class="gratitude-items">
+                    <input type="text" id="gratitude1" placeholder="1." oninput="markUnsaved()">
+                    <input type="text" id="gratitude2" placeholder="2." oninput="markUnsaved()">
+                    <input type="text" id="gratitude3" placeholder="3." oninput="markUnsaved()">
+                </div>
+            </div>
+
+            <textarea id="thoughts" placeholder="What's on your mind today? Energy levels, intentions, wins, notes..." oninput="markUnsaved()"></textarea>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+            <button class="btn btn-secondary" onclick="clearEntry()">Clear</button>
+            <button class="btn btn-secondary" onclick="exportData()">Export All</button>
+            <button class="btn btn-secondary" onclick="window.print()">Print</button>
+        </div>
+
+        <div class="question-bank-toggle">
+            <button onclick="toggleQuestionBank()">View Full Question Bank (120 questions)</button>
+        </div>
+
+        <div class="question-bank" id="questionBank">
+            <h3>Question Bank</h3>
+            <p class="question-bank-intro">This question bank is not meant to be completed. It's meant to be returned to. Some questions will hit differently in January than in July. Let them sit. Come back. The well refills.</p>
+            <div id="questionBankContent"></div>
+        </div>
+
+        <div class="past-entries">
+            <div class="past-entries-header">
+                <h2>Past Entries</h2>
+            </div>
+            <div class="entry-list" id="entryList">
+                <div class="empty-state">No entries yet. Start writing.</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Daily Anchors Journal — Your data stays in your browser. Nothing is sent anywhere.
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Entry saved</div>
+
+    <script>
+        const questions = {
+            "Identity & Self-Understanding": [
+                "Which project in my life is secretly about healing something deeper?",
+                "What is one way my creativity has surprised me this year?",
+                "What story about myself do I hope to outgrow in the next decade?",
+                "If I had to summarize my legacy in three sentences, what would they be?",
+                "Which part of my life feels like it's in beta testing right now?",
+                "What symbol represents this season of my life, and why?",
+                "What is one belief I inherited that no longer serves me, and what would life feel like without it?",
+                "Which part of myself do I most resist showing others, and what's the cost of that?",
+                "Who do I compare myself to most, and what does that reveal about me?",
+                "Where am I most afraid of being ordinary, and what's beneath that fear?",
+                "Which part of myself scares me with its power?",
+                "What does my envy map reveal about my unexplored territory?",
+                "Where do I confuse numbness with peace?",
+                "Which version of myself am I homesick for?",
+                "What does my relationship with celebration reveal?",
+                "What would my hands create if my head weren't involved?",
+                "What does my definition of maturity actually include?",
+                "What does my definition of intelligence exclude that it shouldn't?",
+                "Which of my strengths has become a cage?",
+                "What am I grieving that I haven't named as grief?",
+                "Which part of my identity am I holding onto too tightly?",
+                "Which part of my personality is a costume I've worn too long?",
+                "Where do I perform competence to hide vulnerability?"
+            ],
+            "Fear & Vulnerability": [
+                "Where am I most afraid of wasting my potential, and why?",
+                "Which fear runs my life from behind the scenes?",
+                "Which fear is so familiar it feels like part of my personality?",
+                "What fear masquerades as practicality in my life?",
+                "What have I been calling ambition that's actually fear?",
+                "If I trusted myself completely, what would change tomorrow?",
+                "What would I risk if I truly believed in my resilience?",
+                "What would I admit if I knew it wouldn't be used against me?",
+                "What question am I most afraid someone will ask me?",
+                "What would I do differently if I knew I'd be forgiven?"
+            ],
+            "Growth & Change": [
+                "Which failure from the past secretly saved me, even if it didn't feel like it at the time?",
+                "Which memory from childhood still shapes how I chase or avoid risk?",
+                "What's one future possibility that excites me even if it scares me?",
+                "What do I do when I want to avoid discomfort—and what would happen if I stayed with it?",
+                "What am I learning about myself through the way I respond to boredom?",
+                "What assumption about myself am I most ready to challenge?",
+                "Which wound has become my compass?",
+                "Which wound am I ready to thank for its teachings?",
+                "What does my resistance tell me about what I actually need?",
+                "Where am I waiting for perfect conditions that will never come?",
+                "What does my resistance to change protect?",
+                "What gift have I received that I haven't fully opened yet?",
+                "Which relationship taught me the most about my own capacity?"
+            ],
+            "Values & Priorities": [
+                "If I had to cut 80% of my to-do list, what would remain—and why?",
+                "If I stripped away productivity as a metric, how would I measure a good life?",
+                "Where in my life am I still optimizing for status instead of joy?",
+                "What ritual grounds me when everything else feels unstable?",
+                "What does enough actually look like for me?",
+                "If I could only build one thing this year, what would I choose—and why?",
+                "If I could give my attention to only three things this month, what would they be?",
+                "What does my ideal day look like, hour by hour?",
+                "What does my dream life actually require of me?"
+            ],
+            "Time & Presence": [
+                "If tomorrow were exactly like today, repeated forever, what part would I treasure most?",
+                "If today were the prologue of a memoir, what would the first sentence be?",
+                "If today was a poem, what image would capture its essence?",
+                "What would I do today if this were the most important day of my life?",
+                "What does my relationship with the present moment actually look like?",
+                "Where am I living in preparation instead of presence?",
+                "Where am I creating scarcity in the midst of abundance?",
+                "Where am I confusing motion for meaning?",
+                "Where am I confusing being busy with being important?",
+                "Where do I confuse movement with progress?"
+            ],
+            "Relationships & Connection": [
+                "What relationship in my life currently needs more listening and less fixing?",
+                "What lesson have my children (or loved ones) taught me that no book could?",
+                "How do I want my kids (or future self) to describe me when they remember these years?",
+                "When was the last time I truly felt seen—and what made that moment possible?",
+                "What small act of love or presence do I tend to overlook in daily life?",
+                "Where am I over-functioning in relationships?",
+                "Where do I confuse caretaking with connection?",
+                "What pattern keeps showing up in my relationships, and what is it teaching me?",
+                "What does repair look like in my most important relationship?"
+            ],
+            "Body & Rest": [
+                "Where in my life do I feel most at home in my body, and where do I feel estranged?",
+                "What wisdom has come from my body that my mind initially rejected?",
+                "What does rest look like when I'm not just recovering from exhaustion?",
+                "Where do I confuse distraction with rest?",
+                "What part of my daily routine is actually a form of avoidance?",
+                "What would I write in a letter to my body?",
+                "If my attention were currency, where am I overspending?"
+            ],
+            "Legacy & Future Self": [
+                "If I met my 80-year-old self, what do I hope they'd thank me for?",
+                "What would I write in a letter to my younger self's wounds?",
+                "If I could ask my younger self one question, what would it be?",
+                "Which ancestor would understand this phase of my life?",
+                "Which ancestor's life would I want to understand more deeply?",
+                "If my life were a book, what chapter am I actually in versus what chapter I think I'm in?",
+                "If my life had a thesis statement right now, what would it be?"
+            ],
+            "Work & Purpose": [
+                "Where am I being invited to begin again?",
+                "What would I create if I weren't afraid of being misunderstood?",
+                "Which boundary have I been hesitant to set, and what's at stake?",
+                "What story about scarcity still drives my decisions?",
+                "Where am I being loyal to pain?",
+                "Where am I outsourcing my sense of worth?",
+                "What does play look like for me now, as an adult?",
+                "Where am I living small to make others comfortable?",
+                "What boundary would change everything if I enforced it?",
+                "Which aspect of myself am I rationing?",
+                "What am I tolerating that's slowly draining me?",
+                "Which sacrifice am I making that no one asked me to make?"
+            ],
+            "Truth & Authenticity": [
+                "What truth have I been circling around but not yet naming?",
+                "What would my authentic voice sound like without the filter?",
+                "Which truth am I avoiding by staying confused?",
+                "What do I know to be true that I act as if I don't believe?",
+                "What do I pretend not to know about myself?",
+                "Where do I feel most like an imposter, and why?",
+                "What am I ready to stop explaining or defending?",
+                "Where do I confuse suffering with virtue?"
+            ],
+            "Deep Reflection": [
+                "What does my clutter represent emotionally?",
+                "Where am I confusing achievement with fulfillment?",
+                "What does my loneliness actually hunger for?",
+                "Which future am I planning for that I don't actually want?",
+                "What does my anger want me to pay attention to?",
+                "What does my procrastination protect me from?",
+                "Where am I trying to think my way out of something I need to feel?",
+                "What would I do if I stopped trying to prove something?",
+                "Where do I seek complexity to avoid simple truths?",
+                "What question would unlock everything for me right now?",
+                "What would happen if I let myself want what I want?",
+                "Which role am I playing that I didn't audition for?",
+                "Where am I investing energy into something that's already dead?",
+                "Which memory do I return to when I need courage?",
+                "What do I need to forgive myself for?",
+                "What does my spiritual practice actually consist of?",
+                "Which teacher in my life did I underappreciate at the time?",
+                "Where do I seek validation in places that can't provide it?",
+                "What does solitude reveal about me that company conceals?",
+                "Which of my values is currently being tested most?"
+            ]
+        };
+
+        const DEFAULT_HABITS = ['Exercise', 'Meditation', 'Reading', 'Hydrated'];
+        
+        let currentDate = new Date();
+        let currentQuestions = [];
+        let selectedMood = null;
+        let hasUnsavedChanges = false;
+        let lastSavedState = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initHabits();
+            checkOnboarding();
+            loadDate();
+            renderEntryList();
+            setupUnsavedWarning();
+        });
+
+        // Onboarding
+        function checkOnboarding() {
+            const hasSeenOnboarding = localStorage.getItem('dailyAnchorsOnboarded');
+            if (hasSeenOnboarding) {
+                document.getElementById('onboarding').classList.add('hidden');
+            } else {
+                runTypingAnimation();
+            }
+        }
+
+        function runTypingAnimation() {
+            const messages = [
+                "Three questions. One reflection. Every day.",
+                "This is your private space to think clearly.",
+                "No accounts. No cloud. Just you and your thoughts."
+            ];
+            
+            const typingText = document.getElementById('typingText');
+            const cursor = document.getElementById('typingCursor');
+            let messageIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            let pauseEnd = 0;
+
+            function type() {
+                const currentMessage = messages[messageIndex];
+                
+                if (Date.now() < pauseEnd) {
+                    setTimeout(type, 50);
+                    return;
+                }
+
+                if (!isDeleting) {
+                    typingText.textContent = currentMessage.substring(0, charIndex + 1);
+                    charIndex++;
+
+                    if (charIndex === currentMessage.length) {
+                        pauseEnd = Date.now() + 2000;
+                        isDeleting = true;
+                    }
+                } else {
+                    typingText.textContent = currentMessage.substring(0, charIndex - 1);
+                    charIndex--;
+
+                    if (charIndex === 0) {
+                        isDeleting = false;
+                        messageIndex = (messageIndex + 1) % messages.length;
+                        
+                        if (messageIndex === 0) {
+                            // Show buttons after cycling through once
+                            document.getElementById('onboardingButtons').classList.add('visible');
+                            document.getElementById('onboardingFeatures').classList.add('visible');
+                        }
+                    }
+                }
+
+                const speed = isDeleting ? 30 : 50;
+                setTimeout(type, speed);
+            }
+
+            setTimeout(type, 500);
+            
+            // Show buttons after 8 seconds regardless
+            setTimeout(() => {
+                document.getElementById('onboardingButtons').classList.add('visible');
+                document.getElementById('onboardingFeatures').classList.add('visible');
+            }, 8000);
+        }
+
+        function startJournal(destination) {
+            localStorage.setItem('dailyAnchorsOnboarded', 'true');
+            document.getElementById('onboarding').classList.add('hidden');
+            
+            if (destination === 'browse') {
+                setTimeout(() => {
+                    document.querySelector('.past-entries').scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+            }
+        }
+
+        function showHome() {
+            if (hasUnsavedChanges) {
+                if (!confirm('You have unsaved changes. Continue without saving?')) {
+                    return;
+                }
+                clearUnsaved();
+            }
+            const onboarding = document.getElementById('onboarding');
+            onboarding.classList.remove('hidden');
+            // Show buttons immediately for returning users
+            document.getElementById('onboardingButtons').classList.add('visible');
+            document.getElementById('onboardingFeatures').classList.add('visible');
+            // Reset typing text for fresh animation
+            document.getElementById('typingText').textContent = 'Welcome back.';
+        }
+
+        // Dark Mode
+        function initTheme() {
+            const savedTheme = localStorage.getItem('dailyAnchorsTheme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
+
+        function toggleDarkMode() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('dailyAnchorsTheme', next);
+            updateThemeButton(next);
+        }
+
+        function updateThemeButton(theme) {
+            document.getElementById('darkModeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Custom Habits
+        function initHabits() {
+            const savedHabits = JSON.parse(localStorage.getItem('dailyAnchorsHabits')) || DEFAULT_HABITS;
+            renderHabits(savedHabits);
+        }
+
+        function renderHabits(habits) {
+            const container = document.getElementById('habitsContainer');
+            container.innerHTML = habits.map((habit, i) => `
+                <div class="check-item">
+                    <input type="checkbox" id="habit${i}" onchange="markUnsaved()">
+                    <label class="habit-label" onclick="editHabit(${i}, event)" title="Click to rename">${habit}</label>
+                </div>
+            `).join('');
+        }
+
+        function editHabit(index, event) {
+            event.preventDefault();
+            const habits = JSON.parse(localStorage.getItem('dailyAnchorsHabits')) || DEFAULT_HABITS;
+            const label = event.target;
+            const currentValue = habits[index];
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'habit-edit';
+            input.value = currentValue;
+            
+            input.onblur = () => saveHabitEdit(index, input.value, label);
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') input.blur();
+                if (e.key === 'Escape') {
+                    input.value = currentValue;
+                    input.blur();
+                }
+            };
+            
+            label.replaceWith(input);
+            input.focus();
+            input.select();
+        }
+
+        function saveHabitEdit(index, newValue, originalLabel) {
+            const habits = JSON.parse(localStorage.getItem('dailyAnchorsHabits')) || DEFAULT_HABITS;
+            habits[index] = newValue.trim() || DEFAULT_HABITS[index];
+            localStorage.setItem('dailyAnchorsHabits', JSON.stringify(habits));
+            renderHabits(habits);
+            showToast('Habit renamed');
+        }
+
+        function getHabits() {
+            return JSON.parse(localStorage.getItem('dailyAnchorsHabits')) || DEFAULT_HABITS;
+        }
+
+        // Unsaved Changes Protection
+        function setupUnsavedWarning() {
+            window.addEventListener('beforeunload', (e) => {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        }
+
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            document.getElementById('unsavedIndicator').classList.add('visible');
+        }
+
+        function clearUnsaved() {
+            hasUnsavedChanges = false;
+            document.getElementById('unsavedIndicator').classList.remove('visible');
+        }
+
+        // Search
+        function handleSearch(query) {
+            const results = document.getElementById('searchResults');
+            
+            if (query.length < 2) {
+                results.classList.remove('active');
+                return;
+            }
+
+            const entries = getEntries();
+            const matches = [];
+            const lowerQuery = query.toLowerCase();
+
+            for (const [dateKey, entry] of Object.entries(entries)) {
+                const searchableText = [
+                    ...(entry.answers || []),
+                    entry.thoughts || '',
+                    ...(entry.gratitude || [])
+                ].join(' ').toLowerCase();
+
+                if (searchableText.includes(lowerQuery)) {
+                    const matchIndex = searchableText.indexOf(lowerQuery);
+                    const start = Math.max(0, matchIndex - 30);
+                    const end = Math.min(searchableText.length, matchIndex + query.length + 30);
+                    let snippet = searchableText.substring(start, end);
+                    
+                    if (start > 0) snippet = '...' + snippet;
+                    if (end < searchableText.length) snippet = snippet + '...';
+                    
+                    // Highlight match
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    snippet = snippet.replace(regex, '<mark>$1</mark>');
+                    
+                    matches.push({
+                        date: dateKey,
+                        snippet: snippet
+                    });
+                }
+            }
+
+            if (matches.length === 0) {
+                results.innerHTML = '<div class="search-result-item"><div class="search-result-text">No entries found</div></div>';
+            } else {
+                results.innerHTML = matches.slice(0, 10).map(m => `
+                    <div class="search-result-item" onclick="loadEntryByDate('${m.date}'); clearSearch();">
+                        <div class="search-result-date">${new Date(m.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                        <div class="search-result-text">${m.snippet}</div>
+                    </div>
+                `).join('');
+            }
+            
+            results.classList.add('active');
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').classList.remove('active');
+        }
+
+        // Weekly Review
+        function openWeeklyReview() {
+            const entries = getEntries();
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            const weekEntries = Object.values(entries).filter(e => {
+                const entryDate = new Date(e.date + 'T12:00:00');
+                return entryDate >= weekAgo && entryDate <= today;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const habits = getHabits();
+            const habitCounts = habits.map(() => 0);
+            const moods = [];
+            const moodDays = [];
+
+            weekEntries.forEach(entry => {
+                if (entry.mood) {
+                    moods.push(entry.mood);
+                    moodDays.push(new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }));
+                }
+                if (entry.habits) {
+                    habits.forEach((_, i) => {
+                        if (entry.habits[i]) habitCounts[i]++;
+                    });
+                }
+            });
+
+            let content = '';
+
+            // Mood Chart
+            if (moods.length > 0) {
+                content += `
+                    <div class="review-section">
+                        <div class="review-section-title">Mood This Week</div>
+                        <div class="mood-chart">
+                            ${moods.map(m => `<div class="mood-bar">${m}</div>`).join('')}
+                        </div>
+                        <div class="mood-labels">
+                            ${moodDays.map(d => `<div class="mood-label">${d}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Habit Stats
+            content += `
+                <div class="review-section">
+                    <div class="review-section-title">Habits Completed</div>
+                    <div class="habit-stats">
+                        ${habits.map((h, i) => `
+                            <div class="habit-stat">
+                                <span class="habit-stat-name">${h}</span>
+                                <span class="habit-stat-value">${habitCounts[i]}/${weekEntries.length}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Summary
+            content += `
+                <div class="review-section">
+                    <div class="review-section-title">Week Summary</div>
+                    <div class="entries-summary">
+                        You wrote <strong>${weekEntries.length}</strong> ${weekEntries.length === 1 ? 'entry' : 'entries'} this week.
+                        ${weekEntries.length === 7 ? '🎉 Perfect week!' : weekEntries.length >= 5 ? '💪 Strong consistency!' : weekEntries.length >= 3 ? 'Keep building the habit.' : 'Every entry counts.'}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('weeklyReviewContent').innerHTML = content;
+            document.getElementById('weeklyReviewModal').classList.add('active');
+        }
+
+        function closeWeeklyReview() {
+            document.getElementById('weeklyReviewModal').classList.remove('active');
+        }
+
+        // Core Journal Functions
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function getFirstEntryDate() {
+            const entries = getEntries();
+            const dates = Object.keys(entries).sort();
+            return dates.length > 0 ? new Date(dates[0] + 'T12:00:00') : new Date();
+        }
+
+        function getDayNumber(date) {
+            const firstDate = getFirstEntryDate();
+            const diffTime = date - firstDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return Math.max(1, diffDays + 1);
+        }
+
+        function changeDate(delta) {
+            if (hasUnsavedChanges) {
+                if (!confirm('You have unsaved changes. Continue without saving?')) {
+                    return;
+                }
+            }
+            currentDate = new Date(currentDate.getTime() + delta * 24 * 60 * 60 * 1000);
+            loadDate();
+            clearUnsaved();
+        }
+
+        function loadDate() {
+            document.getElementById('currentDate').textContent = formatDate(currentDate);
+            document.getElementById('dayCounter').textContent = `Day ${getDayNumber(currentDate)}`;
+            
+            const entry = getEntry(getDateKey(currentDate));
+            if (entry) {
+                loadEntry(entry);
+            } else {
+                clearEntry(false);
+                shuffleQuestions();
+            }
+            updateStats();
+            clearUnsaved();
+        }
+
+        function selectMood(mood) {
+            selectedMood = mood;
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.mood === mood);
+            });
+            markUnsaved();
+        }
+
+        function getRandomQuestions(count = 3) {
+            const allQuestions = [];
+            for (const [category, qs] of Object.entries(questions)) {
+                for (const q of qs) {
+                    allQuestions.push({ question: q, category });
+                }
+            }
+            
+            const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
+        }
+
+        function shuffleQuestions() {
+            currentQuestions = getRandomQuestions(3);
+            renderQuestions();
+            markUnsaved();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = currentQuestions.map((q, i) => `
+                <div class="question-block">
+                    <div class="question-label">Question ${i + 1}</div>
+                    <div class="category-tag">${q.category}</div>
+                    <div class="question-text">${q.question}</div>
+                    <textarea id="answer${i + 1}" placeholder="Your reflection..." oninput="markUnsaved()"></textarea>
+                </div>
+            `).join('');
+        }
+
+        function getEntries() {
+            return JSON.parse(localStorage.getItem('dailyAnchorsJournal') || '{}');
+        }
+
+        function getEntry(dateKey) {
+            return getEntries()[dateKey];
+        }
+
+        function calculateStreaks() {
+            const entries = getEntries();
+            const dates = Object.keys(entries).sort().reverse();
+            
+            if (dates.length === 0) return { current: 0, longest: 0 };
+            
+            let currentStreak = 0;
+            let longestStreak = 0;
+            let tempStreak = 1;
+            
+            const today = getDateKey(new Date());
+            const yesterday = getDateKey(new Date(Date.now() - 86400000));
+            
+            if (dates[0] === today || dates[0] === yesterday) {
+                currentStreak = 1;
+                for (let i = 1; i < dates.length; i++) {
+                    const curr = new Date(dates[i-1] + 'T12:00:00');
+                    const prev = new Date(dates[i] + 'T12:00:00');
+                    const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+                    
+                    if (diffDays === 1) {
+                        currentStreak++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            tempStreak = 1;
+            for (let i = 1; i < dates.length; i++) {
+                const curr = new Date(dates[i-1] + 'T12:00:00');
+                const prev = new Date(dates[i] + 'T12:00:00');
+                const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+                
+                if (diffDays === 1) {
+                    tempStreak++;
+                } else {
+                    longestStreak = Math.max(longestStreak, tempStreak);
+                    tempStreak = 1;
+                }
+            }
+            longestStreak = Math.max(longestStreak, tempStreak, currentStreak);
+            
+            return { current: currentStreak, longest: longestStreak };
+        }
+
+        function updateStats() {
+            const entries = getEntries();
+            const totalEntries = Object.keys(entries).length;
+            const streaks = calculateStreaks();
+            
+            document.getElementById('totalEntries').textContent = totalEntries;
+            document.getElementById('currentStreak').textContent = streaks.current;
+            document.getElementById('longestStreak').textContent = streaks.longest;
+        }
+
+        function saveEntry() {
+            const entries = getEntries();
+            const dateKey = getDateKey(currentDate);
+            const habits = getHabits();
+            
+            const habitValues = {};
+            habits.forEach((_, i) => {
+                habitValues[i] = document.getElementById(`habit${i}`)?.checked || false;
+            });
+            
+            entries[dateKey] = {
+                date: dateKey,
+                questions: currentQuestions,
+                answers: [
+                    document.getElementById('answer1')?.value || '',
+                    document.getElementById('answer2')?.value || '',
+                    document.getElementById('answer3')?.value || ''
+                ],
+                mood: selectedMood,
+                sleep: document.getElementById('sleep').value,
+                habits: habitValues,
+                gratitude: [
+                    document.getElementById('gratitude1').value,
+                    document.getElementById('gratitude2').value,
+                    document.getElementById('gratitude3').value
+                ],
+                thoughts: document.getElementById('thoughts').value
+            };
+            
+            localStorage.setItem('dailyAnchorsJournal', JSON.stringify(entries));
+            showToast('Entry saved');
+            renderEntryList();
+            updateStats();
+            clearUnsaved();
+        }
+
+        function loadEntry(entry) {
+            currentQuestions = entry.questions || getRandomQuestions(3);
+            renderQuestions();
+            
+            if (entry.answers) {
+                entry.answers.forEach((a, i) => {
+                    const el = document.getElementById(`answer${i + 1}`);
+                    if (el) el.value = a;
+                });
+            }
+            
+            if (entry.mood) {
+                selectMood(entry.mood);
+            } else {
+                selectedMood = null;
+                document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+            }
+            
+            document.getElementById('sleep').value = entry.sleep || '';
+            
+            const habits = getHabits();
+            if (entry.habits) {
+                habits.forEach((_, i) => {
+                    const checkbox = document.getElementById(`habit${i}`);
+                    if (checkbox) checkbox.checked = entry.habits[i] || false;
+                });
+            } else {
+                habits.forEach((_, i) => {
+                    const checkbox = document.getElementById(`habit${i}`);
+                    if (checkbox) checkbox.checked = false;
+                });
+            }
+            
+            if (entry.gratitude) {
+                document.getElementById('gratitude1').value = entry.gratitude[0] || '';
+                document.getElementById('gratitude2').value = entry.gratitude[1] || '';
+                document.getElementById('gratitude3').value = entry.gratitude[2] || '';
+            }
+            
+            document.getElementById('thoughts').value = entry.thoughts || '';
+        }
+
+        function clearEntry(confirm = true) {
+            if (confirm && !window.confirm('Clear this entry?')) return;
+            
+            document.querySelectorAll('textarea').forEach(t => t.value = '');
+            document.querySelectorAll('.gratitude-items input').forEach(i => i.value = '');
+            document.getElementById('sleep').value = '';
+            document.querySelectorAll('.check-item input').forEach(c => c.checked = false);
+            selectedMood = null;
+            document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+            clearUnsaved();
+        }
+
+        function deleteEntry(dateKey) {
+            if (!window.confirm('Delete this entry?')) return;
+            
+            const entries = getEntries();
+            delete entries[dateKey];
+            localStorage.setItem('dailyAnchorsJournal', JSON.stringify(entries));
+            renderEntryList();
+            updateStats();
+            
+            if (dateKey === getDateKey(currentDate)) {
+                clearEntry(false);
+                shuffleQuestions();
+            }
+        }
+
+        function renderEntryList() {
+            const entries = getEntries();
+            const list = document.getElementById('entryList');
+            const sorted = Object.values(entries).sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (sorted.length === 0) {
+                list.innerHTML = '<div class="empty-state">No entries yet. Start writing.</div>';
+                return;
+            }
+            
+            list.innerHTML = sorted.slice(0, 30).map(entry => {
+                const preview = entry.answers?.[0]?.slice(0, 50) || entry.thoughts?.slice(0, 50) || '';
+                const mood = entry.mood || '';
+                return `
+                    <div class="entry-item" onclick="loadEntryByDate('${entry.date}')">
+                        <div class="entry-item-left">
+                            <span class="entry-item-mood">${mood}</span>
+                            <span class="entry-item-date">${new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                        <span class="entry-item-preview">${preview}${preview.length >= 50 ? '...' : ''}</span>
+                        <button class="entry-item-delete" onclick="event.stopPropagation(); deleteEntry('${entry.date}')">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadEntryByDate(dateKey) {
+            if (hasUnsavedChanges) {
+                if (!confirm('You have unsaved changes. Continue without saving?')) {
+                    return;
+                }
+            }
+            currentDate = new Date(dateKey + 'T12:00:00');
+            loadDate();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function exportData() {
+            const entries = getEntries();
+            const dataStr = JSON.stringify(entries, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `daily-anchors-export-${getDateKey(new Date())}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Data exported');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function toggleQuestionBank() {
+            const bank = document.getElementById('questionBank');
+            bank.classList.toggle('show');
+            
+            if (bank.classList.contains('show') && !bank.dataset.rendered) {
+                renderQuestionBank();
+                bank.dataset.rendered = 'true';
+            }
+        }
+
+        function renderQuestionBank() {
+            const content = document.getElementById('questionBankContent');
+            content.innerHTML = Object.entries(questions).map(([category, qs]) => `
+                <div class="category-section">
+                    <div class="category-title">${category}</div>
+                    <ul class="question-list">
+                        ${qs.map(q => `<li onclick="useQuestion('${q.replace(/'/g, "\\'")}')">${q}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+
+        function useQuestion(question) {
+            const category = Object.entries(questions).find(([_, qs]) => qs.includes(question))?.[0] || 'Deep Reflection';
+            currentQuestions[0] = { question, category };
+            renderQuestions();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('Question loaded');
+        }
+
+        // Close modal on outside click
+        document.getElementById('weeklyReviewModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeWeeklyReview();
+        });
+
+        // Close search on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('searchResults').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

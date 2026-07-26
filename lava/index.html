@@ -1,120 +1,663 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
-        button {
-          width: 10em;
-          height: 4em;
-        }
-        .slidecontainer {
-  width: 80%; /* Width of the outside container */
-}
-
-/* The slider itself */
-.slider {
-  -webkit-appearance: none;  /* Override default CSS styles */
-  appearance: none;
-  width: 100%; /* Full-width */
-  height: 25px; /* Specified height */
-  background: #d3d3d3; /* Grey background */
-  outline: none; /* Remove outline */
-  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
-  transition: opacity .2s;
-}
-
-/* Mouse-over effects */
-.slider:hover {
-  opacity: 1; /* Fully shown on mouse-over */
-}
-
-/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none; /* Override default look */
-  appearance: none;
-  width: 25px; /* Set a specific slider handle width */
-  height: 25px; /* Slider handle height */
-  background: #04AA6D; /* Green background */
-  cursor: pointer; /* Cursor on hover */
-}
-
-.slider::-moz-range-thumb {
-  width: 25px; /* Set a specific slider handle width */
-  height: 25px; /* Slider handle height */
-  background: #04AA6D; /* Green background */
-  cursor: pointer; /* Cursor on hover */
-}
-    </style>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Lava water game</title>
-    <script>
-    var status = "LAVA";
-    var timeout_id = -1;
-    var timeout_ms = 2000;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Floor is Lava! - Interactive Audio Game</title>
+    <meta name="description" content="Active physical audio game for kids and families. Automatically alternates between Lava and Water with randomized timers.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
 
-    function timer() {
-      var seconds_left = parseInt(document.getElementById('seconds').innerHTML);
-      seconds_left -= 1;
-      document.getElementById('seconds').innerHTML = seconds_left;
-      if (seconds_left > 0) {
-        window.setTimeout(timer, 1000);
-      }
-    }
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --lava-primary: #ef4444;
+            --lava-gradient: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #f97316 100%);
+            --water-primary: #0284c7;
+            --water-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%);
+            --card-idle: rgba(22, 30, 49, 0.75);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius-xl: 28px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+        }
 
-    function slider() {
-      var slider = document.getElementById("myRange");
-      timeout_ms = 1000 * slider.value;
-      document.getElementById('seconds').innerHTML = Math.round(timeout_ms / 1000.0);
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    function toggle() {
-      floor = document.getElementById('floor');
-      floor.innerHTML=status;
-      if (status=="LAVA") {
-          floor.style.backgroundColor = 'red';
-          floor.style.color = 'black';
-      } else {
-          floor.style.backgroundColor = 'blue';
-          floor.style.color = 'white';
-      }
-      audio = document.getElementById(status.toLowerCase());
-      audio.play();
-      status = (status == "LAVA") ? "WATER" : "LAVA";
-      timeout_id = window.setTimeout(toggle, timeout_ms);
-      slider();
-      timer();
-    }
-    function start() {
-        slider();
-        toggle();
-    }
-    function stop() {
-      window.clearTimeout(timeout_id);
-      document.getElementById('floor').innerHTML="";
-    }
-    </script>
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 16px;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Ambient Dynamic Background Glow */
+        .bg-ambient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            transition: background 0.8s ease;
+            opacity: 0.35;
+            filter: blur(80px);
+        }
+
+        .bg-ambient.lava-mode {
+            background: radial-gradient(circle at center, #ef4444 0%, #b91c1c 60%, transparent 100%);
+        }
+
+        .bg-ambient.water-mode {
+            background: radial-gradient(circle at center, #06b6d4 0%, #1d4ed8 60%, transparent 100%);
+        }
+
+        /* Header Navigation */
+        header {
+            width: 100%;
+            max-width: 580px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+            margin-bottom: 16px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+            backdrop-filter: blur(12px);
+            transition: all 0.25s ease;
+        }
+
+        .back-btn:hover, .back-btn:active {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-2px);
+        }
+
+        .game-brand {
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #f97316, #ef4444, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Main Container */
+        main {
+            width: 100%;
+            max-width: 580px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        /* Main Display Screen Card */
+        .state-card {
+            background: var(--card-idle);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-xl);
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .state-card.lava-active {
+            background: var(--lava-gradient);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 50px rgba(239, 68, 68, 0.5);
+            animation: pulse-lava 2s infinite ease-in-out alternate;
+        }
+
+        .state-card.water-active {
+            background: var(--water-gradient);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 50px rgba(14, 165, 233, 0.5);
+            animation: pulse-water 2s infinite ease-in-out alternate;
+        }
+
+        @keyframes pulse-lava {
+            0% { transform: scale(1); box-shadow: 0 20px 50px rgba(239, 68, 68, 0.4); }
+            100% { transform: scale(1.02); box-shadow: 0 25px 60px rgba(249, 115, 22, 0.7); }
+        }
+
+        @keyframes pulse-water {
+            0% { transform: scale(1); box-shadow: 0 20px 50px rgba(14, 165, 233, 0.4); }
+            100% { transform: scale(1.02); box-shadow: 0 25px 60px rgba(6, 182, 212, 0.7); }
+        }
+
+        .state-icon {
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.3));
+            transition: transform 0.4s ease;
+        }
+
+        .state-card:hover .state-icon {
+            transform: scale(1.1);
+        }
+
+        .state-title {
+            font-size: 2.1rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .state-subtitle {
+            font-size: 1.05rem;
+            font-weight: 600;
+            opacity: 0.9;
+            max-width: 400px;
+            line-height: 1.4;
+        }
+
+        /* Countdown Badge */
+        .countdown-badge {
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+        }
+
+        .countdown-badge span.seconds-number {
+            color: #fbbf24;
+            font-size: 1.2rem;
+        }
+
+        /* Settings Card */
+        .settings-card {
+            background: var(--card-idle);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .settings-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .slider-value-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+
+        /* Mobile Touch Slider */
+        .slider-container {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .slider-input {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: background 0.2s ease;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.5);
+            border: 3px solid #ffffff;
+            transition: transform 0.15s ease;
+        }
+
+        .slider-input::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+
+        .slider-input::-moz-range-thumb {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.5);
+            border: 3px solid #ffffff;
+        }
+
+        /* Preset Buttons */
+        .presets-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            padding: 8px 0;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover, .preset-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        /* Large Action Controls (Start / Stop) */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px 24px;
+            border-radius: var(--radius-lg);
+            font-size: 1.15rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-start:hover, .btn-start:active {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.55);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-stop:hover, .btn-stop:active {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.55);
+        }
+
+        /* Hidden Audio Players */
+        .audio-container {
+            display: none;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 480px) {
+            body {
+                padding: 14px 12px;
+            }
+            .state-card {
+                padding: 32px 18px;
+                min-height: 250px;
+            }
+            .state-icon {
+                font-size: 4rem;
+            }
+            .state-title {
+                font-size: 1.75rem;
+            }
+            .action-btn {
+                padding: 16px 18px;
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="slidecontainer">
-  <input type="range" min="1" max="10" value="3" class="slider" id="myRange">
-</div>
-<br>
-<div id="seconds"></div>
-<br>
-<button onclick="start();">play</button><br>
-<button onclick="stop();">stop</button><br>
-<div style="width:10em; height:1em; border:1px solid black;">
-    <center><div id="floor"></div></center>
-</div>
-<br>
-<audio id="lava" controls preload="none" style="width:480px;">
- <source src="lava.m4a" type="audio/mp4" />
-</audio>
-<br>
-<audio id="water" controls preload="none" style="width:480px;">
- <source src="water.m4a" type="audio/mp4" />
-</audio>
 
+    <!-- Ambient Background Lighting -->
+    <div class="bg-ambient" id="bg-ambient"></div>
+
+    <!-- Header Navigation -->
+    <header>
+        <a href="../index.html" class="back-btn" title="Return to Main Portal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span>Main Directory</span>
+        </a>
+        <div class="game-brand">VOLCANO AUDIO GAME</div>
+    </header>
+
+    <!-- Main Game Section -->
+    <main>
+
+        <!-- Dynamic State Display Screen Card -->
+        <div class="state-card" id="state-card">
+            <div class="state-icon" id="state-icon">🎮</div>
+            <div class="state-title" id="state-title">READY TO PLAY?</div>
+            <div class="state-subtitle" id="state-subtitle">
+                Set your maximum switch duration below and tap Start Game!
+            </div>
+            
+            <div class="countdown-badge" id="countdown-badge" style="display: none;">
+                <span>⏱️ Next Switch:</span>
+                <span class="seconds-number" id="countdown-seconds">0s</span>
+                <span style="color: #64748b; font-size: 0.8rem;" id="max-info">(Max: 10s)</span>
+            </div>
+        </div>
+
+        <!-- Timer Interval Controls -->
+        <div class="settings-card">
+            <div class="settings-header">
+                <span class="settings-title">Max Switch Interval</span>
+                <span class="slider-value-display" id="slider-val-display">Max 10s</span>
+            </div>
+
+            <div class="slider-container">
+                <input 
+                    type="range" 
+                    min="3" 
+                    max="30" 
+                    value="10" 
+                    class="slider-input" 
+                    id="maxTimeRange"
+                    oninput="updateSliderDisplay()"
+                >
+            </div>
+
+            <div class="presets-row">
+                <button class="preset-btn" onclick="setPreset(5)">5s Max</button>
+                <button class="preset-btn active" id="preset-10" onclick="setPreset(10)">10s Max</button>
+                <button class="preset-btn" onclick="setPreset(15)">15s Max</button>
+                <button class="preset-btn" onclick="setPreset(20)">20s Max</button>
+            </div>
+        </div>
+
+        <!-- Big Touch Control Buttons -->
+        <div class="controls-grid">
+            <button class="action-btn btn-start" id="btn-start" onclick="startGame()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Start Game</span>
+            </button>
+            
+            <button class="action-btn btn-stop" id="btn-stop" onclick="stopGame()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+                <span>Stop</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Hidden Audio Preload -->
+    <div class="audio-container">
+        <audio id="audio-lava" preload="auto">
+            <source src="lava.m4a" type="audio/mp4">
+        </audio>
+        <audio id="audio-water" preload="auto">
+            <source src="water.m4a" type="audio/mp4">
+        </audio>
+    </div>
+
+    <!-- Game Logic Script -->
+    <script>
+        // State Variables
+        let isRunning = false;
+        let currentStatus = 'WATER'; // Start by switching to LAVA first on start
+        let nextSwitchTimeoutId = null;
+        let countdownIntervalId = null;
+        let remainingSeconds = 0;
+        let currentMaxSec = 10;
+
+        // DOM Elements
+        const stateCard = document.getElementById('state-card');
+        const stateIcon = document.getElementById('state-icon');
+        const stateTitle = document.getElementById('state-title');
+        const stateSubtitle = document.getElementById('state-subtitle');
+        const countdownBadge = document.getElementById('countdown-badge');
+        const countdownSeconds = document.getElementById('countdown-seconds');
+        const maxInfo = document.getElementById('max-info');
+        const bgAmbient = document.getElementById('bg-ambient');
+        const slider = document.getElementById('maxTimeRange');
+        const sliderValDisplay = document.getElementById('slider-val-display');
+
+        // Update Slider Display
+        function updateSliderDisplay() {
+            currentMaxSec = parseInt(slider.value, 10);
+            sliderValDisplay.textContent = `Max ${currentMaxSec}s`;
+            
+            // Highlight matching preset button
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                const sec = parseInt(btn.textContent);
+                if (sec === currentMaxSec) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            if (isRunning) {
+                maxInfo.textContent = `(Max: ${currentMaxSec}s)`;
+            }
+        }
+
+        // Set Preset Interval
+        function setPreset(sec) {
+            slider.value = sec;
+            updateSliderDisplay();
+        }
+
+        // Generate Random Duration between 2s and Max Selected Interval
+        function getRandomDuration(maxSeconds) {
+            const minSec = 2; // minimum 2 seconds wait time
+            const max = Math.max(minSec + 1, maxSeconds);
+            return Math.floor(Math.random() * (max - minSec + 1)) + minSec;
+        }
+
+        // Start Game
+        function startGame() {
+            if (isRunning) return;
+            isRunning = true;
+
+            // Initialize Audio unlocking for iOS/Android touch interaction
+            const lavaAudio = document.getElementById('audio-lava');
+            const waterAudio = document.getElementById('audio-water');
+            lavaAudio.play().then(() => lavaAudio.pause()).catch(() => {});
+            waterAudio.play().then(() => waterAudio.pause()).catch(() => {});
+
+            currentStatus = 'WATER'; // Will toggle to LAVA immediately
+            switchState();
+        }
+
+        // Stop Game
+        function stopGame() {
+            isRunning = false;
+            
+            if (nextSwitchTimeoutId) clearTimeout(nextSwitchTimeoutId);
+            if (countdownIntervalId) clearInterval(countdownIntervalId);
+
+            // Pause all audio
+            const lavaAudio = document.getElementById('audio-lava');
+            const waterAudio = document.getElementById('audio-water');
+            lavaAudio.pause();
+            lavaAudio.currentTime = 0;
+            waterAudio.pause();
+            waterAudio.currentTime = 0;
+
+            // Reset visual UI
+            stateCard.className = 'state-card';
+            bgAmbient.className = 'bg-ambient';
+            stateIcon.textContent = '🎮';
+            stateTitle.textContent = 'READY TO PLAY?';
+            stateSubtitle.textContent = 'Set your maximum switch duration and tap Start Game!';
+            countdownBadge.style.display = 'none';
+        }
+
+        // Switch State (Lava vs Water)
+        function switchState() {
+            if (!isRunning) return;
+
+            // Toggle state
+            currentStatus = (currentStatus === 'LAVA') ? 'WATER' : 'LAVA';
+
+            // Apply Visual Theme & Animations
+            if (currentStatus === 'LAVA') {
+                stateCard.className = 'state-card lava-active';
+                bgAmbient.className = 'bg-ambient lava-mode';
+                stateIcon.textContent = '🌋';
+                stateTitle.textContent = 'THE FLOOR IS LAVA!';
+                stateSubtitle.textContent = 'Quick! Get onto a couch, chair, or pillow!';
+            } else {
+                stateCard.className = 'state-card water-active';
+                bgAmbient.className = 'bg-ambient water-mode';
+                stateIcon.textContent = '🌊';
+                stateTitle.textContent = 'SAFE IN THE WATER!';
+                stateSubtitle.textContent = 'Splash around! The floor is safe for now!';
+            }
+
+            // Play Audio Prompt
+            playAudio(currentStatus);
+
+            // Schedule Next Random Switch
+            scheduleNextSwitch();
+        }
+
+        // Play Sound Prompt
+        function playAudio(status) {
+            const lavaAudio = document.getElementById('audio-lava');
+            const waterAudio = document.getElementById('audio-water');
+
+            lavaAudio.pause();
+            lavaAudio.currentTime = 0;
+            waterAudio.pause();
+            waterAudio.currentTime = 0;
+
+            const target = (status === 'LAVA') ? lavaAudio : waterAudio;
+            target.play().catch(err => console.log('Audio playback waiting for interaction:', err));
+        }
+
+        // Schedule Next Switch with Random Duration
+        function scheduleNextSwitch() {
+            if (!isRunning) return;
+
+            currentMaxSec = parseInt(slider.value, 10);
+            const randomSec = getRandomDuration(currentMaxSec);
+            remainingSeconds = randomSec;
+
+            countdownBadge.style.display = 'inline-flex';
+            countdownSeconds.textContent = `${remainingSeconds}s`;
+            maxInfo.textContent = `(Max: ${currentMaxSec}s)`;
+
+            // Clear previous timers
+            if (countdownIntervalId) clearInterval(countdownIntervalId);
+            if (nextSwitchTimeoutId) clearTimeout(nextSwitchTimeoutId);
+
+            // Countdown Ticker
+            countdownIntervalId = setInterval(() => {
+                if (!isRunning) {
+                    clearInterval(countdownIntervalId);
+                    return;
+                }
+                remainingSeconds--;
+                if (remainingSeconds >= 0) {
+                    countdownSeconds.textContent = `${remainingSeconds}s`;
+                } else {
+                    clearInterval(countdownIntervalId);
+                }
+            }, 1000);
+
+            // Schedule state switch
+            nextSwitchTimeoutId = setTimeout(() => {
+                if (!isRunning) return;
+                switchState();
+            }, randomSec * 1000);
+        }
+
+        // Initialize Slider Display on Load
+        updateSliderDisplay();
+    </script>
 </body>
 </html>

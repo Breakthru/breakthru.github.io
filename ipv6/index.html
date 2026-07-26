@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IPv6 Learning Tool</title>
+    <meta name="description" content="Learn IPv6 address structure, convert IPv4 to link-local IPv6, and explore 128-bit hex to decimal octet conversions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #080c14;
+            --bg-card: rgba(20, 28, 45, 0.7);
+            --border-card: rgba(255, 255, 255, 0.1);
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --accent: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --bg-input: rgba(15, 23, 42, 0.8);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 760px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            align-self: flex-start;
+        }
+
+        .nav-back:hover {
+            color: var(--text-main);
+        }
+
+        header {
+            margin-bottom: 0.5rem;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            text-transform: lowercase;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            width: 55px;
+            flex-shrink: 0;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            padding: 0.6rem 2.4rem 0.6rem 0.85rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        input[type="text"]:disabled {
+            opacity: 0.75;
+            background: rgba(15, 23, 42, 0.4);
+            cursor: not-allowed;
+        }
+
+        .btn-copy {
+            position: absolute;
+            right: 6px;
+            padding: 5px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s, background 0.15s;
+            height: 28px;
+            width: 28px;
+        }
+
+        .btn-copy:hover {
+            color: var(--primary);
+            background: rgba(16, 185, 129, 0.15);
+            transform: none;
+            opacity: 1;
+        }
+
+        .btn-copy.copied {
+            color: #10b981;
+        }
+
+        button.action-btn {
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 0.6rem 1.1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #090d16;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        button.action-btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        button.action-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-clear {
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 0.6rem 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-clear:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 0.6rem;
+            margin: 0.6rem 0 0.85rem 55px;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .preset-chip {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            padding: 0.65rem 0.85rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .preset-chip:hover {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .preset-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .preset-addr {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .references-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .references-list a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .references-list a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem 0.75rem;
+            }
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.4rem;
+            }
+            label {
+                width: auto;
+            }
+            .button-row {
+                margin-left: 0;
+            }
+            button.action-btn {
+                width: 100%;
+            }
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script>
+        class IPv6 {
+            constructor(s) {
+                this.bytes = new Array(16).fill(0);  // 16 bytes
+                if (s !== undefined && s !== '') {
+                    this.from_string(s);
+                }
+            }
+
+            from_string(s) {
+                let blocks = s.trim().split(':');
+                let idx = blocks.findIndex(element => element === '');
+                
+                if (idx === -1) {
+                    for (let i = 0; i < blocks.length && i < 8; i++) {
+                        let block_n = parseInt(blocks[i], 16) || 0;
+                        this.bytes[2*i] = (block_n >> 8) & 0xFF;
+                        this.bytes[2*i+1] = block_n & 0xFF;
+                    }
+                    return;
+                }
+
+                // extract bytes before the :: block
+                for (let i = 0; i < idx; i++) {
+                    let block_n = parseInt(blocks[i], 16) || 0;
+                    this.bytes[2*i] = (block_n >> 8) & 0xFF;
+                    this.bytes[2*i+1] = block_n & 0xFF;
+                }
+
+                // extract bytes after the :: block
+                let tmp_bytes = [];
+                for (let i = idx + 1; i < blocks.length; i++) {
+                    if (blocks[i] !== '') {
+                        let block_n = parseInt(blocks[i], 16) || 0;
+                        tmp_bytes.push((block_n >> 8) & 0xFF);
+                        tmp_bytes.push(block_n & 0xFF);
+                    }
+                }
+
+                // put the bytes after :: at the end
+                if (tmp_bytes.length > 0) {
+                    this.set_bytes(tmp_bytes, 16 - tmp_bytes.length);
+                }
+            }
+            
+            set_bytes(b, pos) {
+                for (let i = 0; i < b.length && (i + pos) < 16; i++) {
+                    this.bytes[i + pos] = b[i];
+                }
+            }
+
+            to_string() {
+                let hex = [];  // blocks of 2 bytes
+                for (let i = 0; i < 16; i += 2) {
+                    let val = (this.bytes[i] << 8) | this.bytes[i+1];
+                    hex.push(val.toString(16));            
+                }
+                return hex.join(":");
+            }
+            
+            to_decimal_string() {
+                let decimal = [];  // 16 bytes as decimal numbers
+                for (let i = 0; i < 16; i++) {
+                    decimal.push(this.bytes[i].toString());
+                }
+                return decimal.join(".");        
+            }
+        }
+
+        class IPv4 {
+            constructor(s) {
+                this.bytes = new Array(4).fill(0);  // 4 bytes
+                if (s !== undefined && s !== '') {
+                    this.from_string(s);
+                }
+            }
+            
+            from_string(s) {
+                let blocks = s.trim().split('.');
+                for (let i = 0; i < 4; i++) {
+                    this.bytes[i] = parseInt(blocks[i]) || 0;
+                }
+            }
+        }
+
+        function get_local_ipv6(ipv4_str) {
+            let ipv6 = new IPv6('fe80::');
+            let ipv4 = new IPv4(ipv4_str);
+            ipv6.set_bytes(ipv4.bytes, 12);
+            return ipv6.to_string();
+        }
+
+        function convert4to6() {
+            let input = document.getElementById('ipv4').value;
+            let output = document.getElementById('local_ipv6');
+            output.value = get_local_ipv6(input);
+        }
+
+        function showBytes() {
+            let input = document.getElementById('ipv6').value;
+            let output = document.getElementById('octects');
+            let ipv6 = new IPv6(input);
+            output.value = ipv6.to_decimal_string();
+        }
+        
+        function showHex() {
+            let input = document.getElementById('octects').value;
+            let output = document.getElementById('ipv6');
+            let octets = input.trim().split('.');
+            let hex = [];
+            for (let i = 0; i < octets.length; i += 2) {
+                let b1 = parseInt(octets[i]) || 0;
+                let b2 = parseInt(octets[i+1]) || 0;
+                hex.push(((b1 << 8) | b2).toString(16));            
+            }
+            output.value = hex.join(":");
+        }
+        
+        function clear_all() {
+            let ids = ["ipv4", "local_ipv6", "ipv6", "octects"];
+            ids.forEach((id) => { document.getElementById(id).value = ''; });
+        }
+
+        function loadExample(addr) {
+            let ipv6Input = document.getElementById('ipv6');
+            let octetsInput = document.getElementById('octects');
+            
+            // Set IPv6 text box value
+            ipv6Input.value = addr;
+            
+            // Compute and populate 16 decimal octets
+            let ipv6Obj = new IPv6(addr);
+            octetsInput.value = ipv6Obj.to_decimal_string();
+
+            // Smoothly scroll to top of 16-byte view card if needed
+            ipv6Input.focus();
+        }
+
+        function copyInput(id, btn) {
+            let input = document.getElementById(id);
+            if (!input || !input.value) return;
+
+            const text = input.value;
+            const showSuccess = () => {
+                let originalSvg = btn.innerHTML;
+                btn.classList.add('copied');
+                btn.title = "Copied!";
+                btn.innerHTML = `
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                `;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.title = "Copy to clipboard";
+                    btn.innerHTML = originalSvg;
+                }, 1500);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(showSuccess).catch(() => {
+                    input.select();
+                    document.execCommand('copy');
+                    showSuccess();
+                });
+            } else {
+                input.select();
+                try {
+                    document.execCommand('copy');
+                    showSuccess();
+                } catch (e) {
+                    console.error('Copy failed', e);
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="nav-back">&larr; Back to Application Index</a>
+
+        <header>
+            <h1>IPv6 Learning Tool</h1>
+            <p>Understand IPv6 addressing, link-local conversion, and 128-bit octet representations.</p>
+        </header>
+
+        <div class="card">
+            <h2>make link-local ipv6 from any ipv4</h2>
+            <div class="input-group">
+                <label for="ipv4">ipv4</label>
+                <div class="input-wrapper">
+                    <input type="text" id="ipv4" placeholder="192.168.1.1">
+                    <button type="button" class="btn-copy" onclick="copyInput('ipv4', this)" title="Copy to clipboard">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+                <button class="action-btn" onclick="convert4to6();">local 4 to local 6</button>
+            </div>
+            <div class="input-group">
+                <label for="local_ipv6">ipv6</label>
+                <div class="input-wrapper">
+                    <input type="text" id="local_ipv6" disabled placeholder="fe80::c0a8:101">
+                    <button type="button" class="btn-copy" onclick="copyInput('local_ipv6', this)" title="Copy to clipboard">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>show ipv6 as 16 bytes</h2>
+            <div class="input-group">
+                <label for="ipv6">ipv6</label>
+                <div class="input-wrapper">
+                    <input type="text" id="ipv6" placeholder="fe80::c0a8:101">
+                    <button type="button" class="btn-copy" onclick="copyInput('ipv6', this)" title="Copy to clipboard">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="button-row">
+                <button class="action-btn" onclick="showBytes();" title="Convert IPv6 hex to 16 decimal bytes">&rarr; Show Bytes</button>
+                <button class="action-btn" onclick="showHex();" title="Convert 16 decimal bytes to IPv6 hex">&larr; Show Hex</button>
+            </div>
+            <div class="input-group">
+                <label for="octects">bytes</label>
+                <div class="input-wrapper">
+                    <input type="text" id="octects" placeholder="254.128.0.0.0.0.0.0.0.0.0.0.192.168.1.1">
+                    <button type="button" class="btn-copy" onclick="copyInput('octects', this)" title="Copy to clipboard">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="display: flex; justify-content: flex-end;">
+            <button class="btn-clear" onclick="clear_all()">Clear</button>
+        </div>
+
+        <div class="card">
+            <h2>example ipv6 addresses &amp; prefixes</h2>
+            <div class="examples-grid">
+                <button type="button" class="preset-chip" onclick="loadExample('fe80::1')">
+                    <span class="preset-label">Link-Local (Gateway)</span>
+                    <span class="preset-addr">fe80::1</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('fe80::c0a8:101')">
+                    <span class="preset-label">Link-Local (192.168.1.1 map)</span>
+                    <span class="preset-addr">fe80::c0a8:101</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('2001:4860:4860::8888')">
+                    <span class="preset-label">Public Unicast (Google DNS)</span>
+                    <span class="preset-addr">2001:4860:4860::8888</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('2606:4700:4700::1111')">
+                    <span class="preset-label">Public Unicast (Cloudflare DNS)</span>
+                    <span class="preset-addr">2606:4700:4700::1111</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('fd00::1')">
+                    <span class="preset-label">Unique Local (fd00::/8)</span>
+                    <span class="preset-addr">fd00::1</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('2001:db8::1')">
+                    <span class="preset-label">Documentation Prefix (2001:db8::)</span>
+                    <span class="preset-addr">2001:db8::1</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('::1')">
+                    <span class="preset-label">Loopback (::1)</span>
+                    <span class="preset-addr">::1</span>
+                </button>
+                <button type="button" class="preset-chip" onclick="loadExample('ff02::1')">
+                    <span class="preset-label">Multicast (All Nodes)</span>
+                    <span class="preset-addr">ff02::1</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>references</h2>
+            <ul class="references-list">
+                <li><a href="https://www.ripe.net/participate/member-support/lir-basics/ipv6_reference_card.pdf" target="_blank" rel="noopener">RIPE IPv6 Reference Card (PDF)</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Hexspeak" target="_blank" rel="noopener">Hexspeak (Wikipedia)</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
